@@ -1,0 +1,52 @@
+name: vidalys-flow-test
+
+services:
+  test:
+    build:
+      context: .
+      target: test
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      SECRET_KEY: test-only-not-a-runtime-secret
+      DATABASE_URL: postgresql://vidalys_test:vidalys_test@test-db:5432/vidalys_test
+      CELERY_BROKER_URL: redis://test-redis:6379/0
+      REDIS_CACHE_URL: redis://test-redis:6379/1
+      VIDALYS_DEMO_MODE: "1"
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        .venv/bin/python manage.py migrate --noinput &&
+        .venv/bin/ruff check . &&
+        .venv/bin/python manage.py check &&
+        .venv/bin/python manage.py makemigrations --check --dry-run &&
+        .venv/bin/coverage run -m pytest &&
+        .venv/bin/coverage report
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+
+  test-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vidalys_test
+      POSTGRES_USER: vidalys_test
+      POSTGRES_PASSWORD: vidalys_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vidalys_test -d vidalys_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  test-redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
