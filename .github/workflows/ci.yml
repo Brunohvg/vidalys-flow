@@ -2,7 +2,12 @@ name: Foundation CI
 
 on:
   push:
-    branches: [foundation/independent-core, domain/customers-products]
+    branches:
+      - main
+      - foundation/independent-core
+      - domain/customers-products
+      - chore/agent-orchestration
+      - "phase/**"
   pull_request:
 
 jobs:
@@ -46,6 +51,22 @@ jobs:
           enable-cache: true
       - name: Install locked dependencies
         run: uv sync --frozen --group dev
+      - name: Governance JSON syntax
+        run: find project -name '*.json' -print0 | sort -z | xargs -0 -n1 uv run python -m json.tool > /dev/null
+      - name: Governance state and roadmap
+        run: |
+          uv run python scripts/agent_orchestrator.py validate-state
+          uv run python scripts/agent_orchestrator.py validate-roadmap
+      - name: Governance manifests and handoffs
+        run: uv run python scripts/agent_orchestrator.py validate-all
+      - name: Governance prompt versioning
+        run: uv run python scripts/agent_orchestrator.py validate-templates
+      - name: Approved head exists
+        run: |
+          approved_head="$(uv run python -c 'import json; print(json.load(open("project/state.json"))["approved_head"])')"
+          git cat-file -e "${approved_head}^{commit}"
+      - name: Orchestrator tests
+        run: uv run pytest tests/test_agent_orchestrator.py
       - name: Secret scan
         run: uv run python scripts/check_secrets.py
       - name: Independence scan
