@@ -63,10 +63,14 @@ jobs:
         run: uv run python scripts/agent_orchestrator.py validate-all
       - name: Governance prompt versioning
         run: uv run python scripts/agent_orchestrator.py validate-templates
-      - name: Approved head exists
+      - name: Approved phase ancestry and governance baseline
         run: |
-          approved_head="$(uv run python -c 'import json; print(json.load(open("project/state.json"))["approved_head"])')"
-          git cat-file -e "${approved_head}^{commit}"
+          baseline_branch="$(uv run python -c 'import json; print(json.load(open("project/state.json"))["baseline_branch"])')"
+          git fetch --no-tags origin "${baseline_branch}:refs/remotes/origin/${baseline_branch}"
+          uv run python scripts/check_governance_baseline.py \
+            --head HEAD \
+            --ref-name "$GITHUB_REF_NAME" \
+            --baseline-ref "origin/${baseline_branch}"
       - name: Orchestrator tests
         run: uv run pytest tests/test_agent_orchestrator.py
       - name: Secret scan
