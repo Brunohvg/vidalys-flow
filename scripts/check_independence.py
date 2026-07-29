@@ -15,7 +15,6 @@ FORBIDDEN_SYMBOLS = (
     "django_" + "q",
     "q" + "cluster",
     "apps." + "billing",
-    "apps." + "customers",
     "apps." + "orders",
     "apps." + "payments",
     "apps." + "boletos",
@@ -32,6 +31,11 @@ FORBIDDEN_SYMBOLS = (
     "payments" + "_v2",
     "integrations" + "_v2",
 )
+
+DOMAIN_BOUNDARIES = {
+    Path("apps/customers"): ("apps." + "products",),
+    Path("apps/products"): ("apps." + "customers",),
+}
 
 
 def executable_files():
@@ -51,6 +55,22 @@ def violations():
         for symbol in FORBIDDEN_SYMBOLS:
             if symbol in content:
                 found.append((path.relative_to(ROOT), symbol))
+        relative = path.relative_to(ROOT)
+        for domain, forbidden_imports in DOMAIN_BOUNDARIES.items():
+            if domain not in relative.parents:
+                continue
+            for symbol in forbidden_imports:
+                if symbol in content:
+                    found.append((relative, symbol))
+        if "migrations" in relative.parts:
+            for legacy_label in (
+                "customers" + "_v2",
+                "orders" + "_v2",
+                "payments" + "_v2",
+                "integrations" + "_v2",
+            ):
+                if legacy_label in content:
+                    found.append((relative, legacy_label))
     return found
 
 

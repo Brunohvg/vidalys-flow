@@ -2,7 +2,7 @@ name: Foundation CI
 
 on:
   push:
-    branches: [foundation/independent-core]
+    branches: [foundation/independent-core, domain/customers-products]
   pull_request:
 
 jobs:

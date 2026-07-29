@@ -33,6 +33,26 @@ def test_user_without_membership_is_handled_safely(client):
 
 
 @pytest.mark.django_db
+def test_customer_and_product_routes_exist_for_authenticated_member(client):
+    user = User.objects.create_user("owner@example.com")
+    organization = Organization.objects.create(name="Org", slug="org")
+    Membership.objects.create(organization=organization, user=user, role=Membership.Role.OWNER)
+    client.force_login(user)
+    assert client.get(reverse("customers:list")).status_code == 200
+    assert client.get(reverse("customers:create")).status_code == 200
+    assert client.get(reverse("products:list")).status_code == 200
+    assert client.get(reverse("products:create")).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["/api/v1/customers/", "/api/v1/products/"],
+)
+def test_domain_api_is_not_exposed_in_phase_two(client, path):
+    assert client.get(path).status_code == 404
+
+
+@pytest.mark.django_db
 def test_logout_requires_post_and_ends_session(client):
     user = User.objects.create_user("owner@example.com")
     organization = Organization.objects.create(name="Org", slug="org")
