@@ -6,10 +6,18 @@ Plataforma independente de operação de vendas e pós-venda.
 > independente. Não consulta, importa, migra ou compartilha dados, runtime,
 > autenticação ou infraestrutura com o Flowlog.
 
-Este repositório contém a fundação greenfield: identidades nativas,
-organizações, memberships, auditoria, outbox transacional, healthchecks,
-PostgreSQL, Redis e Celery. Domínios de clientes, produtos, pedidos,
-fulfillment, pagamentos, mensagens e integrações não fazem parte desta fase.
+Este repositório contém a fundação greenfield e os domínios nativos de
+clientes e catálogo operacional de produtos. Orders, fulfillment, pagamentos,
+mensagens, integrações e dashboard operacional não fazem parte desta fase.
+
+Após selecionar uma organização permitida por Membership, as interfaces
+estão disponíveis em:
+
+- `/customers/`;
+- `/products/`.
+
+Consulte [Customers](docs/domains/CUSTOMERS.md) e
+[Products](docs/domains/PRODUCTS.md) para regras e decisões de escopo.
 
 ## Início rápido
 

@@ -32,3 +32,15 @@ docker compose -f docker-compose.test.yml config
 Migrations são geradas neste repositório e testadas desde banco vazio.
 Não copiar, editar para compatibilidade ou marcar como aplicadas migrations
 de outro sistema.
+
+Os apps `customers` e `products` possuem migrations iniciais próprias. Para
+validar separadamente:
+
+```bash
+uv run pytest apps/customers
+uv run pytest apps/products
+```
+
+Views são adaptadores. Escritas devem chamar services com `organization` e
+ator explícitos; leituras devem usar selectors tenant-scoped. Não usar
+`Model.objects.all()` em uma interface operacional.
