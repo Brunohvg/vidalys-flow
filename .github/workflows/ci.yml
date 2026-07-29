@@ -66,10 +66,11 @@ jobs:
       - name: Approved phase ancestry and governance baseline
         run: |
           baseline_branch="$(uv run python -c 'import json; print(json.load(open("project/state.json"))["baseline_branch"])')"
+          ref_name="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
           git fetch --no-tags origin "${baseline_branch}:refs/remotes/origin/${baseline_branch}"
           uv run python scripts/check_governance_baseline.py \
             --head HEAD \
-            --ref-name "$GITHUB_REF_NAME" \
+            --ref-name "$ref_name" \
             --baseline-ref "origin/${baseline_branch}"
       - name: Orchestrator tests
         run: uv run pytest tests/test_agent_orchestrator.py
