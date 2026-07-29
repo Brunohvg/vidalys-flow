@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 
 import pytest
@@ -23,6 +24,8 @@ def write_json(path, data):
 
 @pytest.fixture
 def baseline_repository(tmp_path):
+    if shutil.which("git") is None:
+        pytest.skip("Git CLI is not installed in this test environment")
     git(tmp_path, "init", "-b", "main")
     git(tmp_path, "config", "user.email", "governance@example.invalid")
     git(tmp_path, "config", "user.name", "Governance Test")
