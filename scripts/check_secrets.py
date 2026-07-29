@@ -13,7 +13,13 @@ PATTERNS = {
 
 def candidate_files():
     for path in ROOT.rglob("*"):
-        if not path.is_file() or ".git" in path.parts or ".venv" in path.parts:
+        if (
+            not path.is_file()
+            or ".git" in path.parts
+            or ".venv" in path.parts
+            or "__pycache__" in path.parts
+            or path.suffix == ".pyc"
+        ):
             continue
         if path.name == "uv.lock" or path == Path(__file__).resolve():
             continue
