@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Organizações — Vidalys Flow{% endblock %}
+
+{% block content %}
+  <h1>Organizações</h1>
+  {% if memberships %}
+    <ul>
+      {% for membership in memberships %}
+        <li>
+          <strong>{{ membership.organization.name }}</strong>
+          <span class="muted">— {{ membership.get_role_display }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Você ainda não possui acesso ativo a uma organização.</p>
+  {% endif %}
+{% endblock %}
