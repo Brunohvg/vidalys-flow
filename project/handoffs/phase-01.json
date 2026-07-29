@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "phase_id": 1,
+  "phase_name": "Foundation",
+  "status": "approved",
+  "branch": "foundation/independent-core",
+  "base_sha": null,
+  "head_sha": "6a97ac4b5af023f180b3d5282e3439c85e6721d2",
+  "commits": [
+    {
+      "sha": "dbb06f09bb61fad39ffbe3e4b5e977ffe81e3a59",
+      "subject": "chore: initialize independent Vidalys Flow project"
+    },
+    {
+      "sha": "994b1969bba8098e77b3cfe04ee8736d26bf3acf",
+      "subject": "feat(users): add native email-based user"
+    },
+    {
+      "sha": "91d0328b069d443e8194ab189562bd7c76b0786b",
+      "subject": "feat(organizations): add organizations memberships and units"
+    },
+    {
+      "sha": "c4ab842d4cf2035e5afdfb789c87dbaa56241ecb",
+      "subject": "feat(audit): add organization-scoped audit events"
+    },
+    {
+      "sha": "a70061657af31dfbf81d3da100bd4782c7294ab5",
+      "subject": "feat(platform): add transactional outbox foundation"
+    },
+    {
+      "sha": "aed672a095d56e14019ea6395d438b592f32ebf1",
+      "subject": "chore(infra): add Docker Compose and foundation CI"
+    },
+    {
+      "sha": "3867ce787d8873aa3b55cb5515b510cd2ce7e9f8",
+      "subject": "test: add foundation isolation and integration coverage"
+    },
+    {
+      "sha": "6a97ac4b5af023f180b3d5282e3439c85e6721d2",
+      "subject": "docs: document independent greenfield architecture"
+    }
+  ],
+  "delivered_scope": [
+    "greenfield Django foundation",
+    "native users and memberships",
+    "organizations and units",
+    "sanitized audit events",
+    "transactional outbox",
+    "PostgreSQL, Redis, Celery, Docker, and CI foundation"
+  ],
+  "models": [
+    "users.User",
+    "organizations.Organization",
+    "organizations.OrganizationUnit",
+    "organizations.Membership",
+    "audit.AuditEvent",
+    "platform.OutboxEvent"
+  ],
+  "migrations": [
+    "apps/users/migrations/0001_initial.py",
+    "apps/organizations/migrations/0001_initial.py",
+    "apps/organizations/migrations/0002_initial.py",
+    "apps/audit/migrations/0001_initial.py",
+    "apps/audit/migrations/0002_initial.py",
+    "apps/platform/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "count": 48,
+    "coverage_percent": 85,
+    "database": "PostgreSQL 17",
+    "result": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed"
+  },
+  "ci": {
+    "workflow_id": 30414462392,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/30414462392",
+    "head_sha": "6a97ac4b5af023f180b3d5282e3439c85e6721d2",
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Membership, organization-scoped models, policies, services, and cross-organization tests."
+  },
+  "legacy_reuse": {
+    "data": false,
+    "migrations": false,
+    "runtime": false
+  },
+  "deferred": [
+    "Customers",
+    "Products",
+    "Orders and later domains"
+  ],
+  "risks": [],
+  "blockers": [],
+  "human_approval": {
+    "status": "approved",
+    "evidence": "Explicit approval recorded in the Phase 2 authorization."
+  }
+}

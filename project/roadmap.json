@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "phases": [
+    {
+      "id": 0,
+      "name": "Audit",
+      "status": "approved",
+      "dependencies": [],
+      "approved_sha": null,
+      "branch": null,
+      "handoff": null,
+      "domains": [
+        "source audit"
+      ],
+      "human_approval_status": "approved",
+      "known_risks": []
+    },
+    {
+      "id": 1,
+      "name": "Foundation",
+      "status": "approved",
+      "dependencies": [
+        0
+      ],
+      "approved_sha": "6a97ac4b5af023f180b3d5282e3439c85e6721d2",
+      "branch": "foundation/independent-core",
+      "handoff": "project/handoffs/phase-01.json",
+      "domains": [
+        "core",
+        "users",
+        "organizations",
+        "audit",
+        "platform"
+      ],
+      "human_approval_status": "approved",
+      "known_risks": []
+    },
+    {
+      "id": 2,
+      "name": "Customers and Products",
+      "status": "approved",
+      "dependencies": [
+        1
+      ],
+      "approved_sha": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+      "branch": "domain/customers-products",
+      "handoff": "project/handoffs/phase-02.json",
+      "domains": [
+        "customers",
+        "products"
+      ],
+      "human_approval_status": "approved",
+      "known_risks": [
+        "Public APIs, product images, and external references remain deferred."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Orders",
+      "status": "planned",
+      "dependencies": [
+        2
+      ],
+      "approved_sha": null,
+      "branch": "phase/03-orders",
+      "handoff": null,
+      "domains": [
+        "orders"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": [
+        "State transitions, snapshots, money, and concurrent changes require explicit contracts."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Fulfillment",
+      "status": "planned",
+      "dependencies": [
+        3
+      ],
+      "approved_sha": null,
+      "branch": "phase/04-fulfillment",
+      "handoff": null,
+      "domains": [
+        "fulfillment"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    },
+    {
+      "id": 5,
+      "name": "Payments",
+      "status": "planned",
+      "dependencies": [
+        4
+      ],
+      "approved_sha": null,
+      "branch": "phase/05-payments",
+      "handoff": null,
+      "domains": [
+        "payments"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    },
+    {
+      "id": 6,
+      "name": "Messaging",
+      "status": "planned",
+      "dependencies": [
+        5
+      ],
+      "approved_sha": null,
+      "branch": "phase/06-messaging",
+      "handoff": null,
+      "domains": [
+        "messaging"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    },
+    {
+      "id": 7,
+      "name": "Integrations",
+      "status": "planned",
+      "dependencies": [
+        6
+      ],
+      "approved_sha": null,
+      "branch": "phase/07-integrations",
+      "handoff": null,
+      "domains": [
+        "integrations"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    },
+    {
+      "id": 8,
+      "name": "Dashboard and complete experience",
+      "status": "planned",
+      "dependencies": [
+        7
+      ],
+      "approved_sha": null,
+      "branch": "phase/08-dashboard-experience",
+      "handoff": null,
+      "domains": [
+        "dashboard",
+        "complete experience"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    },
+    {
+      "id": 9,
+      "name": "Infrastructure and homologation",
+      "status": "planned",
+      "dependencies": [
+        8
+      ],
+      "approved_sha": null,
+      "branch": "phase/09-infrastructure-homologation",
+      "handoff": null,
+      "domains": [
+        "infrastructure",
+        "homologation"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    },
+    {
+      "id": 10,
+      "name": "Cutover and Flowlog operational closure",
+      "status": "planned",
+      "dependencies": [
+        9
+      ],
+      "approved_sha": null,
+      "branch": "phase/10-cutover",
+      "handoff": null,
+      "domains": [
+        "cutover"
+      ],
+      "human_approval_status": "pending",
+      "known_risks": []
+    }
+  ]
+}

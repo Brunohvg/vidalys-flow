@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "id": 3,
+  "name": "Orders",
+  "base_sha": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+  "branch": "phase/03-orders",
+  "status": "planned",
+  "plan_status": "pending",
+  "implementation_status": "blocked",
+  "review_status": "blocked",
+  "qa_status": "blocked",
+  "human_approval_status": "pending",
+  "allowed_status_values": {
+    "status": [
+      "planned",
+      "in_progress",
+      "candidate",
+      "approved",
+      "rejected"
+    ],
+    "plan_status": [
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "implementation_status": [
+      "blocked",
+      "pending",
+      "in_progress",
+      "complete"
+    ],
+    "review_status": [
+      "blocked",
+      "pending",
+      "in_progress",
+      "complete",
+      "changes_requested"
+    ],
+    "qa_status": [
+      "blocked",
+      "pending",
+      "in_progress",
+      "go",
+      "no_go"
+    ],
+    "human_approval_status": [
+      "pending",
+      "approved",
+      "rejected"
+    ]
+  },
+  "dependencies": [
+    2
+  ],
+  "allowed_apps": [
+    "orders",
+    "audit",
+    "platform",
+    "customers",
+    "products",
+    "organizations",
+    "users",
+    "core"
+  ],
+  "forbidden_apps": [
+    "fulfillment",
+    "payments",
+    "messaging",
+    "integrations",
+    "dashboard",
+    "inventory",
+    "tax",
+    "accounting",
+    "marketing"
+  ],
+  "expected_models": [
+    {
+      "name": "Order",
+      "purpose": "Organization-scoped aggregate with customer snapshots, canonical state, totals, and audit metadata."
+    },
+    {
+      "name": "OrderItem",
+      "purpose": "Organization-scoped item with optional product/variant reference and immutable commercial snapshots."
+    },
+    {
+      "name": "OrderStatusHistory",
+      "purpose": "Auditable canonical state transition history."
+    }
+  ],
+  "expected_features": [
+    "Create and edit draft orders through services.",
+    "Confirm orders with immutable customer, product, and item snapshots.",
+    "Allow catalog-backed and free-form items.",
+    "Calculate monetary totals deterministically.",
+    "Apply explicit canonical state transitions.",
+    "Provide organization-scoped selectors, policies, HTML interfaces, audit, and outbox events."
+  ],
+  "deferred_features": [
+    "fulfillment and pickup execution",
+    "payment processing or gateway integration",
+    "transactional messaging",
+    "external integrations and public API",
+    "advanced inventory reservation",
+    "tax and accounting",
+    "legacy data import"
+  ],
+  "states": {
+    "requirement": "Canonical states and transition graph must be confirmed during planning before implementation.",
+    "initial_state": "draft",
+    "confirmed_states": [
+      "draft"
+    ],
+    "unconfirmed_states": [],
+    "rule": "Do not persist provider or legacy states as canonical states without an approved normalization contract."
+  },
+  "snapshots": [
+    "Confirmed orders retain customer name, document, contact, and address snapshots required by the approved contract.",
+    "Every item retains name, SKU or identifier, unit, quantity, unit price, discount, and total snapshots required by the approved contract.",
+    "Later Customer or Product changes never rewrite confirmed history.",
+    "The exact personal-data snapshot set requires explicit planning approval."
+  ],
+  "idempotency": [
+    "Create and confirmation commands define idempotency semantics before implementation.",
+    "Outbox events use stable aggregate and event identifiers.",
+    "Retries never duplicate confirmation, history, or monetary effects.",
+    "Concurrent commands lock and revalidate the organization-scoped aggregate."
+  ],
+  "money_rules": [
+    "Use Decimal and explicit currency; never float.",
+    "Persist integer minor units or approved fixed-precision decimals consistently.",
+    "Rounding mode and order of operations must be approved before implementation.",
+    "Server-side totals are authoritative and are recalculated from items.",
+    "Quantity, price, discounts, subtotal, and total must satisfy database and service invariants."
+  ],
+  "authorization": [
+    "Organization comes from authenticated active Membership.",
+    "Every service and selector receives Organization explicitly.",
+    "Object identifiers are always resolved inside Organization.",
+    "State-changing roles and exceptional actions must be declared in the approved plan.",
+    "Cross-organization reads and writes are refused and tested."
+  ],
+  "migrations": {
+    "new_only": true,
+    "legacy_reuse": false,
+    "empty_postgresql_required": true,
+    "technical_rollback_required": true,
+    "data_migrations_allowed": false
+  },
+  "tests": {
+    "database": "PostgreSQL 17",
+    "required": [
+      "success and validation errors",
+      "authorization and cross-organization isolation",
+      "draft edits and confirmation snapshots",
+      "state transition success and refusal",
+      "money calculations and rounding boundaries",
+      "idempotency",
+      "concurrent confirmation and state changes",
+      "audit and outbox sanitization",
+      "migration application and technical rollback",
+      "regression of approved phases"
+    ],
+    "network_access": false
+  },
+  "coverage": {
+    "minimum_total_percent": 85,
+    "domain_expectation": "Critical order rules require direct behavioral tests; aggregate coverage alone is insufficient."
+  },
+  "ci": [
+    "locked dependency installation",
+    "JSON and governance validation",
+    "secret scan",
+    "independence scan",
+    "Ruff",
+    "Django check",
+    "migration consistency",
+    "empty PostgreSQL 17 migration",
+    "tests and coverage",
+    "Docker build",
+    "Compose validation"
+  ],
+  "documentation": [
+    "architecture dependency graph",
+    "Orders domain contract",
+    "business rules and state transitions",
+    "security and personal-data decisions",
+    "ADRs for state, snapshots, idempotency, and money where needed",
+    "validated phase handoff"
+  ],
+  "acceptance_criteria": [
+    "The plan is explicitly approved before implementation.",
+    "Only allowed apps and features changed.",
+    "No later domain or external effect was introduced.",
+    "Organization isolation and authorization are enforced and tested.",
+    "Snapshots, states, money, idempotency, and concurrency follow approved contracts.",
+    "All quality gates and CI pass on the candidate HEAD.",
+    "Independent review has no unresolved blocker.",
+    "QA and Security emit GO.",
+    "Human approval is explicit before PR, merge, state update, or next phase."
+  ],
+  "checks": [
+    "python scripts/agent_orchestrator.py validate-all",
+    "python scripts/check_secrets.py",
+    "python scripts/check_independence.py",
+    "ruff check",
+    "Django check and migration consistency",
+    "PostgreSQL test suite with coverage",
+    "Docker build and Compose config"
+  ],
+  "report_format": {
+    "required_sections": [
+      "checkpoint",
+      "branch",
+      "base_sha",
+      "candidate_head",
+      "scope_delivered",
+      "files_changed",
+      "migrations",
+      "tests_and_coverage",
+      "scans",
+      "ci",
+      "risks",
+      "blockers",
+      "deferred",
+      "human_decision_required"
+    ]
+  },
+  "handoff_format": {
+    "path": "project/handoffs/phase-03.json",
+    "required_fields": [
+      "schema_version",
+      "phase_id",
+      "phase_name",
+      "status",
+      "branch",
+      "base_sha",
+      "head_sha",
+      "commits",
+      "delivered_scope",
+      "models",
+      "migrations",
+      "tests",
+      "scans",
+      "ci",
+      "organization_isolation",
+      "legacy_reuse",
+      "deferred",
+      "risks",
+      "blockers",
+      "human_approval"
+    ]
+  },
+  "allowed_scope": [
+    "Planning and, only after plan approval, a new greenfield Orders domain.",
+    "Minimal approved adapters to existing Foundation, Customers, and Products contracts.",
+    "New Orders tests, migrations, documentation, audit, and outbox integration."
+  ],
+  "forbidden_scope": [
+    "Starting Fulfillment, Payments, Messaging, Integrations, Dashboard, infrastructure, homologation, or cutover.",
+    "Changing approved Customers or Products rules without explicit human authorization.",
+    "Reusing Flowlog data, migrations, runtime, IDs, secrets, or infrastructure.",
+    "Deploying, configuring Coolify, merging, or starting the next phase."
+  ]
+}

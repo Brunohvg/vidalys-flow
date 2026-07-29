@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "repository": "Brunohvg/Flowlog",
+  "branch": "product/vidalys-flow-v2",
+  "frozen_sha": "31a3e7b8fe305b93cdcbcdfa7420b8e597412756",
+  "mode": "read_only",
+  "runtime_access": false,
+  "database_access": false,
+  "domains_no_longer_consulted": [
+    {
+      "domain": "Foundation",
+      "status": "completed"
+    },
+    {
+      "domain": "Customers",
+      "status": "completed"
+    },
+    {
+      "domain": "Products",
+      "status": "completed"
+    }
+  ],
+  "domains_still_consultable": [
+    {
+      "domain": "Orders",
+      "reference_app": "orders_v2",
+      "status": "pending"
+    },
+    {
+      "domain": "Fulfillment",
+      "reference_app": null,
+      "status": "pending"
+    },
+    {
+      "domain": "Payments",
+      "reference_app": null,
+      "status": "pending"
+    },
+    {
+      "domain": "Messaging",
+      "reference_app": null,
+      "status": "pending"
+    },
+    {
+      "domain": "Integrations",
+      "reference_app": null,
+      "status": "pending"
+    },
+    {
+      "domain": "Dashboard and complete experience",
+      "reference_app": null,
+      "status": "pending"
+    },
+    {
+      "domain": "Infrastructure and homologation",
+      "reference_app": null,
+      "status": "pending"
+    },
+    {
+      "domain": "Cutover",
+      "reference_app": null,
+      "status": "pending"
+    }
+  ],
+  "rules": [
+    "Reference access is manual, temporary, and read-only.",
+    "Runtime, database, Redis, services, secrets, migrations, data, and infrastructure are never accessed or reused.",
+    "A domain leaves this list after its greenfield contract is approved."
+  ]
+}

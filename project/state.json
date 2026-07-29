@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "product": "Vidalys Flow",
+  "repository": "Brunohvg/vidalys-flow",
+  "approved_phase": 2,
+  "approved_phase_name": "Customers and Products",
+  "approved_head": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+  "default_branch": "main",
+  "next_phase": 3,
+  "next_phase_name": "Orders",
+  "active_candidate": null,
+  "human_approval_required": true
+}

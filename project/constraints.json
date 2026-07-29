@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "normative_sources": {
+    "global_agent_contract": "AGENTS.md",
+    "phase_scope": "project/phases/<id>-<name>.json",
+    "executable_independence_rules": "scripts/check_independence.py",
+    "executable_secret_rules": "scripts/check_secrets.py",
+    "quality_gates": "docs/agents/QUALITY_GATES.md",
+    "precedence": [
+      "human approval explicitly recorded in project/state.json",
+      "phase manifest",
+      "project/constraints.json",
+      "AGENTS.md",
+      "domain and architecture documentation"
+    ]
+  },
+  "forbidden_global_imports": [
+    "legacy tenant runtime",
+    "legacy domain apps",
+    "Flowlog application modules",
+    "cross-domain imports not declared in architecture"
+  ],
+  "forbidden_symbols": [
+    "legacy runtime mode switches",
+    "legacy tenant middleware",
+    "legacy application labels",
+    "provider-specific fields in canonical models"
+  ],
+  "forbidden_apps": [
+    "ERP",
+    "prospecting CRM",
+    "advanced inventory",
+    "tax",
+    "accounting",
+    "marketing",
+    "e-commerce"
+  ],
+  "forbidden_git_actions": [
+    "force-push",
+    "history rewrite",
+    "destructive rebase",
+    "branch deletion without explicit authorization",
+    "merge without human approval",
+    "creating a phase from an unapproved candidate"
+  ],
+  "forbidden_database_operations": [
+    "SQLite domain tests",
+    "legacy data import",
+    "legacy migration reuse",
+    "fake migration compatibility",
+    "Flowlog database access"
+  ],
+  "forbidden_external_effects": [
+    "provider calls without an approved phase contract",
+    "deploy without human approval",
+    "Coolify changes without explicit scope",
+    "Flowlog runtime access",
+    "printing or persisting secrets"
+  ],
+  "minimum_test_requirements": [
+    "success and error paths",
+    "authorization",
+    "cross-organization isolation",
+    "idempotency when applicable",
+    "concurrency when applicable",
+    "migration application from empty PostgreSQL",
+    "technical migration rollback when applicable"
+  ],
+  "minimum_coverage_percent": 85,
+  "allowed_dependencies": {
+    "runtime": "Only dependencies already locked or explicitly approved in the phase manifest.",
+    "tooling": "Python standard library is preferred; new dependencies require explicit approval.",
+    "database": "PostgreSQL 17",
+    "broker_and_cache": "Redis"
+  },
+  "organization_isolation": [
+    "Every operational entity belongs to Organization.",
+    "Organization is derived from authenticated active Membership.",
+    "Tenant-scoped uniqueness includes Organization.",
+    "Services and selectors receive Organization explicitly.",
+    "Every feature includes cross-tenant tests.",
+    "Background tasks revalidate Organization and entity."
+  ]
+}

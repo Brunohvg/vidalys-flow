@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "phase_id": 2,
+  "phase_name": "Customers and Products",
+  "status": "approved",
+  "branch": "domain/customers-products",
+  "base_sha": "6a97ac4b5af023f180b3d5282e3439c85e6721d2",
+  "head_sha": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+  "commits": [
+    {
+      "sha": "6b9494e2254e551851c08d8f1743d44400a35ced",
+      "subject": "docs: record customer and product domain decisions"
+    },
+    {
+      "sha": "3abec83a8f2f9de75b17569d9ba0e8b75b9770d9",
+      "subject": "feat(customers): add organization-scoped customer domain"
+    },
+    {
+      "sha": "b107884067d489a611499b47bfcc5990eafcde62",
+      "subject": "feat(customers): add customer operations and interfaces"
+    },
+    {
+      "sha": "664b6e9411d1f3cfbae889b1a094c1edd5a404a7",
+      "subject": "feat(products): add organization-scoped product catalog"
+    },
+    {
+      "sha": "9bfd6e49dbdb9e35bb7889defdc270ea010ac37c",
+      "subject": "feat(products): add catalog operations and interfaces"
+    },
+    {
+      "sha": "7d27be7d3ff1732f1cb1e4d35df307062584cfd0",
+      "subject": "test: add customer and product isolation coverage"
+    },
+    {
+      "sha": "2e4ad54cd85aa457b9eed5c3ee05f30387a055be",
+      "subject": "docs: document customer and product domains"
+    },
+    {
+      "sha": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+      "subject": "feat: paginate customer and product lists"
+    }
+  ],
+  "delivered_scope": [
+    "organization-scoped customer identity, contacts, addresses, notes, and merge",
+    "organization-scoped operational product catalog, variants, SKU, barcode, and identifiers",
+    "HTML interfaces with active organization revalidation",
+    "sanitized audit and transactional outbox integration"
+  ],
+  "models": [
+    "customers.Customer",
+    "customers.ContactPoint",
+    "customers.CustomerAddress",
+    "customers.CustomerNote",
+    "customers.CustomerMerge",
+    "products.Product",
+    "products.ProductVariant",
+    "products.ProductIdentifier"
+  ],
+  "migrations": [
+    "apps/customers/migrations/0001_initial.py",
+    "apps/products/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "count": 104,
+    "coverage_percent": 86,
+    "database": "PostgreSQL 17",
+    "result": "passed",
+    "concurrency": "passed",
+    "cross_organization": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed"
+  },
+  "ci": {
+    "workflow_id": 30415971723,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/30415971723",
+    "head_sha": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services and selectors, active Membership revalidation, tenant constraints, and cross-tenant tests."
+  },
+  "legacy_reuse": {
+    "data": false,
+    "migrations": false,
+    "runtime": false
+  },
+  "deferred": [
+    "public Customers and Products APIs",
+    "ProductImage and media infrastructure",
+    "importers, external references, and synchronizations",
+    "inventory, prices, Orders, Payments, Fulfillment, and Messaging"
+  ],
+  "risks": [
+    "Multi-organization users must explicitly select an active organization.",
+    "Deferred APIs, images, and external references require later approved contracts."
+  ],
+  "blockers": [],
+  "human_approval": {
+    "status": "approved",
+    "evidence": "Explicit approval in the Phase 2.5 authorization."
+  }
+}
