@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -44,12 +45,16 @@ def customer_list(request):
         return context
     organization, _ = context
     query = request.GET.get("q", "")
+    customers = Paginator(
+        selectors.search_customers(organization=organization, query=query),
+        25,
+    ).get_page(request.GET.get("page"))
     return render(
         request,
         "customers/list.html",
         {
             "organization": organization,
-            "customers": selectors.search_customers(organization=organization, query=query),
+            "customers": customers,
             "query": query,
         },
     )

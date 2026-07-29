@@ -32,4 +32,11 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if customers.paginator.num_pages > 1 %}
+    <nav aria-label="Paginação de clientes">
+      {% if customers.has_previous %}<a href="?q={{ query|urlencode }}&page={{ customers.previous_page_number }}">Anterior</a>{% endif %}
+      <span>Página {{ customers.number }} de {{ customers.paginator.num_pages }}</span>
+      {% if customers.has_next %}<a href="?q={{ query|urlencode }}&page={{ customers.next_page_number }}">Próxima</a>{% endif %}
+    </nav>
+  {% endif %}
 {% endblock %}

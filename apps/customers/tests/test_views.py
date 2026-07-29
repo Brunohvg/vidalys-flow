@@ -186,3 +186,22 @@ def test_multiple_memberships_require_explicit_selection(
     response = client.get(reverse("customers:list"))
     assert response.status_code == 302
     assert response.url == reverse("organizations:list")
+
+
+@pytest.mark.django_db
+def test_customer_list_is_paginated_at_25(client, organization, user, operator_membership):
+    Customer.objects.bulk_create(
+        [
+            Customer(
+                organization=organization,
+                customer_type=Customer.Type.INDIVIDUAL,
+                display_name=f"Cliente {index:02}",
+            )
+            for index in range(26)
+        ]
+    )
+    client.force_login(user)
+    response = client.get(reverse("customers:list"))
+    assert response.context["customers"].paginator.per_page == 25
+    assert len(response.context["customers"]) == 25
+    assert "Próxima" in response.content.decode()

@@ -95,3 +95,15 @@ def test_invalid_product_forms_do_not_mutate(client, organization, user, operato
     assert product.variants.count() == 1
     response = client.post(reverse("products:create"), {"name": "", "default_unit": "un"})
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_product_list_is_paginated_at_25(client, organization, user, operator_membership):
+    Product.objects.bulk_create(
+        [Product(organization=organization, name=f"Produto {index:02}") for index in range(26)]
+    )
+    client.force_login(user)
+    response = client.get(reverse("products:list"))
+    assert response.context["products"].paginator.per_page == 25
+    assert len(response.context["products"]) == 25
+    assert "Próxima" in response.content.decode()
