@@ -1,0 +1,6 @@
+CUSTOMER_CREATED = "customer.created"
+CUSTOMER_MERGED = "customer.merged"
+CUSTOMER_UPDATED = "customer.updated"
+CUSTOMER_STATUS_CHANGED = "customer.status_changed"
+CUSTOMER_NOTE_ADDED = "customer.note_added"
+CUSTOMER_NOTE_REMOVED = "customer.note_removed"
