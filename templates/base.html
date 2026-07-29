@@ -12,17 +12,28 @@
     main { background: white; border: 1px solid #dfe3e8; border-radius: .75rem; padding: 1.25rem; }
     a { color: #155eef; }
     label { display: block; margin-top: 1rem; font-weight: 600; }
-    input { width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .25rem; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .25rem; }
     button { padding: .7rem 1rem; border: 0; border-radius: .4rem; background: #155eef; color: white; cursor: pointer; }
     .message, .errorlist { padding: .75rem; border-radius: .4rem; background: #fff1f0; color: #9c1c13; }
     .muted { color: #5f6b7a; }
     .inline { display: inline; }
+    nav { display: flex; flex-wrap: wrap; gap: .75rem; }
+    table { width: 100%; border-collapse: collapse; margin-block: 1rem; }
+    th, td { padding: .65rem; border-bottom: 1px solid #dfe3e8; text-align: left; }
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1rem; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+    section { margin-block: 1.5rem; }
   </style>
 </head>
 <body>
   <header>
     <strong>Vidalys Flow</strong>
     {% if request.user.is_authenticated %}
+      <nav aria-label="Navegação principal">
+        <a href="{% url 'organizations:list' %}">Organizações</a>
+        <a href="{% url 'customers:list' %}">Clientes</a>
+        <a href="{% url 'products:list' %}">Produtos</a>
+      </nav>
       <form class="inline" method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit">Sair</button>

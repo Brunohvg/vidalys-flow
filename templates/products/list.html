@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos — Vidalys Flow{% endblock %}
+
+{% block content %}
+  <div class="actions">
+    <div>
+      <h1>Produtos</h1>
+      <p class="muted">{{ organization.name }}</p>
+    </div>
+    <a href="{% url 'products:create' %}">Novo produto</a>
+  </div>
+
+  <form method="get" role="search">
+    <label for="product-search">Buscar por nome, SKU, código de barras ou identificador</label>
+    <input id="product-search" type="search" name="q" value="{{ query }}">
+    <button type="submit">Buscar</button>
+  </form>
+
+  <table>
+    <thead><tr><th>Nome</th><th>Status</th><th>Unidade</th><th>Ação</th></tr></thead>
+    <tbody>
+      {% for product in products %}
+        <tr>
+          <td>{{ product.name }}</td>
+          <td>{{ product.get_status_display }}</td>
+          <td>{{ product.default_unit }}</td>
+          <td><a href="{% url 'products:detail' product_id=product.id %}">Ver detalhes</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">Nenhum produto encontrado nesta organização.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

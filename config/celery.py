@@ -13,5 +13,7 @@ app.autodiscover_tasks(
         "apps.organizations",
         "apps.audit",
         "apps.platform",
+        "apps.customers",
+        "apps.products",
     ]
 )

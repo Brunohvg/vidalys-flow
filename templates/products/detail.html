@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — Vidalys Flow{% endblock %}
+
+{% block content %}
+  <div class="actions">
+    <div>
+      <h1>{{ product.name }}</h1>
+      <p class="muted">{{ organization.name }} · {{ product.get_status_display }}</p>
+    </div>
+    <a href="{% url 'products:edit' product_id=product.id %}">Editar</a>
+  </div>
+
+  <p>{{ product.description|default:"Sem descrição." }}</p>
+  <p>Unidade: {{ product.default_unit }}</p>
+
+  <div class="grid">
+    <section>
+      <h2>Variações</h2>
+      <ul>
+        {% for variant in variants %}
+          <li>{{ variant.name|default:"Sem nome" }} · SKU {{ variant.sku|default:"—" }} · código {{ variant.barcode|default:"—" }}</li>
+        {% empty %}<li>Nenhuma variação cadastrada.</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'products:add-variant' product_id=product.id %}">
+        {% csrf_token %}{{ variant_form.as_p }}<button type="submit">Adicionar variação</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Identificadores</h2>
+      <ul>
+        {% for identifier in identifiers %}
+          <li>{{ identifier.get_kind_display }}: {{ identifier.value }}</li>
+        {% empty %}<li>Nenhum identificador cadastrado.</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'products:add-identifier' product_id=product.id %}">
+        {% csrf_token %}{{ identifier_form.as_p }}<button type="submit">Adicionar identificador</button>
+      </form>
+    </section>
+  </div>
+
+  <section>
+    <h2>Status</h2>
+    <form method="post" action="{% url 'products:change-status' product_id=product.id %}">
+      {% csrf_token %}{{ status_form.as_p }}<button type="submit">Atualizar status</button>
+    </form>
+  </section>
+{% endblock %}
