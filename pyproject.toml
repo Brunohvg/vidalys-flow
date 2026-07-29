@@ -1,0 +1,58 @@
+[project]
+name = "vidalys-flow"
+version = "0.1.0"
+description = "Vidalys Flow — plataforma independente de operação de vendas e pós-venda"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "celery[redis]>=5.5,<6.0",
+    "cryptography>=46.0,<47.0",
+    "dj-database-url>=3.1,<4.0",
+    "django>=5.2,<6.0",
+    "django-cors-headers>=4.9,<5.0",
+    "django-filter>=25.0,<26.0",
+    "djangorestframework>=3.16,<4.0",
+    "drf-spectacular>=0.29,<1.0",
+    "gunicorn>=23.0,<26.0",
+    "psycopg[binary]>=3.2,<4.0",
+    "python-decouple>=3.8,<4.0",
+    "whitenoise>=6.11,<7.0",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.10,<8.0",
+    "pytest>=8.4,<9.0",
+    "pytest-django>=4.11,<5.0",
+    "ruff>=0.12,<1.0",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["apps", "tests"]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+branch = true
+source = ["apps", "config"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [".venv", "staticfiles", "**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "DJ", "UP", "B", "SIM"]
+ignore = ["DJ001"]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405"]
+"apps/*/tests/*.py" = ["DJ008"]
+"tests/*.py" = ["DJ008"]

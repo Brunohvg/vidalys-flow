@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Vidalys Flow{% endblock %}</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #f6f7f9; color: #18202a; }
+    header, main { width: min(68rem, calc(100% - 2rem)); margin-inline: auto; }
+    header { display: flex; align-items: center; justify-content: space-between; padding-block: 1rem; }
+    main { background: white; border: 1px solid #dfe3e8; border-radius: .75rem; padding: 1.25rem; }
+    a { color: #155eef; }
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+    input { width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .25rem; }
+    button { padding: .7rem 1rem; border: 0; border-radius: .4rem; background: #155eef; color: white; cursor: pointer; }
+    .message, .errorlist { padding: .75rem; border-radius: .4rem; background: #fff1f0; color: #9c1c13; }
+    .muted { color: #5f6b7a; }
+    .inline { display: inline; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Vidalys Flow</strong>
+    {% if request.user.is_authenticated %}
+      <form class="inline" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Sair</button>
+      </form>
+    {% endif %}
+  </header>
+  <main>
+    {% for message in messages %}<p class="message">{{ message }}</p>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
