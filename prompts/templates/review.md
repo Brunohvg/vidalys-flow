@@ -2,7 +2,8 @@
 
 Papel: {{ROLE}}
 Fase: {{PHASE_ID}} — {{PHASE_NAME}}
-Base: `{{BASE_SHA}}`
+Dependência aprovada: `{{DEPENDENCY_HEAD}}`
+Referência de baseline: `{{BASE_REF}}`
 Branch candidata: `{{BRANCH}}`
 
 ## Escopo permitido

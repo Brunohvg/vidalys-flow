@@ -44,7 +44,14 @@ manifesto da fase e a documentação específica do domínio.
 
 ## Git e branches
 
-- Cada fase nasce de `main` no `approved_head` registrado no estado.
+- Cada fase nasce do SHA atual de `origin/main`, a `baseline_branch`.
+- `origin/main` deve conter `approved_phase_head` como ancestral. Esse último
+  SHA é evidência da fase de produto aprovada, não a base exata obrigatória.
+- Antes de criar a branch, resolva `git rev-parse origin/main` e registre o
+  resultado como `actual_base_sha`; no handoff ele ocupa `base_sha`.
+- Valide a dependência de produto pelo `dependency_head` do manifesto.
+- Commits de governança aprovados podem existir entre `approved_phase_head` e
+  a baseline; código de domínio não aprovado não pode existir nesse intervalo.
 - Use uma branch exclusiva por fase/agente; dois agentes não atuam
   simultaneamente na mesma branch.
 - Não faça force-push, rebase destrutivo, reescrita de histórico, merge, PR,
@@ -61,7 +68,8 @@ checkpoint.
 
 - O implementador não revisa nem aprova o próprio trabalho.
 - Nenhum agente altera uma fase para `approved`, nem modifica
-  `approved_phase`, `approved_head` ou `human_approval_status` para aprovado.
+  `approved_phase`, `approved_phase_head` ou `human_approval_status` para
+  aprovado.
 - Somente aprovação humana explícita pode autorizar avanço, merge, release e
   atualização do estado oficial.
 - Um reviewer registra achados; não corrige silenciosamente.

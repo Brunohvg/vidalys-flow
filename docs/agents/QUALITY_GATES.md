@@ -7,6 +7,11 @@ executáveis complementares são `scripts/check_secrets.py` e
 ## Gates mínimos
 
 - escopo permitido e proibido conferido no manifesto;
+- `approved_phase_head` é ancestral da baseline e do candidato;
+- commits entre a fase aprovada e a baseline alteram somente caminhos de
+  governança permitidos;
+- `dependency_head` coincide com a fase aprovada no roadmap;
+- `base_sha` do handoff registra o `actual_base_sha` usado;
 - organização explícita e teste cross-tenant para toda entidade operacional;
 - migrations novas aplicadas e revertidas tecnicamente em PostgreSQL;
 - testes de sucesso, erro, autorização, isolamento, idempotência e

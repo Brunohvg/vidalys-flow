@@ -2,7 +2,8 @@
 
 Papel: {{ROLE}}
 Fase: {{PHASE_ID}} — {{PHASE_NAME}}
-Base: `{{BASE_SHA}}`
+Dependência aprovada: `{{DEPENDENCY_HEAD}}`
+Referência de baseline: `{{BASE_REF}}`
 Branch: `{{BRANCH}}`
 
 ## Escopo permitido
@@ -13,8 +14,10 @@ Branch: `{{BRANCH}}`
 
 {{FORBIDDEN_SCOPE}}
 
-Implemente somente o plano aprovado, preserve o estado oficial e produza um
-candidato e um handoff validável.
+Antes de criar ou usar a branch, resolva `origin/{{BASE_REF}}` e registre o
+SHA como `actual_base_sha`. Implemente somente o plano aprovado, preserve o
+estado oficial e produza um candidato e um handoff cujo `base_sha` seja esse
+SHA real.
 
 ## Checks
 

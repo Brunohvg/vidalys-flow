@@ -2,18 +2,21 @@
 
 O fluxo padrão de uma fase é:
 
-1. confirmar `main` no `approved_head`;
-2. criar `phase/<id>-<name>` a partir desse commit;
-3. renderizar e executar o planejamento;
-4. aguardar aprovação humana do plano;
-5. renderizar e executar a implementação;
-6. validar o handoff do implementador;
-7. executar review independente;
-8. executar QA e segurança;
-9. entregar relatório consolidado;
-10. aguardar aprovação humana da fase;
-11. preparar PR e merge somente quando autorizados;
-12. atualizar o estado oficial por ação de aprovação humana.
+1. confirmar que `origin/main` contém `approved_phase_head` como ancestral;
+2. confirmar que o intervalo contém somente produto ou governança aprovados;
+3. resolver `git rev-parse origin/main` como `actual_base_sha`;
+4. validar `dependency_head` contra a fase dependida no roadmap;
+5. criar `phase/<id>-<name>` no `actual_base_sha`;
+6. renderizar e executar o planejamento;
+7. aguardar aprovação humana do plano;
+8. renderizar e executar a implementação;
+9. validar o handoff, cujo `base_sha` registra `actual_base_sha`;
+10. executar review independente;
+11. executar QA e segurança;
+12. entregar relatório consolidado;
+13. aguardar aprovação humana da fase;
+14. preparar PR e merge somente quando autorizados;
+15. atualizar o estado oficial por ação de aprovação humana.
 
 ## Exemplo: Fase 3
 

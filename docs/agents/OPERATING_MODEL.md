@@ -4,9 +4,14 @@ O repositório é a fonte portátil de verdade para planejamento, execução,
 revisão e aprovação. Cada sessão começa pela leitura de `AGENTS.md`,
 `project/state.json`, `project/constraints.json` e do manifesto da fase.
 
-Uma fase é um candidato imutavelmente baseado no último SHA aprovado. Seus
-cinco estados de checkpoint são independentes: plano, implementação, revisão,
-QA/segurança e aprovação humana. Nenhum resultado técnico equivale a
+Uma fase é um candidato criado no SHA atual da baseline `origin/main`.
+`approved_phase_head` preserva a última evidência de produto,
+`dependency_head` comprova a dependência funcional e `base_sha` no handoff
+registra o `actual_base_sha` realmente usado. Governança aprovada pode avançar
+a baseline sem reclassificar o HEAD histórico da fase anterior.
+
+Os cinco estados de checkpoint são independentes: plano, implementação,
+revisão, QA/segurança e aprovação humana. Nenhum resultado técnico equivale a
 aprovação do produto.
 
 ## Separação de responsabilidade

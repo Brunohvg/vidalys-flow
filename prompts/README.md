@@ -20,6 +20,11 @@ Inicie apenas o planejamento da Fase 3:
 python scripts/agent_orchestrator.py render planning 03
 ```
 
+O prompt informa `dependency_head` e `base_ref`, mas não inventa o SHA da
+baseline. Antes da futura criação da branch, o executor deverá resolver
+`git rev-parse origin/main`, registrar o resultado como `actual_base_sha` no
+relatório e como `base_sha` no handoff.
+
 Após aprovação humana explícita do plano e atualização manual de
 `plan_status` para `approved`:
 

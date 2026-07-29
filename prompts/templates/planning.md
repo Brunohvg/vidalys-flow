@@ -2,7 +2,8 @@
 
 Papel: {{ROLE}}
 Fase: {{PHASE_ID}} — {{PHASE_NAME}}
-Base: `{{BASE_SHA}}`
+Dependência aprovada: `{{DEPENDENCY_HEAD}}`
+Referência de baseline: `{{BASE_REF}}`
 Branch proposta: `{{BRANCH}}`
 
 ## Escopo permitido
@@ -16,8 +17,9 @@ Branch proposta: `{{BRANCH}}`
 ## Trabalho e checks
 
 Audite somente as referências autorizadas, declare regras, riscos,
-dependências, estados e decisões que exigem aprovação. Não modifique código de
-domínio.
+dependências, estados e decisões que exigem aprovação. Confirme que o executor
+deverá registrar `actual_base_sha` antes de criar a branch. Não modifique
+código de domínio.
 
 {{CHECKS}}
 

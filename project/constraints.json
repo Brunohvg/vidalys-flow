@@ -5,6 +5,7 @@
     "phase_scope": "project/phases/<id>-<name>.json",
     "executable_independence_rules": "scripts/check_independence.py",
     "executable_secret_rules": "scripts/check_secrets.py",
+    "executable_baseline_rules": "scripts/check_governance_baseline.py",
     "quality_gates": "docs/agents/QUALITY_GATES.md",
     "precedence": [
       "human approval explicitly recorded in project/state.json",
@@ -42,6 +43,19 @@
     "branch deletion without explicit authorization",
     "merge without human approval",
     "creating a phase from an unapproved candidate"
+  ],
+  "governance_baseline_allowed_paths": [
+    "AGENTS.md",
+    "project/",
+    "docs/agents/",
+    "prompts/",
+    "scripts/agent_orchestrator.py",
+    "scripts/check_governance_baseline.py",
+    "scripts/check_independence.py",
+    "scripts/check_secrets.py",
+    "tests/test_agent_orchestrator.py",
+    "tests/test_governance_baseline.py",
+    ".github/workflows/"
   ],
   "forbidden_database_operations": [
     "SQLite domain tests",

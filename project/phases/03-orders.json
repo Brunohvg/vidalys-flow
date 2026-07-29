@@ -1,8 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "id": 3,
   "name": "Orders",
-  "base_sha": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+  "dependency_phase": 2,
+  "dependency_head": "b28a019871274e9da1ca1cb65043c5e208b0e727",
+  "base_ref": "main",
   "branch": "phase/03-orders",
   "status": "planned",
   "plan_status": "pending",
@@ -49,9 +51,6 @@
       "rejected"
     ]
   },
-  "dependencies": [
-    2
-  ],
   "allowed_apps": [
     "orders",
     "audit",
@@ -211,7 +210,9 @@
     "required_sections": [
       "checkpoint",
       "branch",
-      "base_sha",
+      "dependency_head",
+      "base_ref",
+      "actual_base_sha",
       "candidate_head",
       "scope_delivered",
       "files_changed",
@@ -227,6 +228,7 @@
   },
   "handoff_format": {
     "path": "project/handoffs/phase-03.json",
+    "base_sha_semantics": "The exact origin/main SHA resolved before branch creation; this is actual_base_sha in checkpoint reports.",
     "required_fields": [
       "schema_version",
       "phase_id",
