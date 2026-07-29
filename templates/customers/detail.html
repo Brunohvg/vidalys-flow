@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.display_name }} — Vidalys Flow{% endblock %}
+
+{% block content %}
+  <div class="actions">
+    <div>
+      <h1>{{ customer.display_name }}</h1>
+      <p class="muted">{{ organization.name }} · {{ customer.get_status_display }}</p>
+    </div>
+    <a href="{% url 'customers:edit' customer_id=customer.id %}">Editar</a>
+  </div>
+
+  <dl>
+    <dt>Tipo</dt><dd>{{ customer.get_customer_type_display }}</dd>
+    <dt>Razão social</dt><dd>{{ customer.legal_name|default:"—" }}</dd>
+    <dt>Documento</dt><dd>{{ detail.document|default:"—" }}</dd>
+  </dl>
+
+  <div class="grid">
+    <section>
+      <h2>Contatos</h2>
+      <ul>
+        {% for contact in detail.contacts %}
+          <li>{{ contact.kind }}: {{ contact.value }}{% if contact.is_primary %} (principal){% endif %}</li>
+        {% empty %}<li>Nenhum contato cadastrado.</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'customers:add-contact' customer_id=customer.id %}">
+        {% csrf_token %}{{ contact_form.as_p }}<button type="submit">Adicionar contato</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Endereços</h2>
+      <ul>
+        {% for address in detail.addresses %}
+          <li>{{ address }}{% if address.is_default_shipping %} (entrega padrão){% endif %}</li>
+        {% empty %}<li>Nenhum endereço cadastrado.</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'customers:add-address' customer_id=customer.id %}">
+        {% csrf_token %}{{ address_form.as_p }}<button type="submit">Adicionar endereço</button>
+      </form>
+    </section>
+  </div>
+
+  <section>
+    <h2>Notas operacionais</h2>
+    <ul>
+      {% for note in detail.notes %}
+        <li>{{ note.content }} — {{ note.author.get_full_name|default:note.author.email }}</li>
+      {% empty %}<li>Nenhuma nota cadastrada.</li>{% endfor %}
+    </ul>
+    <form method="post" action="{% url 'customers:add-note' customer_id=customer.id %}">
+      {% csrf_token %}{{ note_form.as_p }}<button type="submit">Adicionar nota</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Status</h2>
+    <form method="post" action="{% url 'customers:change-status' customer_id=customer.id %}">
+      {% csrf_token %}{{ status_form.as_p }}<button type="submit">Atualizar status</button>
+    </form>
+  </section>
+
+  {% if can_merge %}
+    <section>
+      <h2>Mesclar cliente</h2>
+      <p>A origem ficará inativa e apontará para o cliente destino. A operação é auditada.</p>
+      <form method="post" action="{% url 'customers:merge' customer_id=customer.id %}">
+        {% csrf_token %}{{ merge_form.as_p }}<button type="submit">Mesclar</button>
+      </form>
+    </section>
+  {% endif %}
+{% endblock %}

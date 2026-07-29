@@ -10,6 +10,10 @@
         <li>
           <strong>{{ membership.organization.name }}</strong>
           <span class="muted">— {{ membership.get_role_display }}</span>
+          <form class="inline" method="post" action="{% url 'organizations:select' organization_id=membership.organization.id %}">
+            {% csrf_token %}
+            <button type="submit">Acessar</button>
+          </form>
         </li>
       {% endfor %}
     </ul>

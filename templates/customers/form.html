@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{% if creating %}Novo cliente{% else %}Editar cliente{% endif %} — Vidalys Flow{% endblock %}
+
+{% block content %}
+  <h1>{% if creating %}Novo cliente{% else %}Editar {{ customer.display_name }}{% endif %}</h1>
+  <p class="muted">{{ organization.name }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+  </form>
+{% endblock %}

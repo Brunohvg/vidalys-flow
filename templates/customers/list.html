@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes — Vidalys Flow{% endblock %}
+
+{% block content %}
+  <div class="actions">
+    <div>
+      <h1>Clientes</h1>
+      <p class="muted">{{ organization.name }}</p>
+    </div>
+    <a href="{% url 'customers:create' %}">Novo cliente</a>
+  </div>
+
+  <form method="get" role="search">
+    <label for="customer-search">Buscar por nome, documento, telefone ou e-mail</label>
+    <input id="customer-search" type="search" name="q" value="{{ query }}">
+    <button type="submit">Buscar</button>
+  </form>
+
+  <table>
+    <thead><tr><th>Nome</th><th>Tipo</th><th>Status</th><th>Ação</th></tr></thead>
+    <tbody>
+      {% for customer in customers %}
+        <tr>
+          <td>{{ customer.display_name }}</td>
+          <td>{{ customer.get_customer_type_display }}</td>
+          <td>{{ customer.get_status_display }}</td>
+          <td><a href="{% url 'customers:detail' customer_id=customer.id %}">Ver detalhes</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">Nenhum cliente encontrado nesta organização.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
