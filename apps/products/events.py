@@ -1,0 +1,5 @@
+PRODUCT_CREATED = "product.created"
+PRODUCT_UPDATED = "product.updated"
+PRODUCT_STATUS_CHANGED = "product.status_changed"
+PRODUCT_VARIANT_CREATED = "product.variant_created"
+PRODUCT_IDENTIFIER_ADDED = "product.identifier_added"
