@@ -36,16 +36,18 @@ def test_valid_state_and_all_artifacts(repository):
     repository.validate_all()
 
     assert state["approved_phase"] == 2
+    assert state["approved_phase_head"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
+    assert state["baseline_branch"] == "main"
     assert state["active_candidate"] is None
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):
     path = governance_root / "project/state.json"
     state = load_json(path)
-    state["approved_head"] = "invalid"
+    state["approved_phase_head"] = "invalid"
     write_json(path, state)
 
-    with pytest.raises(GovernanceError, match="approved_head"):
+    with pytest.raises(GovernanceError, match="approved_phase_head"):
         GovernanceRepository(governance_root).validate_state()
 
 
@@ -65,13 +67,30 @@ def test_unapproved_dependency_is_rejected(governance_root):
         GovernanceRepository(governance_root).validate_phase(3)
 
 
-def test_phase_base_must_match_approved_head(governance_root):
+def test_dependency_head_must_match_approved_dependency(governance_root):
     path = governance_root / "project/phases/03-orders.json"
     phase = load_json(path)
-    phase["base_sha"] = "0" * 40
+    phase["dependency_head"] = "0" * 40
     write_json(path, phase)
 
-    with pytest.raises(GovernanceError, match="base differs"):
+    with pytest.raises(GovernanceError, match="dependency_head differs"):
+        GovernanceRepository(governance_root).validate_phase(3)
+
+
+def test_phase_uses_main_as_unresolved_baseline(repository):
+    phase = repository.validate_phase(3)
+
+    assert phase["base_ref"] == "main"
+    assert "base_sha" not in phase
+
+
+def test_wrong_baseline_reference_is_rejected(governance_root):
+    path = governance_root / "project/phases/03-orders.json"
+    phase = load_json(path)
+    phase["base_ref"] = "chore/candidate"
+    write_json(path, phase)
+
+    with pytest.raises(GovernanceError, match="base_ref differs"):
         GovernanceRepository(governance_root).validate_phase(3)
 
 
@@ -117,6 +136,8 @@ def test_rendering_is_deterministic(repository):
     assert first == second
     assert "Planning Agent" in first
     assert "b28a019871274e9da1ca1cb65043c5e208b0e727" in first
+    assert "Referência de baseline: `main`" in first
+    assert "actual_base_sha" in first
 
 
 def test_environment_secrets_are_never_rendered(repository, monkeypatch):
@@ -170,3 +191,42 @@ def test_cli_errors_return_nonzero(capsys):
 def test_handoff_path_cannot_escape_repository(repository):
     with pytest.raises(GovernanceError, match="handoff must be"):
         repository.validate_handoff("project/state.json")
+
+
+def test_future_handoff_records_actual_base_sha(governance_root):
+    path = governance_root / "project/handoffs/phase-03.json"
+    handoff = {
+        "schema_version": 1,
+        "phase_id": 3,
+        "phase_name": "Orders",
+        "status": "candidate",
+        "branch": "phase/03-orders",
+        "base_sha": "f2fdc8e2283c905be1547528d83fd0ba6de06612",
+        "head_sha": "2" * 40,
+        "commits": [{"sha": "2" * 40, "subject": "candidate"}],
+        "delivered_scope": [],
+        "models": [],
+        "migrations": [],
+        "tests": {},
+        "scans": {},
+        "ci": {},
+        "organization_isolation": {},
+        "legacy_reuse": {},
+        "deferred": [],
+        "risks": [],
+        "blockers": [],
+        "human_approval": {"status": "pending", "evidence": "not_recorded"},
+    }
+    write_json(path, handoff)
+
+    validated = GovernanceRepository(governance_root).validate_handoff("project/handoffs/phase-03.json")
+
+    assert validated["base_sha"] == "f2fdc8e2283c905be1547528d83fd0ba6de06612"
+
+
+def test_phase_two_historical_head_is_preserved(repository):
+    roadmap = repository.validate_roadmap()
+    handoff = repository.validate_handoff("project/handoffs/phase-02.json")
+
+    assert roadmap["phases"][2]["approved_sha"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
+    assert handoff["head_sha"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"

@@ -58,7 +58,9 @@ PHASE_REQUIRED_FIELDS = {
     "schema_version",
     "id",
     "name",
-    "base_sha",
+    "dependency_phase",
+    "dependency_head",
+    "base_ref",
     "branch",
     "status",
     "plan_status",
@@ -67,7 +69,6 @@ PHASE_REQUIRED_FIELDS = {
     "qa_status",
     "human_approval_status",
     "allowed_status_values",
-    "dependencies",
     "allowed_apps",
     "forbidden_apps",
     "expected_models",
@@ -96,7 +97,8 @@ TEMPLATE_TOKENS = {
         "ROLE",
         "PHASE_ID",
         "PHASE_NAME",
-        "BASE_SHA",
+        "DEPENDENCY_HEAD",
+        "BASE_REF",
         "BRANCH",
         "ALLOWED_SCOPE",
         "FORBIDDEN_SCOPE",
@@ -108,7 +110,8 @@ TEMPLATE_TOKENS = {
         "ROLE",
         "PHASE_ID",
         "PHASE_NAME",
-        "BASE_SHA",
+        "DEPENDENCY_HEAD",
+        "BASE_REF",
         "BRANCH",
         "ALLOWED_SCOPE",
         "FORBIDDEN_SCOPE",
@@ -120,7 +123,8 @@ TEMPLATE_TOKENS = {
         "ROLE",
         "PHASE_ID",
         "PHASE_NAME",
-        "BASE_SHA",
+        "DEPENDENCY_HEAD",
+        "BASE_REF",
         "BRANCH",
         "ALLOWED_SCOPE",
         "FORBIDDEN_SCOPE",
@@ -132,14 +136,15 @@ TEMPLATE_TOKENS = {
         "ROLE",
         "PHASE_ID",
         "PHASE_NAME",
-        "BASE_SHA",
+        "DEPENDENCY_HEAD",
+        "BASE_REF",
         "BRANCH",
         "ALLOWED_SCOPE",
         "FORBIDDEN_SCOPE",
         "CHECKS",
         "REPORT_FORMAT",
     },
-    "approval": {"PHASE_ID", "PHASE_NAME", "BASE_SHA", "BRANCH"},
+    "approval": {"PHASE_ID", "PHASE_NAME", "DEPENDENCY_HEAD", "BASE_REF", "BRANCH"},
 }
 
 
@@ -227,8 +232,8 @@ class GovernanceRepository:
                 "repository",
                 "approved_phase",
                 "approved_phase_name",
-                "approved_head",
-                "default_branch",
+                "approved_phase_head",
+                "baseline_branch",
                 "next_phase",
                 "next_phase_name",
                 "active_candidate",
@@ -236,23 +241,30 @@ class GovernanceRepository:
             },
             "project/state.json",
         )
-        if state["schema_version"] != 1:
+        if state["schema_version"] != 2:
             raise GovernanceError("unsupported state schema_version")
         if state["product"] != "Vidalys Flow" or state["repository"] != "Brunohvg/vidalys-flow":
             raise GovernanceError("state identifies a different product or repository")
-        _require_sha(state["approved_head"], "state approved_head")
+        if "approved_head" in state or "default_branch" in state:
+            raise GovernanceError("state contains an obsolete ambiguous baseline field")
+        _require_sha(state["approved_phase_head"], "state approved_phase_head")
         if not isinstance(state["approved_phase"], int) or state["approved_phase"] < 0:
             raise GovernanceError("approved_phase must be a non-negative integer")
         if state["next_phase"] != state["approved_phase"] + 1:
             raise GovernanceError("next_phase must immediately follow approved_phase")
-        if state["default_branch"] != "main":
-            raise GovernanceError("default_branch must be main")
+        if state["baseline_branch"] != "main":
+            raise GovernanceError("baseline_branch must be main")
         if state["active_candidate"] is not None:
             candidate = _require_mapping(state["active_candidate"], "active_candidate")
-            _require_fields(candidate, {"phase", "branch", "base_sha"}, "active_candidate")
-            _require_sha(candidate["base_sha"], "active_candidate base_sha")
-            if candidate["phase"] != state["next_phase"] or candidate["base_sha"] != state["approved_head"]:
-                raise GovernanceError("active_candidate must describe the next phase on approved_head")
+            _require_fields(
+                candidate,
+                {"phase", "branch", "base_ref", "actual_base_sha", "dependency_head"},
+                "active_candidate",
+            )
+            _require_sha(candidate["actual_base_sha"], "active_candidate actual_base_sha")
+            _require_sha(candidate["dependency_head"], "active_candidate dependency_head")
+            if candidate["phase"] != state["next_phase"] or candidate["base_ref"] != state["baseline_branch"]:
+                raise GovernanceError("active_candidate must describe the next phase on the baseline branch")
         if state["human_approval_required"] is not True:
             raise GovernanceError("human_approval_required must be true")
         return state
@@ -307,8 +319,8 @@ class GovernanceRepository:
                 raise GovernanceError(f"future roadmap phase {phase_id} cannot be approved")
 
         approved = phases[state["approved_phase"]]
-        if approved["approved_sha"] != state["approved_head"]:
-            raise GovernanceError("roadmap approved SHA differs from state approved_head")
+        if approved["approved_sha"] != state["approved_phase_head"]:
+            raise GovernanceError("roadmap approved SHA differs from state approved_phase_head")
         if approved["name"] != state["approved_phase_name"]:
             raise GovernanceError("roadmap approved phase name differs from state")
         if phases[state["next_phase"]]["name"] != state["next_phase_name"]:
@@ -345,11 +357,15 @@ class GovernanceRepository:
         roadmap = self.validate_roadmap()
         manifest = self.phase(phase_id)
         _require_fields(manifest, PHASE_REQUIRED_FIELDS, f"phase {phase_id:02d}")
-        if manifest["schema_version"] != 1 or manifest["id"] != phase_id:
+        if manifest["schema_version"] != 2 or manifest["id"] != phase_id:
             raise GovernanceError(f"phase {phase_id:02d} identity or schema is invalid")
-        _require_sha(manifest["base_sha"], f"phase {phase_id:02d} base_sha")
-        if phase_id == state["next_phase"] and manifest["base_sha"] != state["approved_head"]:
-            raise GovernanceError(f"phase {phase_id:02d} base differs from approved_head")
+        if "base_sha" in manifest:
+            raise GovernanceError(f"phase {phase_id:02d} must not invent an actual baseline SHA")
+        _require_sha(manifest["dependency_head"], f"phase {phase_id:02d} dependency_head")
+        if not isinstance(manifest["dependency_phase"], int):
+            raise GovernanceError(f"phase {phase_id:02d} dependency_phase must be an integer")
+        if manifest["base_ref"] != state["baseline_branch"]:
+            raise GovernanceError(f"phase {phase_id:02d} base_ref differs from baseline_branch")
         if manifest["branch"] != f"phase/{phase_id:02d}-{manifest['name'].lower().replace(' ', '-')}":
             raise GovernanceError(f"phase {phase_id:02d} branch does not follow the phase convention")
 
@@ -370,18 +386,24 @@ class GovernanceRepository:
                 raise GovernanceError(f"phase {phase_id:02d} declares divergent values for {field}")
 
         roadmap_phases = {phase["id"]: phase for phase in roadmap["phases"]}
-        dependencies = manifest["dependencies"]
-        if not isinstance(dependencies, list) or not dependencies:
-            raise GovernanceError(f"phase {phase_id:02d} must declare dependencies")
-        for dependency in dependencies:
-            dependency_phase = roadmap_phases.get(dependency)
-            if (
-                dependency_phase is None
-                or dependency_phase["status"] != "approved"
-                or dependency_phase["human_approval_status"] != "approved"
-                or dependency_phase["approved_sha"] is None
-            ):
-                raise GovernanceError(f"phase {phase_id:02d} dependency {dependency} is not approved")
+        roadmap_phase = roadmap_phases.get(phase_id)
+        dependency = manifest["dependency_phase"]
+        dependency_phase = roadmap_phases.get(dependency)
+        if roadmap_phase is None or roadmap_phase["dependencies"] != [dependency]:
+            raise GovernanceError(f"phase {phase_id:02d} dependency differs from roadmap")
+        if (
+            dependency_phase is None
+            or dependency_phase["status"] != "approved"
+            or dependency_phase["human_approval_status"] != "approved"
+            or dependency_phase["approved_sha"] is None
+        ):
+            raise GovernanceError(f"phase {phase_id:02d} dependency {dependency} is not approved")
+        if manifest["dependency_head"] != dependency_phase["approved_sha"]:
+            raise GovernanceError(f"phase {phase_id:02d} dependency_head differs from roadmap approved SHA")
+        if state["active_candidate"] is not None:
+            candidate = state["active_candidate"]
+            if candidate["dependency_head"] != manifest["dependency_head"]:
+                raise GovernanceError("active_candidate dependency_head differs from phase manifest")
 
         if phase_id > state["approved_phase"] and (
             manifest["status"] == "approved" or manifest["human_approval_status"] == "approved"
@@ -415,7 +437,7 @@ class GovernanceRepository:
         phase_id = handoff["phase_id"]
         if not isinstance(phase_id, int) or phase_id < 1:
             raise GovernanceError("handoff phase_id must be a positive integer")
-        _require_sha(handoff["base_sha"], "handoff base_sha", nullable=True)
+        _require_sha(handoff["base_sha"], "handoff base_sha", nullable=phase_id == 1)
         _require_sha(handoff["head_sha"], "handoff head_sha")
         if not isinstance(handoff["commits"], list) or not handoff["commits"]:
             raise GovernanceError("handoff commits must not be empty")
@@ -497,7 +519,8 @@ class GovernanceRepository:
             "ROLE": ROLES[checkpoint],
             "PHASE_ID": f"{phase_id:02d}",
             "PHASE_NAME": manifest["name"],
-            "BASE_SHA": manifest["base_sha"],
+            "DEPENDENCY_HEAD": manifest["dependency_head"],
+            "BASE_REF": manifest["base_ref"],
             "BRANCH": manifest["branch"],
             "ALLOWED_SCOPE": _bullets(manifest["allowed_scope"]),
             "FORBIDDEN_SCOPE": _bullets(manifest["forbidden_scope"]),
@@ -530,8 +553,8 @@ class GovernanceRepository:
             ("repository", state["repository"]),
             ("approved_phase", state["approved_phase"]),
             ("approved_phase_name", state["approved_phase_name"]),
-            ("approved_head", state["approved_head"]),
-            ("default_branch", state["default_branch"]),
+            ("approved_phase_head", state["approved_phase_head"]),
+            ("baseline_branch", state["baseline_branch"]),
             ("next_phase", state["next_phase"]),
             ("next_phase_name", state["next_phase_name"]),
             ("active_candidate", state["active_candidate"]),
