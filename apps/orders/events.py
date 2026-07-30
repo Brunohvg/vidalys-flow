@@ -1,0 +1,7 @@
+ORDER_CREATED = "order.created"
+ORDER_CUSTOMER_CHANGED = "order.customer_changed"
+ORDER_ITEM_ADDED = "order.item_added"
+ORDER_ITEM_UPDATED = "order.item_updated"
+ORDER_ITEM_REMOVED = "order.item_removed"
+ORDER_CONFIRMED = "order.confirmed"
+ORDER_CANCELLED = "order.cancelled"

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Novo pedido — Vidalys Flow{% endblock %}
+{% block content %}
+  <h1>Novo pedido</h1>
+  <p class="muted">{{ organization.name }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Criar rascunho</button>
+  </form>
+{% endblock %}

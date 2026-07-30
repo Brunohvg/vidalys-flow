@@ -9,7 +9,7 @@ def test_executable_code_is_independent():
 
 
 def test_domain_services_and_selectors_require_explicit_organization():
-    for domain in ("customers", "products"):
+    for domain in ("customers", "products", "orders"):
         for module in ("services.py", "selectors.py"):
             path = Path("apps") / domain / module
             tree = ast.parse(path.read_text(encoding="utf-8"))
