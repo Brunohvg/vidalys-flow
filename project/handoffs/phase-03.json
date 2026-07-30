@@ -5,14 +5,14 @@
   "status": "candidate",
   "branch": "phase/03-orders",
   "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
-  "head_sha": "92d40267c30591343a329083980d657da1c40b62",
+  "head_sha": "92d402684cb1c85f9c02027b756500321d15009e",
   "commits": [
     {
       "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
       "subject": "feat(orders): implement organization-scoped order lifecycle"
     },
     {
-      "sha": "92d40267c30591343a329083980d657da1c40b62",
+      "sha": "92d402684cb1c85f9c02027b756500321d15009e",
       "subject": "fix(orders): handle replay after item removal"
     }
   ],
@@ -58,7 +58,7 @@
   "ci": {
     "workflow_id": "not_recorded",
     "url": "not_recorded",
-    "head_sha": "92d40267c30591343a329083980d657da1c40b62",
+    "head_sha": "92d402684cb1c85f9c02027b756500321d15009e",
     "conclusion": "not_run"
   },
   "organization_isolation": {
