@@ -20,6 +20,7 @@ from apps.orders.events import (
 )
 from apps.orders.exceptions import (
     ConfirmationBlocked,
+    IdempotencyConflict,
     InvalidItem,
     OrderNotEditable,
     OrderPermissionDenied,
@@ -107,8 +108,18 @@ def _outbox(*, order, event_type, command_id):
 
 def _existing_result(receipt, *, item=False):
     if item:
-        return OrderItem.objects.get(order=receipt.order, id=receipt.result_item_id)
-    return Order.objects.get(id=receipt.order_id)
+        result = OrderItem.objects.filter(
+            organization=receipt.organization,
+            order=receipt.order,
+            id=receipt.result_item_id,
+        ).first()
+        if result is None:
+            raise IdempotencyConflict("O item resultante deste comando não existe mais.")
+        return result
+    result = Order.objects.filter(organization=receipt.organization, id=receipt.order_id).first()
+    if result is None:
+        raise IdempotencyConflict("O pedido resultante deste comando não existe mais.")
+    return result
 
 
 def _recalculate(order):

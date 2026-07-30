@@ -193,6 +193,39 @@ def test_add_item_command_is_idempotent(organization, order, user):
 
 
 @pytest.mark.django_db
+def test_retry_of_item_command_reports_result_removed(organization, order, user):
+    command_key = key()
+    item = add_item(
+        organization=organization,
+        order=order,
+        actor=user,
+        expected_version=1,
+        idempotency_key=command_key,
+        name="Item",
+        quantity=1,
+        unit_price=10,
+    )
+    remove_item(
+        organization=organization,
+        item=item,
+        actor=user,
+        expected_version=2,
+        idempotency_key=key(),
+    )
+    with pytest.raises(IdempotencyConflict, match="não existe mais"):
+        add_item(
+            organization=organization,
+            order=order,
+            actor=user,
+            expected_version=1,
+            idempotency_key=command_key,
+            name="Item",
+            quantity=1,
+            unit_price=10,
+        )
+
+
+@pytest.mark.django_db
 def test_operator_cannot_apply_discount_or_surcharge(organization, order, user):
     with pytest.raises(OrderPermissionDenied):
         add_item(
