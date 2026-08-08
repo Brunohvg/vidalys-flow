@@ -66,11 +66,11 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": null,
-    "url": null,
+    "workflow_id": 31259856105,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31259856105",
     "head_sha": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
-    "run_attempt": null,
-    "conclusion": "pending"
+    "run_attempt": 1,
+    "conclusion": "success"
   },
   "organization_isolation": {
     "status": "passed",
@@ -94,7 +94,6 @@
     "The order-cancellation consumer shares the internal default Celery queue and must be observed for retry/backlog behavior in later homologation."
   ],
   "blockers": [
-    "GitHub Actions has not yet run on the remediated candidate HEAD.",
     "A new independent Review is required after successful CI."
   ],
   "review": {
