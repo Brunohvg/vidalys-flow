@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/03-orders",
   "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
-  "head_sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
+  "head_sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
   "commits": [
     {
       "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
@@ -16,16 +16,12 @@
       "subject": "fix(orders): handle replay after item removal"
     },
     {
-      "sha": "af527afff78a240972f8dd4795d587176874cab3",
-      "subject": "docs(orders): record phase 03 candidate handoff"
-    },
-    {
-      "sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
-      "subject": "docs(orders): correct candidate head evidence"
-    },
-    {
       "sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
       "subject": "docs: synchronize phase 03 project status"
+    },
+    {
+      "sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
+      "subject": "fix(orders): resolve independent review blockers"
     }
   ],
   "delivered_scope": [
@@ -47,7 +43,7 @@
     "apps/orders/migrations/0001_initial.py"
   ],
   "tests": {
-    "count": 169,
+    "count": 172,
     "skipped": 5,
     "coverage_percent": 86,
     "database": "PostgreSQL 17",
@@ -68,9 +64,9 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 31235156568,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31235156568",
-    "head_sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
+    "workflow_id": 31235650552,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31235650552",
+    "head_sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
     "run_attempt": 1,
     "conclusion": "success"
   },
