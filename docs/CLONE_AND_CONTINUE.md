@@ -20,15 +20,25 @@ antes de continuar.
 
 ## Ambiente local reproduzível
 
-Requisitos: Git, Docker com Compose e, para execução direta, Python 3.12 e
-`uv`. Não use SQLite.
+Requisitos: Git e Docker com Compose. Python 3.12, PostgreSQL 17, Redis,
+Gunicorn, Celery e `uv` são fornecidos pelas imagens. Não use SQLite.
 
 ```bash
 cp .env.example .env
-docker compose up -d db redis
-uv sync --frozen --group dev
-uv run python manage.py migrate
-uv run python manage.py check
+docker compose up --build -d
+docker compose ps
+```
+
+O Compose aguarda banco e Redis saudáveis, aplica migrations e inicia web,
+worker e Beat na ordem correta. Assim, a máquina não precisa de banco, broker
+ou runtime Python instalados fora do Docker.
+
+Em WSL sem `systemd`, o Docker Engine local pode precisar ser iniciado após
+abrir a distribuição:
+
+```bash
+sudo service docker start
+docker info
 ```
 
 Alternativamente, todo o gate pode rodar em containers:

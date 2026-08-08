@@ -2,30 +2,47 @@
 
 ## Ambiente
 
-Use Python 3.12, PostgreSQL 17 e Redis. Nunca substitua os testes de domínio
-por SQLite.
+O caminho padrão exige somente Docker com Compose. Python 3.12, PostgreSQL 17,
+Redis, Gunicorn e Celery ficam nos containers; nunca substitua os testes de
+domínio por SQLite.
 
 ```bash
-uv sync --frozen --group dev
-docker compose up -d db redis
-uv run python manage.py migrate
+cp .env.example .env
+docker compose up --build -d
+docker compose ps
 ```
 
-Configure as variáveis a partir de `.env.example`; não versionar `.env`.
+O serviço `migrate` aguarda PostgreSQL e Redis saudáveis. `web`,
+`worker-default` e `beat` só iniciam depois que as migrations terminam com
+sucesso. Configure as variáveis a partir de `.env.example`; não versionar
+`.env`.
+
+No WSL com Docker Engine local e sem `systemd`, inicie o daemon antes do
+Compose e aguarde a seção `Server` aparecer:
+
+```bash
+sudo service docker start
+docker info
+```
+
+Para acompanhar ou encerrar o ambiente:
+
+```bash
+docker compose logs -f web worker-default beat
+docker compose down
+```
 
 ## Checks
 
 ```bash
-uv run ruff check .
-uv run python manage.py check
-uv run python manage.py makemigrations --check --dry-run
-uv run coverage run -m pytest
-uv run coverage report
-uv run python scripts/check_secrets.py
-uv run python scripts/check_independence.py
 docker compose config
 docker compose -f docker-compose.test.yml config
+docker compose -f docker-compose.test.yml up --build \
+  --abort-on-container-exit --exit-code-from test
 ```
+
+O fluxo direto com `uv` continua opcional para quem já possui Python e os
+serviços locais, mas não é requisito para desenvolvimento ou validação.
 
 ## Migrations
 
@@ -37,10 +54,8 @@ Os apps `customers`, `products`, `orders` e `fulfillment` possuem migrations ini
 próprias. Para validar separadamente:
 
 ```bash
-uv run pytest apps/customers
-uv run pytest apps/products
-uv run pytest apps/orders
-uv run pytest apps/fulfillment
+docker compose -f docker-compose.test.yml run --rm test \
+  .venv/bin/pytest apps/fulfillment
 ```
 
 Views são adaptadores. Escritas devem chamar services com `organization` e

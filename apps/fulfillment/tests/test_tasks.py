@@ -2,10 +2,19 @@ import uuid
 
 import pytest
 
+from apps.fulfillment.exceptions import InvalidFulfillment
 from apps.fulfillment.models import Fulfillment, FulfillmentCommandReceipt
-from apps.fulfillment.services import create_fulfillment
+from apps.fulfillment.services import consume_order_cancelled_event, create_fulfillment
 from apps.fulfillment.tasks import consume_order_cancellations
 from apps.orders.services import cancel_order
+from apps.platform.services import enqueue_event
+from config.celery import app as celery_app
+
+
+def test_fulfillment_cancellation_task_is_registered_by_celery():
+    celery_app.loader.import_default_modules()
+
+    assert "apps.fulfillment.tasks.consume_order_cancellations" in celery_app.tasks
 
 
 @pytest.mark.django_db
@@ -64,3 +73,24 @@ def test_order_cancel_event_cancels_open_batches_once_and_preserves_completed(
     assert FulfillmentCommandReceipt.objects.filter(operation="consume_order_cancelled_event").count() == 1
     audit = organization.audit_events.filter(action="fulfillment.cancelled", entity_id=str(open_batch.id)).get()
     assert "Cancelamento comercial" not in str(audit.payload)
+
+
+@pytest.mark.django_db
+def test_order_cancellation_event_cannot_cross_organization(
+    organization,
+    other_organization,
+    confirmed_order,
+):
+    event = enqueue_event(
+        organization=other_organization,
+        event_type="order.cancelled",
+        aggregate_type="order",
+        aggregate_id=confirmed_order.id,
+        payload={"order_id": str(confirmed_order.id), "status": "cancelled"},
+        idempotency_key=f"cross-tenant:{confirmed_order.id}",
+    )
+
+    with pytest.raises(InvalidFulfillment, match="organização"):
+        consume_order_cancelled_event(event=event)
+
+    assert not FulfillmentCommandReceipt.objects.filter(organization=other_organization).exists()

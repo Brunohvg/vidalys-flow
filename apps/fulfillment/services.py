@@ -84,6 +84,33 @@ def _lock_fulfillment(*, organization, fulfillment):
     return locked
 
 
+def _lock_order_then_fulfillment(*, organization, fulfillment, require_confirmed=True):
+    """Lock aggregate rows in the canonical Order -> Fulfillment order."""
+    fulfillment_ref = (
+        Fulfillment.objects.filter(organization=organization, id=fulfillment.id)
+        .values("order_id")
+        .first()
+    )
+    if fulfillment_ref is None:
+        raise OrganizationMismatch("Fulfillment não pertence à organização.")
+    order = (
+        Order.objects.select_for_update()
+        .filter(organization=organization, id=fulfillment_ref["order_id"])
+        .first()
+    )
+    if order is None:
+        raise OrganizationMismatch("Pedido não pertence à organização.")
+    if require_confirmed and order.status != Order.Status.CONFIRMED:
+        raise InvalidFulfillment("Somente pedido confirmado e não cancelado pode ser atendido.")
+    locked_fulfillment = _lock_fulfillment(
+        organization=organization,
+        fulfillment=fulfillment,
+    )
+    if locked_fulfillment.order_id != order.id:
+        raise OrganizationMismatch("Fulfillment não pertence ao pedido da organização.")
+    return order, locked_fulfillment
+
+
 def _ensure_version(*, fulfillment, expected_version):
     if fulfillment.version != expected_version:
         raise VersionConflict(
@@ -289,11 +316,13 @@ def replace_allocations(
     )
     if not is_new:
         return _existing_result(receipt)
-    fulfillment = _lock_fulfillment(organization=organization, fulfillment=fulfillment)
+    order, fulfillment = _lock_order_then_fulfillment(
+        organization=organization,
+        fulfillment=fulfillment,
+    )
     if fulfillment.status != Fulfillment.Status.DRAFT:
         raise InvalidFulfillment("Somente lote em rascunho pode ser editado.")
     _ensure_version(fulfillment=fulfillment, expected_version=expected_version)
-    order = _lock_order(organization=organization, order=fulfillment.order)
     allocations = _lock_and_validate_allocations(
         organization=organization,
         order=order,
@@ -369,9 +398,11 @@ def transition_fulfillment(
     )
     if not is_new:
         return _existing_result(receipt)
-    fulfillment = _lock_fulfillment(organization=organization, fulfillment=fulfillment)
+    _, fulfillment = _lock_order_then_fulfillment(
+        organization=organization,
+        fulfillment=fulfillment,
+    )
     _ensure_version(fulfillment=fulfillment, expected_version=expected_version)
-    _lock_order(organization=organization, order=fulfillment.order)
     ensure_transition(fulfillment=fulfillment, target_status=target_status)
     from_status = fulfillment.status
     fulfillment.status = target_status
@@ -412,13 +443,14 @@ def cancel_from_order_event(*, organization, fulfillment, source_event_id):
     )
     if not is_new:
         return _existing_result(receipt)
-    fulfillment = _lock_fulfillment(organization=organization, fulfillment=fulfillment)
+    order, fulfillment = _lock_order_then_fulfillment(
+        organization=organization,
+        fulfillment=fulfillment,
+        require_confirmed=False,
+    )
     if fulfillment.status in (Fulfillment.Status.COMPLETED, Fulfillment.Status.CANCELLED):
         complete_command(receipt=receipt, fulfillment=fulfillment)
         return fulfillment
-    order = Order.objects.select_for_update().filter(organization=organization, id=fulfillment.order_id).first()
-    if order is None:
-        raise OrganizationMismatch("Pedido não pertence à organização.")
     if order.status != Order.Status.CANCELLED:
         raise InvalidFulfillment("Evento não corresponde a pedido cancelado.")
     from_status = fulfillment.status

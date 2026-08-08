@@ -36,12 +36,14 @@ Requisitos: Docker com Compose.
 
 ```bash
 cp .env.example .env
-docker compose up -d db redis
-docker compose --profile release run --rm migrate
-docker compose up -d web worker-default beat
+docker compose up --build -d
+docker compose ps
 ```
 
-Se a porta 8000 já estiver ocupada, defina `VIDALYS_WEB_PORT` no `.env`.
+Esse único comando constrói a aplicação e inicia PostgreSQL 17, Redis, aplica
+as migrations e só então libera web, worker Celery e scheduler Beat. Não é
+necessário instalar Python, PostgreSQL, Redis ou `uv` no host. Se a porta 8000
+já estiver ocupada, defina `VIDALYS_WEB_PORT` no `.env`.
 
 Crie a primeira organização:
 
@@ -60,10 +62,10 @@ O bootstrap nunca recebe a senha como argumento e não a imprime.
 ## Validação
 
 ```bash
-uv sync --frozen --group dev
-uv run python scripts/check_secrets.py
-uv run python scripts/check_independence.py
 docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from test
 ```
+
+O Compose de testes usa banco e Redis efêmeros e executa migrations, rollback
+técnico, Ruff, Django checks, suíte PostgreSQL e cobertura dentro do container.
 
 Consulte [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) para o fluxo completo.

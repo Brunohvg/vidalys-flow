@@ -88,17 +88,22 @@
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
-    "report": null,
+    "status": "changes_requested",
+    "report": "project/reviews/phase-04-review-01.md",
     "candidate_head": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
-    "blockers": []
+    "blockers": [
+      "Lock-order inversion between fulfillment transitions and order-cancellation event consumption can deadlock.",
+      "Required PostgreSQL concurrency coverage is missing for allocation replacement, transitions, and cancellation races.",
+      "Direct cross-organization event-consumption and complete sanitization evidence are missing.",
+      "The evidence carrier changes files other than the handoff, contrary to the handoff protocol."
+    ]
   },
   "qa_security": {
     "status": "blocked",
     "report": null,
     "candidate_head": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
     "blockers": [
-      "Independent Review without unresolved blockers is required first."
+      "Review 01 requested changes; remediation, new CI, and a blocker-free independent Review are required first."
     ]
   },
   "human_approval": {

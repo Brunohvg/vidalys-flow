@@ -323,3 +323,76 @@ def test_history_and_items_refuse_direct_deletion(
         fulfillment.items.get().delete()
     with pytest.raises(TypeError):
         fulfillment.status_history.get().delete()
+
+
+@pytest.mark.django_db
+def test_cancel_reason_and_personal_data_are_absent_from_operational_evidence(
+    organization,
+    confirmed_order,
+    confirmed_item,
+    user,
+    manager,
+    manager_membership,
+    caplog,
+):
+    fulfillment = create_fulfillment(
+        organization=organization,
+        order=confirmed_order,
+        actor=user,
+        method="delivery",
+        allocations=allocation(confirmed_item, "1"),
+        idempotency_key=str(uuid.uuid4()),
+    )
+    sensitive_reason = "Documento 52998224725, ligar para 11999998888"
+    transition_fulfillment(
+        organization=organization,
+        fulfillment=fulfillment,
+        actor=manager,
+        target_status="cancelled",
+        reason=sensitive_reason,
+        expected_version=1,
+        idempotency_key=str(uuid.uuid4()),
+    )
+
+    persisted_evidence = {
+        "audit": list(organization.audit_events.values("action", "payload")),
+        "outbox": list(organization.outbox_events.values("event_type", "payload", "idempotency_key")),
+        "receipts": list(
+            organization.fulfillment_command_receipts.values(
+                "operation",
+                "request_hash",
+                "resulting_version",
+                "completed",
+            )
+        ),
+        "logs": caplog.text,
+    }
+    serialized = str(persisted_evidence)
+    assert sensitive_reason not in serialized
+    assert "52998224725" not in serialized
+    assert "11999998888" not in serialized
+    assert "Avenida Paulista" not in serialized
+
+
+@pytest.mark.django_db
+def test_validation_exception_does_not_echo_delivery_snapshot_personal_data(
+    organization, confirmed_order, confirmed_item, user
+):
+    confirmed_order.shipping_address_snapshot = {
+        **confirmed_order.shipping_address_snapshot,
+        "instructions": "CPF 52998224725 no portão",
+    }
+    confirmed_order.save(update_fields=("shipping_address_snapshot", "updated_at"))
+
+    with pytest.raises(InvalidFulfillment) as captured:
+        create_fulfillment(
+            organization=organization,
+            order=confirmed_order,
+            actor=user,
+            method="delivery",
+            allocations=allocation(confirmed_item, "1"),
+            idempotency_key=str(uuid.uuid4()),
+        )
+
+    assert "52998224725" not in str(captured.value)
+    assert "portão" not in str(captured.value)
