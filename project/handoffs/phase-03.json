@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/03-orders",
   "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
-  "head_sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
+  "head_sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
   "commits": [
     {
       "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
@@ -22,6 +22,10 @@
     {
       "sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
       "subject": "docs(orders): correct candidate head evidence"
+    },
+    {
+      "sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
+      "subject": "docs: synchronize phase 03 project status"
     }
   ],
   "delivered_scope": [
@@ -64,10 +68,10 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 30534745778,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/30534745778",
-    "head_sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
-    "run_attempt": 2,
+    "workflow_id": 31235156568,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31235156568",
+    "head_sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
+    "run_attempt": 1,
     "conclusion": "success"
   },
   "organization_isolation": {
