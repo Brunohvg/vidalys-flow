@@ -2,12 +2,12 @@
   "schema_version": 2,
   "product": "Vidalys Flow",
   "repository": "Brunohvg/vidalys-flow",
-  "approved_phase": 3,
-  "approved_phase_name": "Orders",
-  "approved_phase_head": "d36558636586b766a4d3b5b8f83abcb2505f78e0",
+  "approved_phase": 4,
+  "approved_phase_name": "Fulfillment",
+  "approved_phase_head": "323861ef62db547a3947f63018a16b908cbc0f55",
   "baseline_branch": "main",
-  "next_phase": 4,
-  "next_phase_name": "Fulfillment",
+  "next_phase": 5,
+  "next_phase_name": "Payments",
   "active_candidate": null,
   "human_approval_required": true
 }

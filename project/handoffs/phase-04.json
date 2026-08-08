@@ -68,9 +68,12 @@
     "Runtime differences between local .venv and container images may affect test execution"
   ],
   "blockers": [],
+  "merged_pr": 3,
+  "merged_head_sha": "323861ef62db547a3947f63018a16b908cbc0f55",
+  "merged_at": "2026-08-08T15:10:55Z",
   "human_approval": {
-    "approved_by": null,
-    "approved_at": null,
-    "note": "Implementation approved interactively by the product owner in the workspace conversation. PR should record explicit approver before merge."
+    "approved_by": "Brunohvg",
+    "approved_at": "2026-08-08T15:10:55Z",
+    "note": "Implementation approved and merged as the official candidate (PR #3)."
   }
 }

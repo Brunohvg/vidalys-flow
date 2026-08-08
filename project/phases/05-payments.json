@@ -1,0 +1,25 @@
+{
+  "phase_id": 5,
+  "phase_name": "Payments",
+  "status": "candidate",
+  "owner": null,
+  "summary": "Implement Payments domain: gateway integrations, payment methods, refunds, and reconciliation.",
+  "scope": [
+    "Payment model and events",
+    "Gateway integration adapters (Stripe, Braintree as adapters)",
+    "Payment authorization and capture flows",
+    "Refunds and chargebacks",
+    "Outbox + audit integration",
+    "CI validation on empty PostgreSQL 17"
+  ],
+  "constraints": [
+    "No reuse of legacy databases or schemas",
+    "All migrations must apply on empty PostgreSQL 17",
+    "Security review required before QA GO"
+  ],
+  "deliverables": [],
+  "dependencies": [
+    "approved Phase 4 Fulfillment",
+    "Orders domain stability"
+  ]
+}
