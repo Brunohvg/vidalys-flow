@@ -24,6 +24,10 @@ Consulte [Customers](docs/domains/CUSTOMERS.md) e
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e
 decisões de escopo.
 
+Para uma visão integrada, consulte o [fluxo funcional](docs/SYSTEM_FLOW.md), o
+[caminho até produção](docs/ROADMAP_TO_PRODUCTION.md) e a
+[visão futura de Payments](docs/domains/PAYMENTS_VISION.md).
+
 ## Início rápido
 
 Requisitos: Docker com Compose.

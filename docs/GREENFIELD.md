@@ -8,6 +8,11 @@ O Flowlog é apenas referência temporária durante a reconstrução. Seu códig
 histórico Git, migrations, banco, Redis, usuários, IDs, media, secrets e
 configuração de deploy não pertencem a este produto.
 
+Não haverá API de sincronização, ponte de autenticação, compartilhamento de
+infraestrutura ou dependência operacional entre os produtos. O encerramento
+futuro do sistema antigo é uma decisão operacional separada e não autoriza
+migração, importação ou integração.
+
 O banco `vidalys_flow` começa vazio. Toda entidade nasce diretamente neste
 sistema. Não existe ETL, sincronização ou reconciliação entre produtos.
 

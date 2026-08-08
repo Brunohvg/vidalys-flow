@@ -6,6 +6,7 @@ from django.db.models import Max
 from django.utils import timezone
 
 from apps.audit.services import record_event
+from apps.customers.models import Customer
 from apps.orders import policies
 from apps.orders.calculations import calculate_line, calculate_order, money
 from apps.orders.calculations import quantity as normalize_quantity
@@ -34,7 +35,7 @@ from apps.orders.numbering import allocate_order_number
 from apps.orders.snapshots import customer_snapshots
 from apps.orders.transitions import ensure_transition
 from apps.platform.services import enqueue_event
-from apps.products.models import Product
+from apps.products.models import Product, ProductVariant
 
 
 def _require_permission(*, actor, organization, action):
@@ -60,6 +61,44 @@ def _lock_order(*, organization, order):
     if not locked:
         raise OrganizationMismatch("Pedido não pertence à organização.")
     return locked
+
+
+def _lock_confirmation_sources(*, organization, order):
+    customer = (
+        Customer.objects.select_for_update()
+        .filter(organization=organization, id=order.customer_id)
+        .first()
+    )
+    if customer is None:
+        raise OrganizationMismatch("Cliente não pertence à organização.")
+
+    items = list(order.items.select_for_update().order_by("id"))
+    product_ids = sorted({item.product_id for item in items if item.product_id})
+    variant_ids = sorted({item.variant_id for item in items if item.variant_id})
+    products = {
+        product.id: product
+        for product in Product.objects.select_for_update()
+        .filter(organization=organization, id__in=product_ids)
+        .order_by("id")
+    }
+    variants = {
+        variant.id: variant
+        for variant in ProductVariant.objects.select_for_update()
+        .filter(organization=organization, id__in=variant_ids)
+        .order_by("id")
+    }
+    for item in items:
+        if item.product_id:
+            product = products.get(item.product_id)
+            if product is None:
+                raise OrganizationMismatch("Produto não pertence à organização.")
+            item.product = product
+        if item.variant_id:
+            variant = variants.get(item.variant_id)
+            if variant is None:
+                raise OrganizationMismatch("Variação não pertence à organização.")
+            item.variant = variant
+    return customer, items
 
 
 def _ensure_draft(order):
@@ -375,7 +414,12 @@ def update_item(
         surcharge_amount=item.surcharge_amount if surcharge_amount is None else surcharge_amount,
     )
     new_reason = item.surcharge_reason if surcharge_reason is None else surcharge_reason.strip()
-    if item.discount_amount or item.surcharge_amount or line.discount_amount or line.surcharge_amount:
+    adjustment_changed = (
+        line.discount_amount != item.discount_amount
+        or line.surcharge_amount != item.surcharge_amount
+        or new_reason != item.surcharge_reason
+    )
+    if adjustment_changed:
         _require_permission(actor=actor, organization=organization, action="adjust")
     _validate_surcharge(amount=line.surcharge_amount, reason=new_reason)
     changed_fields = []
@@ -459,8 +503,8 @@ def confirm_order(*, organization, order, actor, expected_version, idempotency_k
     order = _lock_order(organization=organization, order=order)
     _ensure_version(order=order, expected_version=expected_version)
     ensure_transition(from_status=order.status, to_status=Order.Status.CONFIRMED)
-    _require_customer(organization=organization, customer=order.customer)
-    items = list(order.items.select_related("product", "variant"))
+    customer, items = _lock_confirmation_sources(organization=organization, order=order)
+    _require_customer(organization=organization, customer=customer)
     if not items:
         raise ConfirmationBlocked("Pedido sem itens não pode ser confirmado.")
     for item in items:
@@ -489,7 +533,7 @@ def confirm_order(*, organization, order, actor, expected_version, idempotency_k
         if changed_fields:
             item.save(update_fields=(*changed_fields, "updated_at"))
     _recalculate(order)
-    for field, value in customer_snapshots(order.customer).items():
+    for field, value in customer_snapshots(customer).items():
         setattr(order, field, value)
     order.status = Order.Status.CONFIRMED
     order.confirmed_at = timezone.now()

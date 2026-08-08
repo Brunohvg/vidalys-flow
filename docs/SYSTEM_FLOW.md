@@ -1,0 +1,86 @@
+# Fluxo funcional da Vidalys Flow
+
+Este documento separa o que já existe do que pertence ao produto-alvo. A
+fonte oficial de estado continua sendo `project/state.json` e os manifestos de
+fase.
+
+## Princípio central
+
+A Vidalys Flow é um produto greenfield. Ela não sincroniza, consulta ou
+compartilha banco, Redis, arquivos, usuários, IDs, autenticação, secrets,
+workers, webhooks, runtime, servidor ou deploy com o Flowlog antigo. A
+referência histórica permitida pelo processo serve somente para compreender
+ideias de produto ainda não reconstruídas e nunca cria uma ligação técnica.
+
+## Fluxo disponível hoje
+
+```text
+login
+  → seleção de Organization autorizada por Membership ativa
+  → Customers e endereços/contatos
+  → Products e variantes
+  → Order draft e itens
+  → validação, snapshots e confirmação
+  → histórico + AuditEvent + OutboxEvent internos
+```
+
+1. O usuário autentica com identidade nativa da Vidalys Flow.
+2. Seleciona uma Organization da qual possui Membership ativa.
+3. Toda leitura e escrita revalida essa Organization; IDs isolados nunca
+   autorizam acesso.
+4. Customers mantém identidade, documento normalizado, contatos, endereços e
+   merge explícito.
+5. Products mantém catálogo, variantes, SKU e identificadores por
+   Organization.
+6. Orders cria rascunhos numerados como `PED-000001`, aceita itens de catálogo
+   ou livres e calcula valores no servidor.
+7. Na confirmação, o pedido bloqueia e relê suas fontes comerciais, valida
+   Customer/Product/Variant e congela os snapshots aprovados.
+8. Mudanças relevantes geram histórico de estado, auditoria sanitizada e
+   eventos internos na mesma transação.
+
+Orders não cobra, separa, entrega, envia mensagens, emite documento fiscal ou
+chama providers nesta fase.
+
+## Papéis
+
+- OWNER, ADMIN, MANAGER e OPERATOR consultam pedidos, criam/editam drafts,
+  informam preço-base e confirmam;
+- OWNER, ADMIN e MANAGER aplicam desconto/acréscimo, cancelam e visualizam PII
+  sem máscara;
+- OPERATOR recebe documento, contato e endereço mascarados;
+- a permissão é sempre organizacional e nunca global no User.
+
+## Fluxo-alvo do produto completo
+
+```text
+Customer + Product
+        ↓
+      Order
+        ↓
+   Fulfillment
+        ↓
+Payment link ──→ provider externo ──→ webhook verificado
+        ↓                              ↓
+ estado financeiro canônico ← reconciliação idempotente
+        ↓
+ Messaging / Integrations / Dashboard
+        ↓
+ homologação isolada → aprovação humana → produção isolada
+```
+
+Esse fluxo-alvo não significa que os módulos futuros já existam. Cada seta só
+é liberada pela fase correspondente, com contrato, testes, Review,
+QA/Segurança e aprovação humana próprios.
+
+## Regras transversais
+
+- PostgreSQL é a fonte transacional; Redis é exclusivo da Vidalys Flow;
+- toda entidade operacional pertence a uma Organization;
+- services executam regras, selectors fazem leituras e policies autorizam;
+- comandos críticos são idempotentes e concorrência é explicitamente testada;
+- dados pessoais não entram em logs, AuditEvent ou OutboxEvent;
+- integrações externas ficam desligadas por padrão e exigem autorização,
+  credenciais exclusivas e observabilidade;
+- nenhum ambiente futuro pode reutilizar infraestrutura do Flowlog.
+

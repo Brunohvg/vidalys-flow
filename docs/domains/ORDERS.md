@@ -88,6 +88,10 @@ gera conflito.
 Edições e transições bloqueiam Order com `select_for_update`, recarregam o
 estado atual e comparam `expected_version`. Cada mutação incrementa a versão.
 Pedido, histórico, audit, outbox e receipt são gravados na mesma transação.
+Na confirmação, Customer, itens, Products e ProductVariants também são
+recarregados e bloqueados em ordem determinística antes da validação e dos
+snapshots. Merge ou inativação concorrente fica serializado em relação ao
+instante canônico da confirmação.
 O histórico rejeita alteração e exclusão tanto por instância quanto por
 operações de QuerySet.
 

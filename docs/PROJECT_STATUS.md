@@ -26,7 +26,9 @@ humana. Nenhum resultado técnico da Fase 3 modifica esse fato.
 - implementação: completa;
 - Review independente 1: alterações solicitadas e registradas em
   `project/reviews/phase-03-review-01.md`;
-- remediação: em validação para novo Review independente;
+- Review independente 2: alterações solicitadas e registradas em
+  `project/reviews/phase-03-review-02.md`;
+- remediação: em andamento para novo candidato e novo Review independente;
 - QA/Segurança: bloqueado até um Review sem bloqueadores;
 - aprovação humana da fase: pendente.
 

@@ -291,6 +291,47 @@ def test_manager_adjustments_require_valid_reason(organization, customer, manage
 
 
 @pytest.mark.django_db
+def test_operator_edits_base_fields_without_replacing_manager_adjustments(
+    organization,
+    order,
+    user,
+    manager,
+    manager_membership,
+):
+    item = add_item(
+        organization=organization,
+        order=order,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+        name="Item ajustado",
+        quantity=1,
+        unit_price=10,
+        discount_amount=2,
+        surcharge_amount=1,
+        surcharge_reason="Personalização",
+    )
+
+    updated = update_item(
+        organization=organization,
+        item=item,
+        actor=user,
+        expected_version=2,
+        idempotency_key=key(),
+        quantity=2,
+        unit_price=12,
+        notes="Medida conferida",
+    )
+
+    assert updated.quantity == Decimal("2.000")
+    assert updated.unit_price == Decimal("12.00")
+    assert updated.discount_amount == Decimal("2.00")
+    assert updated.surcharge_amount == Decimal("1.00")
+    assert updated.surcharge_reason == "Personalização"
+    assert updated.total == Decimal("23.00")
+
+
+@pytest.mark.django_db
 def test_catalog_snapshots_and_variant_invariant(
     organization,
     order,
