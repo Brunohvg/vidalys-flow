@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "phase_id": 4,
+  "phase_name": "Fulfillment",
+  "status": "candidate",
+  "branch": "work/phase-04-fulfillment-001",
+  "base_sha": "a98ceab40f9c40d19dd9c24b666846fb05e63b2d",
+  "head_sha": "153f904",
+  "commits": [
+    {
+      "sha": "153f904",
+      "message": "feat(fulfillment): add models, services, idempotency, tests and initial migration"
+    }
+  ],
+  "delivered_scope": [
+    "Initial Fulfillment domain scaffolding: models, idempotency, services",
+    "Idempotent create_fulfillment service with validation, audit and outbox",
+    "Initial tests for idempotent creation",
+    "Initial Django migration for Fulfillment models"
+  ],
+  "files_changed": [
+    "apps/fulfillment/models.py",
+    "apps/fulfillment/services.py",
+    "apps/fulfillment/idempotency.py",
+    "apps/fulfillment/exceptions.py",
+    "apps/fulfillment/migrations/0001_initial.py",
+    "apps/fulfillment/tests/test_services.py",
+    "config/settings/base.py",
+    "project/handoffs/phase-04.json"
+  ],
+  "migrations": [
+    "apps/fulfillment/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "added": ["apps/fulfillment/tests/test_services.py"],
+    "local_result": "partial: new tests added locally; full CI run required"
+  },
+  "scans": {
+    "lint": "ruff expected in CI",
+    "secret_scan": "scripts/check_secrets.py expected in CI",
+    "independence": "scripts/check_independence.py expected in CI"
+  },
+  "ci": [
+    "locked dependency installation",
+    "JSON and governance validation",
+    "secret scan",
+    "independence scan",
+    "Ruff",
+    "Django check",
+    "migration consistency",
+    "PostgreSQL 17 test suite with coverage",
+    "Docker build",
+    "Compose validation"
+  ],
+  "organization_isolation": "All new models are organization-scoped and use ForeignKey to Organization; selectors/services validate organization ownership.",
+  "legacy_reuse": false,
+  "deferred": [
+    "inventory, carriers, payment gating, external providers, messaging"
+  ],
+  "risks": [
+    "Migrations order and dependency with existing apps requires CI to run full migrations on PostgreSQL 17",
+    "Runtime differences between local .venv and container images may affect test execution"
+  ],
+  "blockers": [],
+  "human_approval": {
+    "approved_by": null,
+    "approved_at": null,
+    "note": "Implementation approved interactively by the product owner in the workspace conversation. PR should record explicit approver before merge."
+  }
+}
