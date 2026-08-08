@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/03-orders",
   "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
-  "head_sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
+  "head_sha": "18fa77f337f132ae48d22a80122454a415d420ac",
   "commits": [
     {
       "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
@@ -22,6 +22,10 @@
     {
       "sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
       "subject": "fix(orders): resolve independent review blockers"
+    },
+    {
+      "sha": "18fa77f337f132ae48d22a80122454a415d420ac",
+      "subject": "fix(orders): serialize confirmation sources"
     }
   ],
   "delivered_scope": [
@@ -43,15 +47,20 @@
     "apps/orders/migrations/0001_initial.py"
   ],
   "tests": {
-    "count": 172,
-    "skipped": 5,
+    "count": 181,
+    "skipped": 0,
     "coverage_percent": 86,
     "database": "PostgreSQL 17",
     "result": "passed",
     "empty_database_migration": "passed",
     "technical_rollback": "passed",
     "concurrency": "passed",
-    "cross_organization": "passed"
+    "cross_organization": "passed",
+    "local_docker": {
+      "passed": 176,
+      "skipped": 5,
+      "skip_reason": "Git-history governance tests require repository metadata absent from the Docker build context."
+    }
   },
   "scans": {
     "secret_scan": "passed",
@@ -64,9 +73,9 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 31235650552,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31235650552",
-    "head_sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
+    "workflow_id": 31236012453,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31236012453",
+    "head_sha": "18fa77f337f132ae48d22a80122454a415d420ac",
     "run_attempt": 1,
     "conclusion": "success"
   },
