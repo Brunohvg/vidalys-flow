@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Pedidos — Vidalys Flow{% endblock %}
+{% block content %}
+  <h1>Pedidos</h1>
+  <p class="muted">{{ organization.name }}</p>
+  <div class="actions"><a href="{% url 'orders:create' %}">Novo pedido</a></div>
+
+  <form method="get" class="grid">
+    {{ filter_form.as_p }}
+    <p><button type="submit">Filtrar</button></p>
+  </form>
+
+  <table class="responsive-table">
+    <thead>
+      <tr><th>Número</th><th>Cliente</th><th>Estado</th><th>Canal</th><th>Total</th><th>Atualizado</th></tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+        <tr>
+          <td data-label="Número"><a href="{% url 'orders:detail' order.id %}">{{ order.display_number }}</a></td>
+          <td data-label="Cliente">{{ order.customer_name_snapshot|default:order.customer.display_name }}</td>
+          <td data-label="Estado"><span class="badge">{{ order.get_status_display }}</span></td>
+          <td data-label="Canal">{{ order.channel|default:"—" }}</td>
+          <td data-label="Total">R$ {{ order.total }}</td>
+          <td data-label="Atualizado">{{ order.updated_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">Nenhum pedido encontrado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <nav aria-label="Paginação">
+    {% if orders.has_previous %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ orders.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ orders.number }} de {{ orders.paginator.num_pages }}</span>
+    {% if orders.has_next %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ orders.next_page_number }}">Próxima</a>{% endif %}
+  </nav>
+{% endblock %}

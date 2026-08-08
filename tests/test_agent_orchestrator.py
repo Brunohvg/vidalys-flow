@@ -114,9 +114,15 @@ def test_incomplete_handoff_is_rejected(governance_root):
         GovernanceRepository(governance_root).validate_handoff("project/handoffs/phase-02.json")
 
 
-def test_implementation_requires_approved_plan(repository):
+def test_implementation_requires_approved_plan(governance_root):
+    path = governance_root / "project/phases/03-orders.json"
+    phase = load_json(path)
+    phase["plan_status"] = "pending"
+    phase["implementation_status"] = "blocked"
+    write_json(path, phase)
+
     with pytest.raises(GovernanceError, match="before human plan approval"):
-        repository.render("implementation", 3)
+        GovernanceRepository(governance_root).render("implementation", 3)
 
 
 def test_agent_cannot_self_approve_phase(governance_root):
@@ -181,8 +187,8 @@ def test_approval_template_cannot_be_rendered_by_agent(repository):
 
 
 def test_cli_errors_return_nonzero(capsys):
-    assert main(["render", "implementation", "03"]) == 1
-    assert "before human plan approval" in capsys.readouterr().err
+    assert main(["render", "implementation", "99"]) == 1
+    assert "does not exist" in capsys.readouterr().err
 
     assert main(["render", "approval", "03"]) == 1
     assert "Human Approver" in capsys.readouterr().err

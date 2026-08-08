@@ -22,7 +22,17 @@
     th, td { padding: .65rem; border-bottom: 1px solid #dfe3e8; text-align: left; }
     .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1rem; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+    .card { border: 1px solid #dfe3e8; border-radius: .65rem; padding: 1rem; }
+    .badge { display: inline-block; padding: .2rem .55rem; border-radius: 999px; background: #e8efff; }
+    .danger { background: #b42318; }
     section { margin-block: 1.5rem; }
+    @media (max-width: 42rem) {
+      .responsive-table thead { display: none; }
+      .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; }
+      .responsive-table tr { border: 1px solid #dfe3e8; border-radius: .65rem; margin-block: .75rem; padding: .5rem; }
+      .responsive-table td { border: 0; padding: .35rem; }
+      .responsive-table td::before { content: attr(data-label) ": "; font-weight: 700; }
+    }
   </style>
 </head>
 <body>
@@ -33,6 +43,7 @@
         <a href="{% url 'organizations:list' %}">Organizações</a>
         <a href="{% url 'customers:list' %}">Clientes</a>
         <a href="{% url 'products:list' %}">Produtos</a>
+        <a href="{% url 'orders:list' %}">Pedidos</a>
       </nav>
       <form class="inline" method="post" action="{% url 'logout' %}">
         {% csrf_token %}

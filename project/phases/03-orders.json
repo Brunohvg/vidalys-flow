@@ -6,10 +6,10 @@
   "dependency_head": "b28a019871274e9da1ca1cb65043c5e208b0e727",
   "base_ref": "main",
   "branch": "phase/03-orders",
-  "status": "planned",
-  "plan_status": "pending",
-  "implementation_status": "blocked",
-  "review_status": "blocked",
+  "status": "candidate",
+  "plan_status": "approved",
+  "implementation_status": "complete",
+  "review_status": "pending",
   "qa_status": "blocked",
   "human_approval_status": "pending",
   "allowed_status_values": {
@@ -104,38 +104,49 @@
     "legacy data import"
   ],
   "states": {
-    "requirement": "Canonical states and transition graph must be confirmed during planning before implementation.",
+    "requirement": "Approved canonical state contract for Phase 03.",
     "initial_state": "draft",
     "confirmed_states": [
-      "draft"
+      "draft",
+      "confirmed",
+      "cancelled"
     ],
-    "unconfirmed_states": [],
+    "unconfirmed_states": [
+      "completed",
+      "returned",
+      "financial, fulfillment, and provider states"
+    ],
     "rule": "Do not persist provider or legacy states as canonical states without an approved normalization contract."
   },
   "snapshots": [
-    "Confirmed orders retain customer name, document, contact, and address snapshots required by the approved contract.",
-    "Every item retains name, SKU or identifier, unit, quantity, unit price, discount, and total snapshots required by the approved contract.",
+    "Confirmed orders retain customer name, optional normalized document, one primary operational contact, and existing default shipping and billing addresses.",
+    "Every item retains name, variant, SKU, unit, quantity, base price, discount, surcharge, gross total, and total snapshots.",
     "Later Customer or Product changes never rewrite confirmed history.",
-    "The exact personal-data snapshot set requires explicit planning approval."
+    "Personal-data snapshots use a closed versioned schema, are masked for OPERATOR, and never enter audit, outbox, or logs.",
+    "Merged Customer or inactive/archived Product or ProductVariant blocks confirmation until explicit correction."
   ],
   "idempotency": [
-    "Create and confirmation commands define idempotency semantics before implementation.",
+    "All mutable commands use OrderCommandReceipt scoped by Organization, operation, and idempotency key.",
+    "The same key with a different canonical payload is an explicit conflict.",
     "Outbox events use stable aggregate and event identifiers.",
     "Retries never duplicate confirmation, history, or monetary effects.",
-    "Concurrent commands lock and revalidate the organization-scoped aggregate."
+    "Concurrent commands lock and revalidate the organization-scoped aggregate and expected_version.",
+    "Concurrent first-sequence creation is protected by a tenant constraint and PostgreSQL race handling."
   ],
   "money_rules": [
-    "Use Decimal and explicit currency; never float.",
-    "Persist integer minor units or approved fixed-precision decimals consistently.",
-    "Rounding mode and order of operations must be approved before implementation.",
+    "Use BRL and Decimal; never float.",
+    "Persist money as Decimal(14,2) and quantity as Decimal(12,3).",
+    "Round each line with ROUND_HALF_UP before aggregating persisted item values.",
     "Server-side totals are authoritative and are recalculated from items.",
-    "Quantity, price, discounts, subtotal, and total must satisfy database and service invariants."
+    "Quantity, base price, discounts, surcharges, subtotal, and total satisfy database and service invariants.",
+    "Only manager-tier roles apply discounts or surcharges; every surcharge requires a reason and cannot represent shipping, tax, interest, or payment fees."
   ],
   "authorization": [
     "Organization comes from authenticated active Membership.",
     "Every service and selector receives Organization explicitly.",
     "Object identifiers are always resolved inside Organization.",
-    "State-changing roles and exceptional actions must be declared in the approved plan.",
+    "Any active role may view, create and edit drafts, set base price, and confirm.",
+    "Only OWNER, ADMIN, and MANAGER may discount, surcharge, cancel, or view unmasked personal data.",
     "Cross-organization reads and writes are refused and tested."
   ],
   "migrations": {

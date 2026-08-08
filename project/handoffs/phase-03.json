@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "phase_id": 3,
+  "phase_name": "Orders",
+  "status": "candidate",
+  "branch": "phase/03-orders",
+  "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
+  "head_sha": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+  "commits": [
+    {
+      "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
+      "subject": "feat(orders): implement organization-scoped order lifecycle"
+    },
+    {
+      "sha": "92d402684cb1c85f9c02027b756500321d15009e",
+      "subject": "fix(orders): handle replay after item removal"
+    },
+    {
+      "sha": "ab07a9827a5264c773fcde04cb8d0a6afeab8bf6",
+      "subject": "docs: synchronize phase 03 project status"
+    },
+    {
+      "sha": "f42dae3a52e78764ccda5a09cea559bd5dd83282",
+      "subject": "fix(orders): resolve independent review blockers"
+    },
+    {
+      "sha": "18fa77f337f132ae48d22a80122454a415d420ac",
+      "subject": "fix(orders): serialize confirmation sources"
+    },
+    {
+      "sha": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+      "subject": "fix(orders): preserve adjustments in operator form"
+    }
+  ],
+  "delivered_scope": [
+    "organization-scoped draft, confirmation, and cancellation lifecycle",
+    "PED-000001 numbering sequence independent per Organization",
+    "BRL fixed-precision line calculations and server-authoritative aggregate totals",
+    "customer and item snapshots with role-based personal-data masking",
+    "versioned idempotent commands with pessimistic locking and expected_version",
+    "organization-scoped selectors, policies, responsive HTML interfaces, audit, outbox, and status history"
+  ],
+  "models": [
+    "orders.OrderNumberSequence",
+    "orders.Order",
+    "orders.OrderItem",
+    "orders.OrderStatusHistory",
+    "orders.OrderCommandReceipt"
+  ],
+  "migrations": [
+    "apps/orders/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "count": 182,
+    "skipped": 0,
+    "coverage_percent": 87,
+    "database": "PostgreSQL 17",
+    "result": "passed",
+    "empty_database_migration": "passed",
+    "technical_rollback": "passed",
+    "concurrency": "passed",
+    "cross_organization": "passed",
+    "local_docker": {
+      "passed": 177,
+      "skipped": 5,
+      "skip_reason": "Git-history governance tests require repository metadata absent from the Docker build context."
+    }
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed"
+  },
+  "ci": {
+    "workflow_id": 31236267219,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31236267219",
+    "head_sha": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services, selectors and policies; active Membership revalidation; tenant constraints; PostgreSQL cross-organization and concurrency tests."
+  },
+  "legacy_reuse": {
+    "data": false,
+    "migrations": false,
+    "runtime": false
+  },
+  "deferred": [
+    "completed and returned order states",
+    "financial, fulfillment, and provider states",
+    "public API, importers, and external references",
+    "inventory, Fulfillment, Payments, Messaging, Integrations, and fiscal issuance",
+    "Coolify configuration and deployment"
+  ],
+  "risks": [
+    "Personal-data snapshots intentionally duplicate the approved minimum data inside confirmed orders and require the documented masking discipline."
+  ],
+  "blockers": [],
+  "human_approval": {
+    "status": "pending",
+    "evidence": "Only the Phase 03 technical plan is approved; implementation, merge, deploy, and phase completion remain unapproved."
+  }
+}

@@ -14,28 +14,30 @@ python scripts/agent_orchestrator.py validate-all
 python scripts/agent_orchestrator.py validate-phase 03
 ```
 
-Inicie apenas o planejamento da Fase 3:
-
-```bash
-python scripts/agent_orchestrator.py render planning 03
-```
-
-O prompt informa `dependency_head` e `base_ref`, mas não inventa o SHA da
-baseline. Antes da futura criação da branch, o executor deverá resolver
-`git rev-parse origin/main`, registrar o resultado como `actual_base_sha` no
-relatório e como `base_sha` no handoff.
-
-Após aprovação humana explícita do plano e atualização manual de
-`plan_status` para `approved`:
-
-```bash
-python scripts/agent_orchestrator.py render implementation 03
-```
-
-Quando cada checkpoint anterior estiver registrado como concluído, use:
+O planejamento e a implementação da Fase 3 já foram concluídos. O checkpoint
+atual é Review independente:
 
 ```bash
 python scripts/agent_orchestrator.py render review 03
+```
+
+O candidato está em `phase/03-orders`, criado sobre o `actual_base_sha`
+`75c335676c6ad258e5ff2832bb64a2a5a7d97fcc`. O handoff registra essa baseline
+em `base_sha`; `dependency_head` continua sendo a evidência funcional da Fase
+2 aprovada.
+
+Os comandos dos checkpoints já concluídos permanecem disponíveis para
+reprodução, mas não devem reiniciar planejamento ou implementação:
+
+```bash
+python scripts/agent_orchestrator.py render planning 03
+python scripts/agent_orchestrator.py render implementation 03
+```
+
+Depois de Review completo e sem blockers, o próximo agente poderá renderizar
+QA/Segurança:
+
+```bash
 python scripts/agent_orchestrator.py render qa-security 03
 python scripts/agent_orchestrator.py validate-handoff project/handoffs/phase-03.json
 ```

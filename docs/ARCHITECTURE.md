@@ -11,6 +11,7 @@ A Vidalys Flow é um monólito modular Django. A fundação possui somente:
 - `platform`: outbox, guardrails, tarefas e healthchecks.
 - `customers`: identidade, contatos, endereços, notas e merge;
 - `products`: catálogo operacional, variantes e identificadores.
+- `orders`: pedidos comerciais, itens snapshot, estados e totais.
 
 O grafo permitido é:
 
@@ -21,11 +22,13 @@ audit         → core, users, organizations
 platform      → core, audit, organizations
 customers     → core, users, organizations, audit, platform
 products      → core, users, organizations, audit, platform
+orders        → core, users, organizations, customers, products, audit, platform
 ```
 
 `core` nunca importa outro app local. Não existem runtime alternativo,
 middleware de organização, hostname tenancy ou compatibilidade de tabelas.
-Customers e Products não importam um ao outro.
+Customers e Products não importam um ao outro nem importam Orders. Orders
+consome apenas os contratos aprovados desses domínios.
 
 ## Execução
 
@@ -47,3 +50,9 @@ organizacional e pode participar de várias organizações.
 Criação e merge de clientes, além da criação de produto, registram eventos
 reais na outbox. Alterações relevantes são auditadas sem documento, contato,
 conteúdo de nota ou descrição livre nos payloads.
+
+Orders deriva a organização da Membership ativa, usa numeração crescente
+independente por organização e trata o pedido como agregado concorrente.
+Comandos mutáveis possuem recibo idempotente; edições e transições bloqueiam
+o agregado e validam sua versão esperada. Eventos da outbox permanecem
+internos e não publicam para providers nesta fase.

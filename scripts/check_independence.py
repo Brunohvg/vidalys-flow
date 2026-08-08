@@ -15,7 +15,6 @@ FORBIDDEN_SYMBOLS = (
     "django_" + "q",
     "q" + "cluster",
     "apps." + "billing",
-    "apps." + "orders",
     "apps." + "payments",
     "apps." + "boletos",
     "apps." + "integrations",
@@ -33,8 +32,8 @@ FORBIDDEN_SYMBOLS = (
 )
 
 DOMAIN_BOUNDARIES = {
-    Path("apps/customers"): ("apps." + "products",),
-    Path("apps/products"): ("apps." + "customers",),
+    Path("apps/customers"): ("apps." + "products", "apps." + "orders"),
+    Path("apps/products"): ("apps." + "customers", "apps." + "orders"),
 }
 
 
