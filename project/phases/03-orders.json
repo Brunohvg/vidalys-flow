@@ -6,12 +6,12 @@
   "dependency_head": "b28a019871274e9da1ca1cb65043c5e208b0e727",
   "base_ref": "main",
   "branch": "phase/03-orders",
-  "status": "candidate",
+  "status": "approved",
   "plan_status": "approved",
   "implementation_status": "complete",
-  "review_status": "pending",
-  "qa_status": "blocked",
-  "human_approval_status": "pending",
+  "review_status": "complete",
+  "qa_status": "go",
+  "human_approval_status": "approved",
   "allowed_status_values": {
     "status": [
       "planned",

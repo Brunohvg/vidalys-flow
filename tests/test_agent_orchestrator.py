@@ -35,8 +35,8 @@ def test_valid_state_and_all_artifacts(repository):
 
     repository.validate_all()
 
-    assert state["approved_phase"] == 2
-    assert state["approved_phase_head"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
+    assert state["approved_phase"] == 3
+    assert state["approved_phase_head"] == "d36558636586b766a4d3b5b8f83abcb2505f78e0"
     assert state["baseline_branch"] == "main"
     assert state["active_candidate"] is None
 
@@ -126,13 +126,20 @@ def test_implementation_requires_approved_plan(governance_root):
 
 
 def test_agent_cannot_self_approve_phase(governance_root):
-    path = governance_root / "project/phases/03-orders.json"
-    phase = load_json(path)
+    source = governance_root / "project/phases/03-orders.json"
+    path = governance_root / "project/phases/04-fulfillment.json"
+    phase = load_json(source)
+    phase["id"] = 4
+    phase["name"] = "Fulfillment"
+    phase["branch"] = "phase/04-fulfillment"
+    phase["dependency_phase"] = 3
+    phase["dependency_head"] = "d36558636586b766a4d3b5b8f83abcb2505f78e0"
+    phase["status"] = "planned"
     phase["human_approval_status"] = "approved"
     write_json(path, phase)
 
     with pytest.raises(GovernanceError, match="cannot approve"):
-        GovernanceRepository(governance_root).validate_phase(3)
+        GovernanceRepository(governance_root).validate_phase(4)
 
 
 def test_rendering_is_deterministic(repository):
