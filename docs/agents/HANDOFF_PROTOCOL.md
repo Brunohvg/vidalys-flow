@@ -21,6 +21,14 @@ Em fases novas, `base_sha` é o `actual_base_sha`: o SHA exato de
 `origin/main` resolvido antes da criação da branch. Ele não substitui
 `dependency_head`, que permanece como evidência histórica da dependência.
 
+`head_sha` identifica o último commit material do candidato que foi testado e
+deve ser revisado. O próprio arquivo de handoff pode ser versionado por um
+commit posterior exclusivamente de evidência; esse commit transportador não é
+incluído em `commits` nem substitui `head_sha`. Antes do Review, confirme que o
+intervalo `head_sha..HEAD` altera somente o handoff e que o CI registrado foi
+executado exatamente em `head_sha`. Qualquer mudança material posterior exige
+novo `head_sha`, novo CI e novo handoff.
+
 Valide antes de entregar:
 
 ```bash

@@ -45,8 +45,14 @@ def order_for_organization(*, organization, order_id, for_update=False):
     return queryset.first()
 
 
-def order_detail(*, organization, order, membership):
+def order_detail(*, organization, order, user, membership):
     if order.organization_id != organization.id:
+        return None
+    if (
+        membership.organization_id != organization.id
+        or membership.user_id != user.id
+        or not membership.is_active
+    ):
         return None
     unmasked = membership.role in MANAGER_ROLES
     snapshots = {

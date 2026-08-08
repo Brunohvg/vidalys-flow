@@ -97,6 +97,7 @@ def _detail_context(*, request, organization, membership, order):
         "detail": selectors.order_detail(
             organization=organization,
             order=order,
+            user=request.user,
             membership=membership,
         ),
         "can_adjust": can_adjust,

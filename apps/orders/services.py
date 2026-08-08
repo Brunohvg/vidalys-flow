@@ -470,6 +470,24 @@ def confirm_order(*, organization, order, actor, expected_version, idempotency_k
             variant=item.variant,
             confirmation=True,
         )
+        snapshot_updates = {}
+        if item.product:
+            snapshot_updates.update(
+                name_snapshot=item.product.name,
+                unit_snapshot=item.product.default_unit,
+            )
+        if item.variant:
+            snapshot_updates.update(
+                variant_snapshot=item.variant.name,
+                sku_snapshot=item.variant.sku,
+            )
+        changed_fields = []
+        for field, value in snapshot_updates.items():
+            if getattr(item, field) != value:
+                setattr(item, field, value)
+                changed_fields.append(field)
+        if changed_fields:
+            item.save(update_fields=(*changed_fields, "updated_at"))
     _recalculate(order)
     for field, value in customer_snapshots(order.customer).items():
         setattr(order, field, value)

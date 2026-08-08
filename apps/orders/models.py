@@ -187,7 +187,20 @@ class OrderItem(BaseModel):
         ]
 
 
+class ImmutableHistoryQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise TypeError("OrderStatusHistory é imutável.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise TypeError("OrderStatusHistory é imutável.")
+
+    def delete(self):
+        raise TypeError("OrderStatusHistory é imutável.")
+
+
 class OrderStatusHistory(BaseModel):
+    objects = ImmutableHistoryQuerySet.as_manager()
+
     organization = models.ForeignKey(
         "organizations.Organization",
         on_delete=models.PROTECT,
@@ -225,6 +238,11 @@ class OrderStatusHistory(BaseModel):
 
     def delete(self, *args, **kwargs):
         raise TypeError("OrderStatusHistory é imutável.")
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise TypeError("OrderStatusHistory é imutável.")
+        return super().save(*args, **kwargs)
 
 
 class OrderCommandReceipt(BaseModel):

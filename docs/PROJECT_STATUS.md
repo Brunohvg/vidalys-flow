@@ -20,18 +20,17 @@ humana. Nenhum resultado técnico da Fase 3 modifica esse fato.
 ## Candidato da Fase 3 — Orders
 
 - branch: `phase/03-orders`;
-- candidato funcional:
-  `92d402684cb1c85f9c02027b756500321d15009e`;
-- candidato completo com handoff:
-  `cadbfeac60f811d40789082ccdf6475a6860802d`;
+- candidato material e evidência de CI: consultar
+  `project/handoffs/phase-03.json`;
 - planejamento: aprovado;
 - implementação: completa;
-- CI do candidato: sucesso no run `30534745778`, tentativa 2;
-- Review independente: pendente;
-- QA/Segurança: bloqueado até o Review;
+- Review independente 1: alterações solicitadas e registradas em
+  `project/reviews/phase-03-review-01.md`;
+- remediação: em validação para novo Review independente;
+- QA/Segurança: bloqueado até um Review sem bloqueadores;
 - aprovação humana da fase: pendente.
 
-O próximo checkpoint permitido é Review independente. Não iniciar
+O próximo checkpoint permitido é um novo Review independente. Não iniciar
 Fulfillment, PR, merge, release ou atualização de aprovação antes da conclusão
 de Review, QA/Segurança e nova decisão humana.
 

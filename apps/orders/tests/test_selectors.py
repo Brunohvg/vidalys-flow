@@ -53,6 +53,7 @@ def test_operator_detail_masks_confirmed_personal_data(
     detail = order_detail(
         organization=organization,
         order=order,
+        user=user,
         membership=operator_membership,
     )
     assert detail["customer_document"].endswith("4725")
@@ -78,6 +79,7 @@ def test_operator_detail_masks_address(organization, order, user, operator_membe
     detail = order_detail(
         organization=organization,
         order=order,
+        user=user,
         membership=operator_membership,
     )
     assert detail["shipping_address"]["street"] == "••••"
@@ -94,6 +96,7 @@ def test_manager_detail_is_unmasked(organization, order, manager, manager_member
     detail = order_detail(
         organization=organization,
         order=order,
+        user=manager,
         membership=manager_membership,
     )
     assert detail["customer_document"] == "52998224725"
@@ -120,14 +123,67 @@ def test_draft_detail_uses_current_customer_data_with_role_masking(
     operator_detail = order_detail(
         organization=organization,
         order=order,
+        user=user,
         membership=operator_membership,
     )
     manager_detail = order_detail(
         organization=organization,
         order=order,
+        user=manager_membership.user,
         membership=manager_membership,
     )
     assert operator_detail["customer_document"] != "52998224725"
     assert operator_detail["customer_contact"]["value"] == "dr***@example.com"
     assert manager_detail["customer_document"] == "52998224725"
     assert manager_detail["customer_contact"]["value"] == "draft@example.com"
+
+
+@pytest.mark.django_db
+def test_detail_refuses_membership_from_other_organization_or_user(
+    organization,
+    other_organization,
+    order,
+    user,
+    manager,
+):
+    other_membership = Membership.objects.create(
+        organization=other_organization,
+        user=manager,
+        role=Membership.Role.MANAGER,
+    )
+    assert (
+        order_detail(
+            organization=organization,
+            order=order,
+            user=manager,
+            membership=other_membership,
+        )
+        is None
+    )
+
+    manager_membership = Membership.objects.create(
+        organization=organization,
+        user=manager,
+        role=Membership.Role.MANAGER,
+    )
+    assert (
+        order_detail(
+            organization=organization,
+            order=order,
+            user=user,
+            membership=manager_membership,
+        )
+        is None
+    )
+
+    manager_membership.is_active = False
+    manager_membership.save(update_fields=("is_active", "updated_at"))
+    assert (
+        order_detail(
+            organization=organization,
+            order=order,
+            user=manager,
+            membership=manager_membership,
+        )
+        is None
+    )

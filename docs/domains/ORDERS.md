@@ -62,6 +62,11 @@ Na confirmação, Orders congela:
 - nome, variante, SKU, unidade, quantidade, preço, desconto, acréscimo,
   bruto e total de cada item.
 
+Para itens vinculados ao catálogo, nome, unidade, variante e SKU são relidos
+do Product/Variant válido no instante da confirmação. Assim, alterações feitas
+entre a inclusão do item e a confirmação não deixam snapshots comerciais
+obsoletos.
+
 Contato prioriza um registro marcado como primário e, em empate, WhatsApp,
 telefone e e-mail. Os objetos JSON usam `schema_version: 1` e conjunto fechado
 de campos.
@@ -83,6 +88,8 @@ gera conflito.
 Edições e transições bloqueiam Order com `select_for_update`, recarregam o
 estado atual e comparam `expected_version`. Cada mutação incrementa a versão.
 Pedido, histórico, audit, outbox e receipt são gravados na mesma transação.
+O histórico rejeita alteração e exclusão tanto por instância quanto por
+operações de QuerySet.
 
 ## Autorização e interface
 

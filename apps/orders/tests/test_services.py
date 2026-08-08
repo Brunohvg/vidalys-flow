@@ -30,7 +30,7 @@ from apps.orders.services import (
 from apps.organizations.models import Membership
 from apps.platform.models import OutboxEvent
 from apps.products.models import Product
-from apps.products.services import create_product, create_variant
+from apps.products.services import create_product, create_variant, update_product
 
 
 def key():
@@ -496,6 +496,58 @@ def test_confirmation_freezes_closed_snapshots_and_is_idempotent(organization, o
 
 
 @pytest.mark.django_db
+def test_confirmation_refreshes_catalog_snapshots(organization, order, user):
+    product = create_product(
+        organization=organization,
+        actor=user,
+        name="Camiseta antiga",
+        default_unit="un",
+    )
+    variant = create_variant(
+        organization=organization,
+        product=product,
+        actor=user,
+        name="Azul M",
+        sku="CAM-AZ-M",
+    )
+    item = add_item(
+        organization=organization,
+        order=order,
+        actor=user,
+        expected_version=1,
+        idempotency_key=key(),
+        product=product,
+        variant=variant,
+        quantity=1,
+        unit_price=50,
+    )
+    update_product(
+        organization=organization,
+        product=product,
+        actor=user,
+        name="Camiseta atual",
+        default_unit="pc",
+    )
+    variant.name = "Verde G"
+    variant.sku = "CAM-VD-G"
+    variant.save(update_fields=("name", "sku", "updated_at"))
+
+    confirm_order(
+        organization=organization,
+        order=order,
+        actor=user,
+        expected_version=2,
+        idempotency_key=key(),
+    )
+
+    item.refresh_from_db()
+    assert item.name_snapshot == "Camiseta atual"
+    assert item.unit_snapshot == "pc"
+    assert item.variant_snapshot == "Verde G"
+    assert item.sku_snapshot == "CAM-VD-G"
+
+
+@pytest.mark.django_db
 def test_confirmation_blocks_merged_customer(organization, order, customer, user):
     canonical = Customer.objects.create(
         organization=organization,
@@ -684,4 +736,9 @@ def test_status_history_is_separate_and_immutable(organization, order):
     history = OrderStatusHistory.objects.get(order=order)
     with pytest.raises(TypeError):
         history.delete()
+    history.command_id = "rewritten"
+    with pytest.raises(TypeError):
+        history.save()
+    with pytest.raises(TypeError):
+        OrderStatusHistory.objects.filter(id=history.id).update(command_id="rewritten")
     assert AuditEvent.objects.filter(entity_id=str(order.id)).exists()
