@@ -31,6 +31,12 @@
   "migrations": [
     "apps/fulfillment/migrations/0001_initial.py"
   ],
+  "models": [
+    "Fulfillment",
+    "FulfillmentItem",
+    "FulfillmentStatusHistory",
+    "FulfillmentCommandReceipt"
+  ],
   "tests": {
     "added": ["apps/fulfillment/tests/test_services.py"],
     "local_result": "partial: new tests added locally; full CI run required"
