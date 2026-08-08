@@ -40,11 +40,11 @@ login
    eventos internos na mesma transação.
 
 Orders não cobra, separa, entrega, envia mensagens, emite documento fiscal ou
-chama providers. A Fase 4 planeja a separação, entrega e retirada em um módulo
-novo, mas nenhuma dessas funções está implementada enquanto o plano estiver
-pendente.
+chama providers. A branch candidata da Fase 4 implementa separação, entrega e
+retirada em um módulo novo, ainda pendente de Review, QA/Segurança e aprovação
+humana da fase.
 
-## Fluxo proposto para a Fase 4
+## Fluxo candidato da Fase 4
 
 ```text
 Order confirmed

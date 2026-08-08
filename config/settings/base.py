@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "apps.customers",
     "apps.products",
     "apps.orders",
+    "apps.fulfillment",
 ]
 
 MIDDLEWARE = [
@@ -122,6 +123,7 @@ CELERY_TASK_QUEUES = (Queue("default"), Queue("integrations"))
 CELERY_TASK_ROUTES = {
     "apps.platform.tasks.publish_pending_outbox": {"queue": "default"},
     "apps.platform.tasks.record_beat_heartbeat": {"queue": "default"},
+    "apps.fulfillment.tasks.consume_order_cancellations": {"queue": "default"},
 }
 CELERY_BEAT_SCHEDULE = {
     "platform-outbox-publisher": {
@@ -131,6 +133,10 @@ CELERY_BEAT_SCHEDULE = {
     "platform-heartbeat": {
         "task": "apps.platform.tasks.record_beat_heartbeat",
         "schedule": 30.0,
+    },
+    "fulfillment-order-cancellations": {
+        "task": "apps.fulfillment.tasks.consume_order_cancellations",
+        "schedule": 10.0,
     },
 }
 

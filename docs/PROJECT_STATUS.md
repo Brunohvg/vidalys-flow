@@ -24,14 +24,17 @@ humana e merge. Nenhum deploy foi executado.
 - branch: `phase/04-fulfillment`;
 - `actual_base_sha`: `a98ceab40f9c40d19dd9c24b666846fb05e63b2d`;
 - dependência funcional aprovada: `d36558636586b766a4d3b5b8f83abcb2505f78e0`;
-- checkpoint atual: planejamento;
-- plano: pendente de aprovação humana;
-- implementação, Review e QA/Segurança: bloqueados pelo checkpoint;
-- PR, merge, release e deploy: não autorizados por este planejamento.
+- plano: aprovado para implementação em 8 de agosto de 2026;
+- implementação: candidata, com código e migrations concluídos localmente;
+- evidência local: 201 testes aprovados e 85% de cobertura total;
+- Review independente: pendente;
+- QA/Segurança: bloqueado até Review sem bloqueadores;
+- PR, merge, release e deploy: não autorizados neste checkpoint.
 
-O plano propõe lotes parciais de entrega ou retirada com estados logísticos
-próprios, alocação quantitativa concorrente, idempotência e privacidade. Ele
-não adiciona estoque, pagamento, provider nem estado novo a Orders.
+O candidato implementa lotes parciais de entrega ou retirada com estados
+logísticos próprios, alocação quantitativa concorrente, idempotência e
+privacidade. Ele não adiciona estoque, pagamento, provider nem estado novo a
+Orders.
 
 ## Independência do Flowlog
 

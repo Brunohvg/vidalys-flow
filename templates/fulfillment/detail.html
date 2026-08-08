@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ detail.display_number }} — Vidalys Flow{% endblock %}
+{% block content %}
+  <div class="actions">
+    <h1>{{ detail.display_number }}</h1>
+    <span class="badge">{{ fulfillment.get_status_display }}</span>
+  </div>
+  <p>
+    Pedido: <a href="{% url 'orders:detail' fulfillment.order_id %}">{{ fulfillment.order.display_number }}</a>
+    · Método: {{ fulfillment.get_method_display }} · Versão: {{ fulfillment.version }}
+  </p>
+
+  <section>
+    <h2>Destino operacional</h2>
+    {% if fulfillment.method == "delivery" %}
+      <div class="card">
+        <p>{{ detail.destination.recipient_name }}</p>
+        <p>{{ detail.destination.street }}, {{ detail.destination.number }}</p>
+        <p>{{ detail.destination.district }} · {{ detail.destination.city }}/{{ detail.destination.state }}</p>
+        <p>{{ detail.destination.postal_code }}</p>
+      </div>
+    {% else %}
+      <p>Retirada em <strong>{{ fulfillment.pickup_unit_name_snapshot }}</strong>.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Itens alocados</h2>
+    <table class="responsive-table">
+      <thead><tr><th>Item</th><th>SKU</th><th>Unidade</th><th>Quantidade</th></tr></thead>
+      <tbody>
+        {% for item in detail.items %}
+          <tr>
+            <td data-label="Item">{{ item.order_item.name_snapshot }}{% if item.order_item.variant_snapshot %} · {{ item.order_item.variant_snapshot }}{% endif %}</td>
+            <td data-label="SKU">{{ item.order_item.sku_snapshot|default:"—" }}</td>
+            <td data-label="Unidade">{{ item.order_item.unit_snapshot }}</td>
+            <td data-label="Quantidade">{{ item.quantity }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if fulfillment.status == "draft" %}
+    <section>
+      <h2>Editar quantidades</h2>
+      <form method="post" action="{% url 'fulfillment:update' fulfillment.id %}">
+        {% csrf_token %}
+        {{ allocation_form.as_p }}
+        <button type="submit">Salvar quantidades</button>
+      </form>
+    </section>
+  {% endif %}
+
+  {% if fulfillment.status != "completed" and fulfillment.status != "cancelled" %}
+    <section>
+      <h2>Próxima etapa</h2>
+      {% if fulfillment.status == "draft" %}
+        <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'preparing' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Iniciar separação</button></form>
+      {% elif fulfillment.status == "preparing" %}
+        <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'ready' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Marcar como pronto</button></form>
+      {% elif fulfillment.status == "ready" and fulfillment.method == "delivery" %}
+        <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'in_transit' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Despachar entrega</button></form>
+      {% elif fulfillment.status == "ready" and fulfillment.method == "pickup" %}
+        <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'completed' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Concluir retirada</button></form>
+      {% elif fulfillment.status == "in_transit" %}
+        <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'completed' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Concluir entrega</button></form>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if can_cancel and fulfillment.status != "completed" and fulfillment.status != "cancelled" %}
+    <section>
+      <h2>Cancelar lote</h2>
+      <form method="post" action="{% url 'fulfillment:cancel' fulfillment.id %}">
+        {% csrf_token %}
+        {{ cancel_form.as_p }}
+        <button class="danger" type="submit">Cancelar lote</button>
+      </form>
+    </section>
+  {% endif %}
+
+  <section>
+    <h2>Histórico</h2>
+    <ol>
+      {% for event in detail.history %}
+        <li>{{ event.created_at|date:"d/m/Y H:i" }} · {{ event.from_status|default:"criação" }} → {{ event.to_status }}</li>
+      {% endfor %}
+    </ol>
+  </section>
+{% endblock %}

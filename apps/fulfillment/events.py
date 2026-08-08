@@ -1,0 +1,7 @@
+FULFILLMENT_CREATED = "fulfillment.created"
+FULFILLMENT_UPDATED = "fulfillment.updated"
+FULFILLMENT_PREPARING = "fulfillment.preparing"
+FULFILLMENT_READY = "fulfillment.ready"
+FULFILLMENT_DISPATCHED = "fulfillment.dispatched"
+FULFILLMENT_COMPLETED = "fulfillment.completed"
+FULFILLMENT_CANCELLED = "fulfillment.cancelled"

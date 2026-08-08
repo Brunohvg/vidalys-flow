@@ -1,6 +1,6 @@
 # ADR-012 — Fronteira e ciclo de vida de Fulfillment
 
-Status: proposto para aprovação no planejamento da Fase 4.
+Status: aceito para implementação na Fase 4.
 
 ## Contexto
 
@@ -30,4 +30,5 @@ O progresso completo do pedido será uma leitura derivada das quantidades dos
 lotes. Entregas parciais não exigem mudar o agregado comercial. Devolução,
 falha de entrega e logística reversa ficam explicitamente adiadas.
 
-Este ADR só se torna aceito após aprovação humana explícita do plano.
+Aceito pela aprovação humana explícita do plano em 8 de agosto de 2026. Isso
+não aprova implementação, merge ou deploy.

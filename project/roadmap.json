@@ -75,7 +75,7 @@
     {
       "id": 4,
       "name": "Fulfillment",
-      "status": "planned",
+      "status": "candidate",
       "dependencies": [
         3
       ],

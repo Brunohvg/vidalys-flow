@@ -8,15 +8,16 @@ Plataforma independente de operação de vendas e pós-venda.
 
 Este repositório contém a fundação greenfield e os domínios nativos e
 aprovados de clientes, catálogo operacional e Orders. A Fase 4 — Fulfillment
-está somente em planejamento; pagamentos, mensagens, integrações e dashboard
-permanecem em fases posteriores.
+está em implementação na branch candidata; pagamentos, mensagens, integrações
+e dashboard permanecem em fases posteriores.
 
 Após selecionar uma organização permitida por Membership, as interfaces
 estão disponíveis em:
 
 - `/customers/`;
 - `/products/`;
-- `/orders/`.
+- `/orders/`;
+- `/fulfillment/` na branch candidata `phase/04-fulfillment`.
 
 Consulte [Customers](docs/domains/CUSTOMERS.md),
 [Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md), o
@@ -26,7 +27,8 @@ decisões de escopo.
 
 Para uma visão integrada, consulte o [fluxo funcional](docs/SYSTEM_FLOW.md), o
 [caminho até produção](docs/ROADMAP_TO_PRODUCTION.md) e a
-[visão futura de Payments](docs/domains/PAYMENTS_VISION.md).
+[visão futura de Payments](docs/domains/PAYMENTS_VISION.md). Para assumir o
+trabalho em outro computador, siga [Clonar e continuar](docs/CLONE_AND_CONTINUE.md).
 
 ## Início rápido
 

@@ -17,8 +17,8 @@ services:
       - -c
       - >-
         .venv/bin/python manage.py migrate --noinput &&
-        .venv/bin/python manage.py migrate orders zero --noinput &&
-        .venv/bin/python manage.py migrate orders --noinput &&
+        .venv/bin/python manage.py migrate fulfillment zero --noinput &&
+        .venv/bin/python manage.py migrate fulfillment --noinput &&
         .venv/bin/ruff check . &&
         .venv/bin/python manage.py check &&
         .venv/bin/python manage.py makemigrations --check --dry-run &&

@@ -5,19 +5,19 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-A Fase 03 — Orders foi aprovada e integrada. A Fase 04 — Fulfillment está no
-checkpoint de planejamento em `phase/04-fulfillment`, sobre a baseline
-`a98ceab40f9c40d19dd9c24b666846fb05e63b2d`. Seu contrato ainda exige
-aprovação humana antes de qualquer código de domínio. Não há autorização de
-deploy.
+A Fase 03 — Orders foi aprovada e integrada. A Fase 04 — Fulfillment possui
+implementação candidata em `phase/04-fulfillment`, sobre a baseline
+`a98ceab40f9c40d19dd9c24b666846fb05e63b2d`. O próximo checkpoint é Review
+independente, seguido de correções quando necessárias e QA/Segurança. Não há
+autorização de merge ou deploy.
 
 ## Sequência de produto
 
 1. **Orders (Fase 03, concluída).** Registro comercial, snapshots, valores e
    estados canônicos aprovados; sem cobrança ou logística.
-2. **Fulfillment (Fase 04, planejamento).** Aprovar o plano; implementar lotes
-   parciais, separação, entrega ou retirada; revisar; executar QA/Segurança;
-   produzir handoff; obter nova aprovação humana antes de PR/merge.
+2. **Fulfillment (Fase 04, candidata).** Revisar a implementação de lotes
+   parciais, separação, entrega e retirada; executar QA/Segurança; produzir o
+   relatório final; obter nova aprovação humana antes de PR/merge.
 3. **Payments (Fase 05).** Modelar cobranças e links de pagamento de forma
    provider-agnostic; decidir o primeiro rollout entre Mercado Pago e Pagar.me
    conforme conta e sandbox; estabilizar ambos antes do Appmax.

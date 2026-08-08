@@ -132,6 +132,20 @@
     </section>
   {% endif %}
 
+  {% if order.status == "confirmed" %}
+    <section aria-labelledby="fulfillment">
+      <h2 id="fulfillment">Fulfillment</h2>
+      <p><a href="{% url 'fulfillment:create' order.id %}">Criar lote de entrega ou retirada</a></p>
+      <ul>
+        {% for fulfillment in order.fulfillments.all %}
+          <li><a href="{% url 'fulfillment:detail' fulfillment.id %}">{{ fulfillment.display_number }}</a> · {{ fulfillment.get_method_display }} · {{ fulfillment.get_status_display }}</li>
+        {% empty %}
+          <li>Nenhum lote criado.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
   <section aria-labelledby="history">
     <h2 id="history">Histórico de estado</h2>
     <ol>

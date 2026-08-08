@@ -1,7 +1,15 @@
-# Domínio Fulfillment — plano da Fase 4
+# Domínio Fulfillment — Fase 4
 
-Este documento descreve o contrato proposto para aprovação humana. Não existe
-implementação de Fulfillment enquanto `plan_status` permanecer `pending`.
+Este contrato foi aprovado para implementação em 8 de agosto de 2026. A
+aprovação não autoriza merge, deploy ou aprovação da fase concluída.
+
+## Implementação candidata
+
+O domínio está implementado em `apps.fulfillment`, com migrations novas,
+services transacionais, selectors tenant-scoped, policies, recibos
+idempotentes, histórico imutável, eventos internos, tarefa Celery e interface
+HTML em `/fulfillment/`. O candidato ainda exige Review independente,
+QA/Segurança e aprovação humana antes de merge ou release.
 
 ## Objetivo e fronteira
 

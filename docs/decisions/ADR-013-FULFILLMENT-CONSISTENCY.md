@@ -1,6 +1,6 @@
 # ADR-013 — Quantidades, cancelamento, idempotência e concorrência
 
-Status: proposto para aprovação no planejamento da Fase 4.
+Status: aceito para implementação na Fase 4.
 
 ## Contexto
 
@@ -27,4 +27,5 @@ interpretado como estoque. Testes PostgreSQL deverão cobrir alocação e
 cancelamento concorrentes, evento repetido ou fora de ordem e conflito de
 payload idempotente.
 
-Este ADR só se torna aceito após aprovação humana explícita do plano.
+Aceito pela aprovação humana explícita do plano em 8 de agosto de 2026. Isso
+não aprova implementação, merge ou deploy.
