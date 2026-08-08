@@ -6,21 +6,21 @@ Plataforma independente de operação de vendas e pós-venda.
 > independente. Não consulta, importa, migra ou compartilha dados, runtime,
 > autenticação ou infraestrutura com o Flowlog.
 
-Este repositório contém a fundação greenfield e os domínios nativos de
-clientes, catálogo operacional de produtos e o candidato da Fase 3 — Orders.
-Orders ainda depende de Review independente, QA/Segurança e aprovação humana;
-fulfillment, pagamentos, mensagens, integrações e dashboard permanecem fora do
-escopo atual.
+Este repositório contém a fundação greenfield e os domínios nativos e
+aprovados de clientes, catálogo operacional e Orders. A Fase 4 — Fulfillment
+está somente em planejamento; pagamentos, mensagens, integrações e dashboard
+permanecem em fases posteriores.
 
 Após selecionar uma organização permitida por Membership, as interfaces
 estão disponíveis em:
 
 - `/customers/`;
 - `/products/`;
-- `/orders/` na branch candidata `phase/03-orders`.
+- `/orders/`.
 
-Consulte [Customers](docs/domains/CUSTOMERS.md) e
-[Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md) e o
+Consulte [Customers](docs/domains/CUSTOMERS.md),
+[Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md), o
+[plano de Fulfillment](docs/domains/FULFILLMENT.md) e o
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e
 decisões de escopo.
 

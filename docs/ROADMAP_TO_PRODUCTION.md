@@ -5,21 +5,22 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-A Fase 03 — Orders permanece candidata. O checkpoint e as evidências correntes
-estão em `project/handoffs/phase-03.json` e nos relatórios de Review em
-`project/reviews/`. Antes da aprovação humana ainda são obrigatórios Review sem
-bloqueadores e QA/Segurança com GO. Somente depois disso podem ser autorizados
-PR/merge e o planejamento da fase seguinte.
+A Fase 03 — Orders foi aprovada e integrada. A Fase 04 — Fulfillment está no
+checkpoint de planejamento em `phase/04-fulfillment`, sobre a baseline
+`a98ceab40f9c40d19dd9c24b666846fb05e63b2d`. Seu contrato ainda exige
+aprovação humana antes de qualquer código de domínio. Não há autorização de
+deploy.
 
 ## Sequência de produto
 
-1. **Concluir Orders (Fase 03).** Corrigir achados, validar PostgreSQL,
-   concorrência, segurança e handoff; obter aprovação humana.
-2. **Fulfillment (Fase 04).** Planejar e implementar separação, entrega ou
-   retirada sem misturar estados comerciais, financeiros e logísticos.
+1. **Orders (Fase 03, concluída).** Registro comercial, snapshots, valores e
+   estados canônicos aprovados; sem cobrança ou logística.
+2. **Fulfillment (Fase 04, planejamento).** Aprovar o plano; implementar lotes
+   parciais, separação, entrega ou retirada; revisar; executar QA/Segurança;
+   produzir handoff; obter nova aprovação humana antes de PR/merge.
 3. **Payments (Fase 05).** Modelar cobranças e links de pagamento de forma
-   provider-agnostic; planejar Mercado Pago e Pagar.me como primeiros
-   conectores e Appmax como conector posterior.
+   provider-agnostic; decidir o primeiro rollout entre Mercado Pago e Pagar.me
+   conforme conta e sandbox; estabilizar ambos antes do Appmax.
 4. **Messaging (Fase 06).** Enviar comunicações transacionais somente a partir
    de eventos aprovados, com consentimento e rastreabilidade.
 5. **Integrations (Fase 07).** Adicionar conectores externos com isolamento,
@@ -32,6 +33,20 @@ PR/merge e o planejamento da fase seguinte.
 8. **Go-live controlado (Fase 10).** Liberar produção somente após evidências
    de homologação, plano de rollback e aprovação humana. O encerramento
    operacional do sistema antigo não cria integração nem migração de dados.
+
+## Ordens obrigatórias até teste e deploy
+
+Cada fase de produto repete planejamento, aprovação do plano, implementação,
+CI, Review independente, QA/Segurança, handoff, aprovação humana e merge. A
+Fase 09 só começa depois das fases funcionais aprovadas e prepara ambiente
+exclusivo, migrations desde banco vazio, backup/restore, observabilidade e
+testes de aceitação. A Fase 10 executa o go-live apenas com rollback testado e
+aprovação humana específica.
+
+Payments não pode ser antecipado dentro de Fulfillment. Cada conector terá
+credencial exclusiva da Vidalys Flow, checkout hospedado, webhook autenticado,
+deduplicação, reconciliação, sandbox e rollout separado. Nada será reaproveitado
+do Flowlog antigo.
 
 ## Gate repetido em cada fase
 

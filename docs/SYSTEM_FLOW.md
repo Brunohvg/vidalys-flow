@@ -12,7 +12,7 @@ workers, webhooks, runtime, servidor ou deploy com o Flowlog antigo. A
 referência histórica permitida pelo processo serve somente para compreender
 ideias de produto ainda não reconstruídas e nunca cria uma ligação técnica.
 
-## Fluxo disponível hoje
+## Fluxo aprovado hoje
 
 ```text
 login
@@ -40,7 +40,25 @@ login
    eventos internos na mesma transação.
 
 Orders não cobra, separa, entrega, envia mensagens, emite documento fiscal ou
-chama providers nesta fase.
+chama providers. A Fase 4 planeja a separação, entrega e retirada em um módulo
+novo, mas nenhuma dessas funções está implementada enquanto o plano estiver
+pendente.
+
+## Fluxo proposto para a Fase 4
+
+```text
+Order confirmed
+  → lote Fulfillment draft
+  → preparing
+  → ready
+  ├─ delivery → in_transit → completed
+  └─ pickup ───────────────→ completed
+```
+
+Vários lotes podem atender parcialmente o mesmo pedido sem superar a
+quantidade confirmada. O progresso é logístico e não cria `completed` em
+Order. Cancelamento comercial é coordenado por evento interno idempotente;
+estoque, pagamentos, transportadoras, mensagens e integrações não participam.
 
 ## Papéis
 
@@ -58,7 +76,7 @@ Customer + Product
         ↓
       Order
         ↓
-   Fulfillment
+   Fulfillment aprovado
         ↓
 Payment link ──→ provider externo ──→ webhook verificado
         ↓                              ↓
@@ -83,4 +101,3 @@ QA/Segurança e aprovação humana próprios.
 - integrações externas ficam desligadas por padrão e exigem autorização,
   credenciais exclusivas e observabilidade;
 - nenhum ambiente futuro pode reutilizar infraestrutura do Flowlog.
-

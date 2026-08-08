@@ -11,35 +11,34 @@ Consulte e valide o estado:
 ```bash
 python scripts/agent_orchestrator.py status
 python scripts/agent_orchestrator.py validate-all
-python scripts/agent_orchestrator.py validate-phase 03
+python scripts/agent_orchestrator.py validate-phase 04
 ```
 
-O planejamento e a implementação da Fase 3 já foram concluídos. O checkpoint
-atual é Review independente:
+Orders foi aprovado. O checkpoint atual é o planejamento da Fase 4 —
+Fulfillment:
 
 ```bash
-python scripts/agent_orchestrator.py render review 03
+python scripts/agent_orchestrator.py render planning 04
 ```
 
-O candidato está em `phase/03-orders`, criado sobre o `actual_base_sha`
-`75c335676c6ad258e5ff2832bb64a2a5a7d97fcc`. O handoff registra essa baseline
-em `base_sha`; `dependency_head` continua sendo a evidência funcional da Fase
-2 aprovada.
+O planejamento está em `phase/04-fulfillment`, criada sobre o
+`actual_base_sha` `a98ceab40f9c40d19dd9c24b666846fb05e63b2d`.
+`dependency_head` permanece como a evidência funcional da Fase 3 aprovada.
 
-Os comandos dos checkpoints já concluídos permanecem disponíveis para
-reprodução, mas não devem reiniciar planejamento ou implementação:
+O prompt da implementação futura será:
 
 ```bash
-python scripts/agent_orchestrator.py render planning 03
-python scripts/agent_orchestrator.py render implementation 03
+python scripts/agent_orchestrator.py render implementation 04
 ```
 
-Depois de Review completo e sem blockers, o próximo agente poderá renderizar
-QA/Segurança:
+O prompt de implementação só pode ser renderizado depois que uma aprovação
+humana explícita registrar `plan_status: approved`. Review e QA/Segurança
+continuam checkpoints posteriores e independentes:
 
 ```bash
-python scripts/agent_orchestrator.py render qa-security 03
-python scripts/agent_orchestrator.py validate-handoff project/handoffs/phase-03.json
+python scripts/agent_orchestrator.py render review 04
+python scripts/agent_orchestrator.py render qa-security 04
+python scripts/agent_orchestrator.py validate-handoff project/handoffs/phase-04.json
 ```
 
 `approval.md` é material exclusivo do aprovador humano. O orquestrador recusa

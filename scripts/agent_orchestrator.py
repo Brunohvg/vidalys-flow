@@ -400,7 +400,7 @@ class GovernanceRepository:
             raise GovernanceError(f"phase {phase_id:02d} dependency {dependency} is not approved")
         if manifest["dependency_head"] != dependency_phase["approved_sha"]:
             raise GovernanceError(f"phase {phase_id:02d} dependency_head differs from roadmap approved SHA")
-        if state["active_candidate"] is not None:
+        if state["active_candidate"] is not None and state["active_candidate"]["phase"] == phase_id:
             candidate = state["active_candidate"]
             if candidate["dependency_head"] != manifest["dependency_head"]:
                 raise GovernanceError("active_candidate dependency_head differs from phase manifest")

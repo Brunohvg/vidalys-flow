@@ -19,5 +19,6 @@ sistema. Não existe ETL, sincronização ou reconciliação entre produtos.
 Cada domínio deixa de consultar a referência antiga somente depois de possuir
 contrato greenfield aprovado, migrations novas, testes em PostgreSQL,
 isolamento por organização, Review e QA/Segurança concluídos no presente
-repositório. Orders já é tecnicamente independente, mas permanece consultável
-como referência histórica até a aprovação formal da Fase 3.
+repositório. Orders já concluiu esse processo. O planejamento de Fulfillment
+foi produzido apenas com os contratos da Vidalys Flow e não consultou o
+Flowlog.
