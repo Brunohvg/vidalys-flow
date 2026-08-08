@@ -75,19 +75,20 @@
     {
       "id": 4,
       "name": "Fulfillment",
-      "status": "planned",
+      "status": "approved",
       "dependencies": [
         3
       ],
-      "approved_sha": null,
+      "approved_sha": "323861ef62db547a3947f63018a16b908cbc0f55",
       "branch": "phase/04-fulfillment",
-      "handoff": null,
+      "handoff": "project/handoffs/phase-04.json",
       "domains": [
         "fulfillment"
       ],
-      "human_approval_status": "pending",
+      "human_approval_status": "approved",
       "known_risks": []
     },
+
     {
       "id": 5,
       "name": "Payments",

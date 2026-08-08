@@ -22,14 +22,15 @@
     {
       "domain": "Orders",
       "status": "completed"
+    },
+    {
+      "domain": "Fulfillment",
+      "reference_app": "phase/04-fulfillment",
+      "status": "completed",
+      "approved_sha": "323861ef62db547a3947f63018a16b908cbc0f55"
     }
   ],
   "domains_still_consultable": [
-    {
-      "domain": "Fulfillment",
-      "reference_app": null,
-      "status": "pending"
-    },
     {
       "domain": "Payments",
       "reference_app": null,

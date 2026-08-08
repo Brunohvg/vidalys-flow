@@ -72,8 +72,43 @@
   "merged_head_sha": "323861ef62db547a3947f63018a16b908cbc0f55",
   "merged_at": "2026-08-08T15:10:55Z",
   "human_approval": {
-    "approved_by": "Brunohvg",
+    "approved_by": "Bruno Vidal",
     "approved_at": "2026-08-08T15:10:55Z",
+    "decision": "approved",
     "note": "Implementation approved and merged as the official candidate (PR #3)."
-  }
+  },
+  "approval_record": {
+    "candidate_material": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
+    "carrier_evidence": "7b2e92d939e9fd39b3baec1c12b900297a0d6548",
+    "independent_review": "Review 02: APPROVED",
+    "qa_security": "GO",
+    "ci": {
+      "id": "31259856105",
+      "status": "success",
+      "tests_passed": 208,
+      "skips": 0,
+      "coverage_percent": 86
+    },
+    "postgres": "PostgreSQL 17 validated from empty database",
+    "migrations": "rollback and re-apply validated",
+    "concurrency_and_idempotency": "validated",
+    "organization_isolation": "validated",
+    "privacy_and_masking": "validated",
+    "blockers": []
+  },
+  "authorizations": {
+    "register_human_approval": true,
+    "close_pr_4_as_obsolete": true,
+    "use_pr_3_as_official_candidate": true,
+    "incorporate_phase_4_into_main_via_pr_flow": true,
+    "update_governance_and_docs": true,
+    "mark_fulfillment_independent": true,
+    "start_phase_05_planning_after_main_merge_and_ci_green": true
+  },
+  "prohibitions": [
+    "No deploy",
+    "No configuration of real providers",
+    "No real financial transactions",
+    "No initiating Messaging or Integrations until authorized"
+  ]
 }
