@@ -116,6 +116,54 @@ def test_operator_adjustment_submission_is_refused(client, organization, order, 
 
 
 @pytest.mark.django_db
+def test_operator_updates_base_fields_and_preserves_manager_adjustments_from_view(
+    client,
+    organization,
+    order,
+    user,
+    operator_membership,
+    manager,
+    manager_membership,
+):
+    item = add_item(
+        organization=organization,
+        order=order,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=str(uuid.uuid4()),
+        name="Item ajustado",
+        quantity=1,
+        unit_price=10,
+        discount_amount=2,
+        surcharge_amount=1,
+        surcharge_reason="Personalização",
+    )
+    client.force_login(user)
+
+    response = client.post(
+        reverse("orders:update-item", args=(order.id, item.id)),
+        {
+            "expected_version": 2,
+            "idempotency_key": str(uuid.uuid4()),
+            "quantity": "2.000",
+            "unit_price": "12.00",
+            "notes": "Medida conferida",
+        },
+        follow=True,
+    )
+
+    item.refresh_from_db()
+    assert response.status_code == 200
+    assert "Item atualizado." in response.content.decode()
+    assert item.quantity == 2
+    assert item.unit_price == 12
+    assert item.discount_amount == 2
+    assert item.surcharge_amount == 1
+    assert item.surcharge_reason == "Personalização"
+    assert item.notes == "Medida conferida"
+
+
+@pytest.mark.django_db
 def test_cross_organization_detail_is_404(
     client,
     organization,

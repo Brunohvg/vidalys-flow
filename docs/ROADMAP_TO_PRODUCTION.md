@@ -5,10 +5,11 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-A Fase 03 — Orders está em remediação após Review independente. Ainda faltam
-novo CI, Review sem bloqueadores, QA/Segurança e aprovação humana da fase.
-Somente depois disso podem ser autorizados PR/merge e o planejamento da fase
-seguinte.
+A Fase 03 — Orders permanece candidata. O checkpoint e as evidências correntes
+estão em `project/handoffs/phase-03.json` e nos relatórios de Review em
+`project/reviews/`. Antes da aprovação humana ainda são obrigatórios Review sem
+bloqueadores e QA/Segurança com GO. Somente depois disso podem ser autorizados
+PR/merge e o planejamento da fase seguinte.
 
 ## Sequência de produto
 
@@ -73,4 +74,3 @@ uma máquina de produção já provisionada e aprovada. Portanto:
 - **máquina de produção independente:** pendente de comprovação/provisionamento
   na Fase 09;
 - **deploy atual:** não autorizado e não realizado por este fluxo.
-

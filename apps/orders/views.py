@@ -241,6 +241,11 @@ def order_update_item(request, order_id, item_id):
     form = ItemUpdateForm(
         request.POST,
         can_adjust=policies.can_apply_adjustments(user=request.user, organization=organization),
+        initial={
+            "discount_amount": item.discount_amount,
+            "surcharge_amount": item.surcharge_amount,
+            "surcharge_reason": item.surcharge_reason,
+        },
     )
     result = _run_command(
         request,

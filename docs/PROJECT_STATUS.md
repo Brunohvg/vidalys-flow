@@ -28,11 +28,14 @@ humana. Nenhum resultado técnico da Fase 3 modifica esse fato.
   `project/reviews/phase-03-review-01.md`;
 - Review independente 2: alterações solicitadas e registradas em
   `project/reviews/phase-03-review-02.md`;
-- remediação: em andamento para novo candidato e novo Review independente;
+- Review independente 3: alterações solicitadas e registradas em
+  `project/reviews/phase-03-review-03.md`;
+- checkpoint técnico corrente: consultar `project/handoffs/phase-03.json` e o
+  relatório de Review mais recente;
 - QA/Segurança: bloqueado até um Review sem bloqueadores;
 - aprovação humana da fase: pendente.
 
-O próximo checkpoint permitido é um novo Review independente. Não iniciar
+QA só pode começar após um Review independente sem bloqueadores. Não iniciar
 Fulfillment, PR, merge, release ou atualização de aprovação antes da conclusão
 de Review, QA/Segurança e nova decisão humana.
 
