@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/03-orders",
   "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
-  "head_sha": "92d402684cb1c85f9c02027b756500321d15009e",
+  "head_sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
   "commits": [
     {
       "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
@@ -14,6 +14,14 @@
     {
       "sha": "92d402684cb1c85f9c02027b756500321d15009e",
       "subject": "fix(orders): handle replay after item removal"
+    },
+    {
+      "sha": "af527afff78a240972f8dd4795d587176874cab3",
+      "subject": "docs(orders): record phase 03 candidate handoff"
+    },
+    {
+      "sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
+      "subject": "docs(orders): correct candidate head evidence"
     }
   ],
   "delivered_scope": [
@@ -56,10 +64,11 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": "not_recorded",
-    "url": "not_recorded",
-    "head_sha": "92d402684cb1c85f9c02027b756500321d15009e",
-    "conclusion": "not_run"
+    "workflow_id": 30534745778,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/30534745778",
+    "head_sha": "cadbfeac60f811d40789082ccdf6475a6860802d",
+    "run_attempt": 2,
+    "conclusion": "success"
   },
   "organization_isolation": {
     "status": "passed",
@@ -78,7 +87,6 @@
     "Coolify configuration and deployment"
   ],
   "risks": [
-    "GitHub CI was not run because this checkpoint does not authorize push or PR.",
     "Personal-data snapshots intentionally duplicate the approved minimum data inside confirmed orders and require the documented masking discipline."
   ],
   "blockers": [],

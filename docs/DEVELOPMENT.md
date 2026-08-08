@@ -33,12 +33,13 @@ Migrations são geradas neste repositório e testadas desde banco vazio.
 Não copiar, editar para compatibilidade ou marcar como aplicadas migrations
 de outro sistema.
 
-Os apps `customers` e `products` possuem migrations iniciais próprias. Para
-validar separadamente:
+Os apps `customers`, `products` e `orders` possuem migrations iniciais
+próprias. Para validar separadamente:
 
 ```bash
 uv run pytest apps/customers
 uv run pytest apps/products
+uv run pytest apps/orders
 ```
 
 Views são adaptadores. Escritas devem chamar services com `organization` e

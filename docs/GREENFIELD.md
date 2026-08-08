@@ -11,6 +11,8 @@ configuração de deploy não pertencem a este produto.
 O banco `vidalys_flow` começa vazio. Toda entidade nasce diretamente neste
 sistema. Não existe ETL, sincronização ou reconciliação entre produtos.
 
-Cada domínio futuro deixará de consultar a referência antiga quando possuir
-contrato documentado, migrations novas, testes em PostgreSQL, isolamento por
-organização e revisão de segurança no presente repositório.
+Cada domínio deixa de consultar a referência antiga somente depois de possuir
+contrato greenfield aprovado, migrations novas, testes em PostgreSQL,
+isolamento por organização, Review e QA/Segurança concluídos no presente
+repositório. Orders já é tecnicamente independente, mas permanece consultável
+como referência histórica até a aprovação formal da Fase 3.

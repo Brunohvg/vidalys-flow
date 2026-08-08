@@ -57,19 +57,19 @@
     {
       "id": 3,
       "name": "Orders",
-      "status": "planned",
+      "status": "candidate",
       "dependencies": [
         2
       ],
       "approved_sha": null,
       "branch": "phase/03-orders",
-      "handoff": null,
+      "handoff": "project/handoffs/phase-03.json",
       "domains": [
         "orders"
       ],
       "human_approval_status": "pending",
       "known_risks": [
-        "State transitions, snapshots, money, and concurrent changes require explicit contracts."
+        "Independent Review and QA/Security remain pending before human approval."
       ]
     },
     {

@@ -3,7 +3,7 @@
 ## Isolamento
 
 - autorização organizacional é feita por Membership ativa;
-- todo dado operacional futuro deve possuir organização explícita;
+- todo dado operacional deve possuir organização explícita;
 - User não contém papel global de organização;
 - a remoção do último OWNER ativo é recusada em transação;
 - testes cross-organization são obrigatórios.
