@@ -31,6 +31,10 @@ humana e merge. Nenhum deploy foi executado.
 - QA/Segurança: bloqueado até Review sem bloqueadores;
 - PR, merge, release e deploy: não autorizados neste checkpoint.
 
+O handoff candidato e suas evidências estão em
+`project/handoffs/phase-04.json`. O SHA material a revisar é
+`173d0cca7da7a5b8ca9103dbd11a3e13168d18a2`.
+
 O candidato implementa lotes parciais de entrega ou retirada com estados
 logísticos próprios, alocação quantitativa concorrente, idempotência e
 privacidade. Ele não adiciona estoque, pagamento, provider nem estado novo a

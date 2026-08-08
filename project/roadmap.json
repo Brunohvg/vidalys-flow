@@ -81,7 +81,7 @@
       ],
       "approved_sha": null,
       "branch": "phase/04-fulfillment",
-      "handoff": null,
+      "handoff": "project/handoffs/phase-04.json",
       "domains": [
         "fulfillment"
       ],
