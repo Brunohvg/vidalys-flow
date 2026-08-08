@@ -38,7 +38,13 @@ def test_valid_state_and_all_artifacts(repository):
     assert state["approved_phase"] == 3
     assert state["approved_phase_head"] == "d36558636586b766a4d3b5b8f83abcb2505f78e0"
     assert state["baseline_branch"] == "main"
-    assert state["active_candidate"] is None
+    assert state["active_candidate"] == {
+        "phase": 4,
+        "branch": "phase/04-fulfillment",
+        "base_ref": "main",
+        "actual_base_sha": "a98ceab40f9c40d19dd9c24b666846fb05e63b2d",
+        "dependency_head": "d36558636586b766a4d3b5b8f83abcb2505f78e0",
+    }
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):
@@ -82,6 +88,22 @@ def test_phase_uses_main_as_unresolved_baseline(repository):
 
     assert phase["base_ref"] == "main"
     assert "base_sha" not in phase
+
+
+def test_active_candidate_does_not_invalidate_historical_phase(repository):
+    phase = repository.validate_phase(3)
+
+    assert phase["status"] == "approved"
+
+
+def test_active_candidate_dependency_must_match_its_manifest(governance_root):
+    path = governance_root / "project/state.json"
+    state = load_json(path)
+    state["active_candidate"]["dependency_head"] = "0" * 40
+    write_json(path, state)
+
+    with pytest.raises(GovernanceError, match="active_candidate dependency_head differs"):
+        GovernanceRepository(governance_root).validate_phase(4)
 
 
 def test_wrong_baseline_reference_is_rejected(governance_root):

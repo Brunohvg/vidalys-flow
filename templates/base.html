@@ -44,6 +44,7 @@
         <a href="{% url 'customers:list' %}">Clientes</a>
         <a href="{% url 'products:list' %}">Produtos</a>
         <a href="{% url 'orders:list' %}">Pedidos</a>
+        <a href="{% url 'fulfillment:list' %}">Fulfillment</a>
       </nav>
       <form class="inline" method="post" action="{% url 'logout' %}">
         {% csrf_token %}

@@ -1,6 +1,6 @@
 # Arquitetura
 
-## Escopo atual
+## Produto aprovado
 
 A Vidalys Flow é um monólito modular Django. A fundação possui somente:
 
@@ -29,6 +29,19 @@ orders        → core, users, organizations, customers, products, audit, platfo
 middleware de organização, hostname tenancy ou compatibilidade de tabelas.
 Customers e Products não importam um ao outro nem importam Orders. Orders
 consome apenas os contratos aprovados desses domínios.
+
+## Módulo candidato da Fase 4
+
+Fulfillment foi implementado na branch candidata depois da aprovação humana
+de seu plano. O grafo acrescenta uma dependência unidirecional:
+
+```text
+fulfillment → core, users, organizations, orders, audit, platform
+```
+
+Orders não importa Fulfillment. O módulo novo consome snapshots e eventos
+internos aprovados de Orders, sem mudar seus estados comerciais. Não há
+estoque, pagamento, transportadora, provider ou efeito externo na Fase 4.
 
 ## Execução
 

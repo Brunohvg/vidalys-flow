@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "phase_id": 4,
+  "phase_name": "Fulfillment",
+  "status": "candidate",
+  "branch": "phase/04-fulfillment",
+  "base_sha": "a98ceab40f9c40d19dd9c24b666846fb05e63b2d",
+  "head_sha": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
+  "commits": [
+    {
+      "sha": "a9b86956d45ea11441971927a8a641e616aa6dd4",
+      "subject": "docs(fulfillment): plan Phase 04"
+    },
+    {
+      "sha": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
+      "subject": "feat(fulfillment): implement Phase 04 lifecycle"
+    },
+    {
+      "sha": "00e63b4080a77131ca107a31a444b749fc5ac13c",
+      "subject": "fix(fulfillment): resolve Phase 04 review blockers"
+    },
+    {
+      "sha": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
+      "subject": "docs(fulfillment): document Phase 04 remediation"
+    }
+  ],
+  "delivered_scope": [
+    "organization-scoped partial fulfillment batches for delivery and pickup",
+    "draft, preparing, ready, in_transit, completed, and cancelled fulfillment lifecycle without changing Order.status",
+    "Decimal(12,3) allocation limits serialized by PostgreSQL pessimistic locks",
+    "versioned idempotent commands with expected_version and immutable status history",
+    "closed delivery snapshots, pickup-unit snapshots, and manager-tier unmasked personal-data access",
+    "idempotent internal consumption of order.cancelled with completed-history preservation",
+    "tenant-scoped selectors, policies, responsive HTML, audit, outbox, Celery task, and clone/continuation documentation"
+  ],
+  "models": [
+    "fulfillment.Fulfillment",
+    "fulfillment.FulfillmentItem",
+    "fulfillment.FulfillmentStatusHistory",
+    "fulfillment.FulfillmentCommandReceipt"
+  ],
+  "migrations": [
+    "apps/fulfillment/migrations/0001_initial.py",
+    "apps/fulfillment/migrations/0002_fulfillmentstatushistory_fulfillment_history_from_valid_and_more.py"
+  ],
+  "tests": {
+    "count": 208,
+    "skipped": 0,
+    "coverage_percent": 86,
+    "database": "PostgreSQL 17",
+    "result": "passed",
+    "empty_database_migration": "passed",
+    "technical_rollback": "passed",
+    "concurrency": "passed",
+    "cross_organization": "passed",
+    "fulfillment_direct_tests": 24
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed"
+  },
+  "ci": {
+    "workflow_id": 31259856105,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31259856105",
+    "head_sha": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services and selectors, active Membership policies, same-tenant Order/OrderItem/OrganizationUnit resolution, cross-organization tests, and tenant-scoped event consumption."
+  },
+  "legacy_reuse": {
+    "data": false,
+    "migrations": false,
+    "runtime": false
+  },
+  "deferred": [
+    "inventory reservation, stock movement, warehouse management, and picking routes",
+    "carrier quotation, freight price, labels, tracking, and logistics providers",
+    "failed delivery, returns, exchange, reverse logistics, and refunds",
+    "Payments, financial states, Mercado Pago, Pagar.me, and Appmax",
+    "Messaging, Integrations, public API, importers, tax, fiscal issuance, and dashboards",
+    "Coolify, homologation, production machine provisioning, and deployment"
+  ],
+  "risks": [
+    "The approved masking rule means OPERATOR sees a masked delivery address; independent Review must confirm this remains operationally acceptable.",
+    "The order-cancellation consumer shares the internal default Celery queue and must be observed for retry/backlog behavior in later homologation."
+  ],
+  "blockers": [],
+  "review": {
+    "status": "approved",
+    "report": "project/reviews/phase-04-review-02.md",
+    "previous_reports": [
+      "project/reviews/phase-04-review-01.md"
+    ],
+    "candidate_head": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
+    "blockers": []
+  },
+  "qa_security": {
+    "status": "go",
+    "report": "project/qa/phase-04-qa-security.md",
+    "candidate_head": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
+    "blockers": []
+  },
+  "human_approval": {
+    "status": "pending",
+    "evidence": "The Phase 04 technical plan was explicitly approved on 2026-08-08. Implementation, merge, release, deployment, and final phase approval remain separate decisions."
+  }
+}

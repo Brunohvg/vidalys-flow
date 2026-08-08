@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Novo fulfillment — Vidalys Flow{% endblock %}
+{% block content %}
+  <h1>Novo lote para {{ order.display_number }}</h1>
+  <p>Cliente: {{ order.customer_name_snapshot }} · Pedido confirmado em {{ order.confirmed_at|date:"d/m/Y H:i" }}</p>
+  <p class="muted">Informe somente as quantidades deste lote. A soma dos lotes ativos nunca poderá ultrapassar o pedido.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Criar lote</button>
+  </form>
+{% endblock %}

@@ -15,16 +15,14 @@ x-app: &app
     VIDALYS_DEMO_MODE: "1"
     ALLOWED_HOSTS: localhost,127.0.0.1,web
     CSRF_TRUSTED_ORIGINS: http://localhost:8000
-  depends_on:
-    db:
-      condition: service_healthy
-    redis:
-      condition: service_healthy
   restart: unless-stopped
 
 services:
   web:
     <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     command:
       - .venv/bin/gunicorn
       - config.wsgi:application
@@ -32,6 +30,7 @@ services:
       - --workers=2
       - --threads=4
       - --timeout=60
+      - --no-control-socket
       - --access-logfile=-
       - --error-logfile=-
     ports:
@@ -49,6 +48,9 @@ services:
 
   worker-default:
     <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     command: [".venv/bin/celery", "-A", "config", "worker", "--loglevel=INFO", "--queues=default"]
     healthcheck:
       test: ["CMD-SHELL", ".venv/bin/celery -A config inspect ping -d \"celery@$$HOSTNAME\" --timeout 5 | grep -q pong"]
@@ -59,6 +61,9 @@ services:
 
   beat:
     <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     command:
       [
         ".venv/bin/celery",
@@ -78,8 +83,12 @@ services:
   migrate:
     <<: *app
     command: [".venv/bin/python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: "no"
-    profiles: ["release"]
 
   db:
     image: postgres:17-alpine

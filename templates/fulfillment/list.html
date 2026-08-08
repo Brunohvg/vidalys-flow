@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Fulfillment — Vidalys Flow{% endblock %}
+{% block content %}
+  <h1>Fulfillment</h1>
+  <p class="muted">Execução física de pedidos confirmados, separada dos estados comerciais.</p>
+  <form method="get" class="grid">
+    {{ filter_form.as_p }}
+    <p><button type="submit">Filtrar</button></p>
+  </form>
+  <table class="responsive-table">
+    <thead><tr><th>Lote</th><th>Pedido</th><th>Cliente</th><th>Método</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for fulfillment in fulfillments %}
+        <tr>
+          <td data-label="Lote"><a href="{% url 'fulfillment:detail' fulfillment.id %}">{{ fulfillment.display_number }}</a></td>
+          <td data-label="Pedido"><a href="{% url 'orders:detail' fulfillment.order_id %}">{{ fulfillment.order.display_number }}</a></td>
+          <td data-label="Cliente">{{ fulfillment.order.customer_name_snapshot }}</td>
+          <td data-label="Método">{{ fulfillment.get_method_display }}</td>
+          <td data-label="Estado"><span class="badge">{{ fulfillment.get_status_display }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">Nenhum lote encontrado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if fulfillments.has_previous or fulfillments.has_next %}
+    <nav aria-label="Paginação">
+      {% if fulfillments.has_previous %}<a href="?{{ querystring }}&page={{ fulfillments.previous_page_number }}">Anterior</a>{% endif %}
+      <span>Página {{ fulfillments.number }} de {{ fulfillments.paginator.num_pages }}</span>
+      {% if fulfillments.has_next %}<a href="?{{ querystring }}&page={{ fulfillments.next_page_number }}">Próxima</a>{% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

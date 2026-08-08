@@ -75,18 +75,22 @@
     {
       "id": 4,
       "name": "Fulfillment",
-      "status": "planned",
+      "status": "candidate",
       "dependencies": [
         3
       ],
       "approved_sha": null,
       "branch": "phase/04-fulfillment",
-      "handoff": null,
+      "handoff": "project/handoffs/phase-04.json",
       "domains": [
         "fulfillment"
       ],
       "human_approval_status": "pending",
-      "known_risks": []
+      "known_risks": [
+        "Concurrent partial allocations must never exceed the confirmed OrderItem quantity.",
+        "Delivery snapshots contain personal data and require the same masking and sanitization discipline as Orders.",
+        "Order cancellation and fulfillment execution are separate lifecycles and require an explicit, idempotent coordination rule."
+      ]
     },
     {
       "id": 5,

@@ -15,5 +15,7 @@ app.autodiscover_tasks(
         "apps.platform",
         "apps.customers",
         "apps.products",
+        "apps.orders",
+        "apps.fulfillment",
     ]
 )
