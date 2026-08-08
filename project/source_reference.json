@@ -22,14 +22,13 @@
     {
       "domain": "Orders",
       "status": "completed"
+    },
+    {
+      "domain": "Fulfillment",
+      "status": "completed"
     }
   ],
   "domains_still_consultable": [
-    {
-      "domain": "Fulfillment",
-      "reference_app": null,
-      "status": "pending"
-    },
     {
       "domain": "Payments",
       "reference_app": null,

@@ -75,17 +75,17 @@
     {
       "id": 4,
       "name": "Fulfillment",
-      "status": "candidate",
+      "status": "approved",
       "dependencies": [
         3
       ],
-      "approved_sha": null,
+      "approved_sha": "7b2e92d939e9fd39b3baec1c12b900297a0d6548",
       "branch": "phase/04-fulfillment",
       "handoff": "project/handoffs/phase-04.json",
       "domains": [
         "fulfillment"
       ],
-      "human_approval_status": "pending",
+      "human_approval_status": "approved",
       "known_risks": [
         "Concurrent partial allocations must never exceed the confirmed OrderItem quantity.",
         "Delivery snapshots contain personal data and require the same masking and sanitization discipline as Orders.",
