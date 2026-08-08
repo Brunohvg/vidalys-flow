@@ -25,20 +25,26 @@ humana e merge. Nenhum deploy foi executado.
 - `actual_base_sha`: `a98ceab40f9c40d19dd9c24b666846fb05e63b2d`;
 - dependência funcional aprovada: `d36558636586b766a4d3b5b8f83abcb2505f78e0`;
 - plano: aprovado para implementação em 8 de agosto de 2026;
-- implementação: candidata, com código e migrations concluídos localmente;
-- evidência local: 201 testes aprovados e 85% de cobertura total;
-- Review independente: pendente;
-- QA/Segurança: bloqueado até Review sem bloqueadores;
+- implementação: candidata e remediada após o Review independente 01;
+- evidência local: 208 testes aprovados, nenhum skip e 86% de cobertura total;
+- ambiente local: PostgreSQL 17.10, Redis, web, worker Celery e Beat saudáveis
+  em Docker, com migrations desde banco vazio e rollback técnico validados;
+- Review independente 01: `CHANGES_REQUESTED`, com achados remediados no novo
+  candidato e novo Review ainda pendente;
+- CI do candidato remediado: pendente;
+- QA/Segurança: bloqueado até CI e novo Review sem bloqueadores;
 - PR, merge, release e deploy: não autorizados neste checkpoint.
 
-O handoff candidato e suas evidências estão em
-`project/handoffs/phase-04.json`. O SHA material a revisar é
-`173d0cca7da7a5b8ca9103dbd11a3e13168d18a2`.
+O handoff candidato, o SHA material vigente e suas evidências estão em
+`project/handoffs/phase-04.json`. O primeiro parecer independente está em
+`project/reviews/phase-04-review-01.md`.
 
 O candidato implementa lotes parciais de entrega ou retirada com estados
 logísticos próprios, alocação quantitativa concorrente, idempotência e
 privacidade. Ele não adiciona estoque, pagamento, provider nem estado novo a
-Orders.
+Orders. A remediação padroniza locks em `Order -> Fulfillment`, amplia os
+testes concorrentes e cross-organization, comprova sanitização e registra a
+tarefa de cancelamento no worker Celery.
 
 ## Independência do Flowlog
 

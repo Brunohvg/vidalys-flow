@@ -11,6 +11,13 @@ idempotentes, histórico imutável, eventos internos, tarefa Celery e interface
 HTML em `/fulfillment/`. O candidato ainda exige Review independente,
 QA/Segurança e aprovação humana antes de merge ou release.
 
+O Review independente 01 identificou inversão na ordem de locks e lacunas de
+evidência concorrente, cross-organization e de sanitização. A remediação
+padronizou os locks em `Order -> Fulfillment`, registrou a tarefa no Celery e
+ampliou a suíte direta do domínio. O ambiente Docker local validou PostgreSQL
+17, Redis, migrations, rollback técnico, 208 testes sem skips e 86% de
+cobertura; CI e novo Review permanecem obrigatórios.
+
 ## Objetivo e fronteira
 
 Fulfillment controla a execução física de um pedido confirmado: preparar,

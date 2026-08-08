@@ -7,9 +7,10 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 A Fase 03 — Orders foi aprovada e integrada. A Fase 04 — Fulfillment possui
 implementação candidata em `phase/04-fulfillment`, sobre a baseline
-`a98ceab40f9c40d19dd9c24b666846fb05e63b2d`. O próximo checkpoint é Review
-independente, seguido de correções quando necessárias e QA/Segurança. Não há
-autorização de merge ou deploy.
+`a98ceab40f9c40d19dd9c24b666846fb05e63b2d`. O Review 01 solicitou mudanças,
+que foram implementadas e validadas localmente com PostgreSQL 17. O próximo
+checkpoint é CI no SHA remediado, seguido de novo Review independente e
+QA/Segurança. Não há autorização de merge ou deploy.
 
 ## Sequência de produto
 
