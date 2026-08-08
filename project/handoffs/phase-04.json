@@ -104,8 +104,8 @@
     "blockers": []
   },
   "qa_security": {
-    "status": "pending",
-    "report": null,
+    "status": "go",
+    "report": "project/qa/phase-04-qa-security.md",
     "candidate_head": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
     "blockers": []
   },
