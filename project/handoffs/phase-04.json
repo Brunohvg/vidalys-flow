@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/04-fulfillment",
   "base_sha": "a98ceab40f9c40d19dd9c24b666846fb05e63b2d",
-  "head_sha": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
+  "head_sha": "00e63b4080a77131ca107a31a444b749fc5ac13c",
   "commits": [
     {
       "sha": "a9b86956d45ea11441971927a8a641e616aa6dd4",
@@ -14,6 +14,10 @@
     {
       "sha": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
       "subject": "feat(fulfillment): implement Phase 04 lifecycle"
+    },
+    {
+      "sha": "00e63b4080a77131ca107a31a444b749fc5ac13c",
+      "subject": "fix(fulfillment): resolve Phase 04 review blockers"
     }
   ],
   "delivered_scope": [
@@ -36,16 +40,16 @@
     "apps/fulfillment/migrations/0002_fulfillmentstatushistory_fulfillment_history_from_valid_and_more.py"
   ],
   "tests": {
-    "count": 201,
+    "count": 208,
     "skipped": 0,
-    "coverage_percent": 85,
+    "coverage_percent": 86,
     "database": "PostgreSQL 17",
     "result": "passed",
     "empty_database_migration": "passed",
     "technical_rollback": "passed",
     "concurrency": "passed",
     "cross_organization": "passed",
-    "fulfillment_direct_tests": 17
+    "fulfillment_direct_tests": 24
   },
   "scans": {
     "secret_scan": "passed",
@@ -58,11 +62,11 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 31252778133,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31252778133",
-    "head_sha": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
-    "run_attempt": 1,
-    "conclusion": "success"
+    "workflow_id": null,
+    "url": null,
+    "head_sha": "00e63b4080a77131ca107a31a444b749fc5ac13c",
+    "run_attempt": null,
+    "conclusion": "pending"
   },
   "organization_isolation": {
     "status": "passed",
@@ -83,27 +87,27 @@
   ],
   "risks": [
     "The approved masking rule means OPERATOR sees a masked delivery address; independent Review must confirm this remains operationally acceptable.",
-    "The order-cancellation consumer shares the internal default Celery queue and must be observed for retry/backlog behavior in later homologation.",
-    "Total coverage is exactly the required 85 percent floor; critical Fulfillment rules have direct tests, but Review should scrutinize untested adapter branches."
+    "The order-cancellation consumer shares the internal default Celery queue and must be observed for retry/backlog behavior in later homologation."
   ],
-  "blockers": [],
+  "blockers": [
+    "GitHub Actions has not yet run on the remediated candidate HEAD.",
+    "A new independent Review is required after successful CI."
+  ],
   "review": {
-    "status": "changes_requested",
-    "report": "project/reviews/phase-04-review-01.md",
-    "candidate_head": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
-    "blockers": [
-      "Lock-order inversion between fulfillment transitions and order-cancellation event consumption can deadlock.",
-      "Required PostgreSQL concurrency coverage is missing for allocation replacement, transitions, and cancellation races.",
-      "Direct cross-organization event-consumption and complete sanitization evidence are missing.",
-      "The evidence carrier changes files other than the handoff, contrary to the handoff protocol."
-    ]
+    "status": "pending",
+    "report": null,
+    "previous_reports": [
+      "project/reviews/phase-04-review-01.md"
+    ],
+    "candidate_head": "00e63b4080a77131ca107a31a444b749fc5ac13c",
+    "blockers": []
   },
   "qa_security": {
     "status": "blocked",
     "report": null,
-    "candidate_head": "173d0cca7da7a5b8ca9103dbd11a3e13168d18a2",
+    "candidate_head": "00e63b4080a77131ca107a31a444b749fc5ac13c",
     "blockers": [
-      "Review 01 requested changes; remediation, new CI, and a blocker-free independent Review are required first."
+      "Successful CI and a blocker-free independent Review are required first."
     ]
   },
   "human_approval": {
