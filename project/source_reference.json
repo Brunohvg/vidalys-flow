@@ -18,14 +18,13 @@
     {
       "domain": "Products",
       "status": "completed"
+    },
+    {
+      "domain": "Orders",
+      "status": "completed"
     }
   ],
   "domains_still_consultable": [
-    {
-      "domain": "Orders",
-      "reference_app": "orders_v2",
-      "status": "pending"
-    },
     {
       "domain": "Fulfillment",
       "reference_app": null,

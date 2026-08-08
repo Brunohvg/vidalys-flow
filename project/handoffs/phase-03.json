@@ -2,10 +2,10 @@
   "schema_version": 1,
   "phase_id": 3,
   "phase_name": "Orders",
-  "status": "candidate",
+  "status": "approved",
   "branch": "phase/03-orders",
   "base_sha": "75c335676c6ad258e5ff2832bb64a2a5a7d97fcc",
-  "head_sha": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+  "head_sha": "d36558636586b766a4d3b5b8f83abcb2505f78e0",
   "commits": [
     {
       "sha": "b3c230140c6797a8e35657afb39680c0d73f37d0",
@@ -77,9 +77,9 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 31236267219,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31236267219",
-    "head_sha": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+    "workflow_id": 31236330092,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31236330092",
+    "head_sha": "d36558636586b766a4d3b5b8f83abcb2505f78e0",
     "run_attempt": 1,
     "conclusion": "success"
   },
@@ -103,8 +103,20 @@
     "Personal-data snapshots intentionally duplicate the approved minimum data inside confirmed orders and require the documented masking discipline."
   ],
   "blockers": [],
+  "review": {
+    "status": "approved",
+    "report": "project/reviews/phase-03-review-04.md",
+    "candidate_head": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+    "blockers": []
+  },
+  "qa_security": {
+    "status": "go",
+    "report": "project/qa/phase-03-qa-security.md",
+    "candidate_head": "80e2a9178bc749c39a3e075d3d771dca82d5e43d",
+    "blockers": []
+  },
   "human_approval": {
-    "status": "pending",
-    "evidence": "Only the Phase 03 technical plan is approved; implementation, merge, deploy, and phase completion remain unapproved."
+    "status": "approved",
+    "evidence": "Human approval to proceed was explicitly given after independent Review APPROVED and QA/Security GO on 2026-08-08. Deployment was not authorized or performed."
   }
 }

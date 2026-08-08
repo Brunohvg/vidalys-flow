@@ -29,6 +29,11 @@ intervalo `head_sha..HEAD` altera somente o handoff e que o CI registrado foi
 executado exatamente em `head_sha`. Qualquer mudança material posterior exige
 novo `head_sha`, novo CI e novo handoff.
 
+Depois da aprovação humana, o handoff histórico `approved` usa como `head_sha`
+o `approved_phase_head` registrado no roadmap/state, ainda que esse SHA seja o
+carrier final de evidência. O CI deve ter sido executado também nesse SHA; o
+campo `review.candidate_head` preserva o SHA material efetivamente revisado.
+
 Valide antes de entregar:
 
 ```bash

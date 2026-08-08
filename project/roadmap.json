@@ -57,19 +57,19 @@
     {
       "id": 3,
       "name": "Orders",
-      "status": "candidate",
+      "status": "approved",
       "dependencies": [
         2
       ],
-      "approved_sha": null,
+      "approved_sha": "d36558636586b766a4d3b5b8f83abcb2505f78e0",
       "branch": "phase/03-orders",
       "handoff": "project/handoffs/phase-03.json",
       "domains": [
         "orders"
       ],
-      "human_approval_status": "pending",
+      "human_approval_status": "approved",
       "known_risks": [
-        "Independent Review and QA/Security remain pending before human approval."
+        "Confirmed-order snapshots intentionally retain the approved minimum personal data and require masking discipline."
       ]
     },
     {
