@@ -93,12 +93,10 @@
     "The approved masking rule means OPERATOR sees a masked delivery address; independent Review must confirm this remains operationally acceptable.",
     "The order-cancellation consumer shares the internal default Celery queue and must be observed for retry/backlog behavior in later homologation."
   ],
-  "blockers": [
-    "A new independent Review is required after successful CI."
-  ],
+  "blockers": [],
   "review": {
-    "status": "pending",
-    "report": null,
+    "status": "approved",
+    "report": "project/reviews/phase-04-review-02.md",
     "previous_reports": [
       "project/reviews/phase-04-review-01.md"
     ],
@@ -106,12 +104,10 @@
     "blockers": []
   },
   "qa_security": {
-    "status": "blocked",
+    "status": "pending",
     "report": null,
     "candidate_head": "70364bc7c8a381dc958b2c7e2976f6d28d015023",
-    "blockers": [
-      "Successful CI and a blocker-free independent Review are required first."
-    ]
+    "blockers": []
   },
   "human_approval": {
     "status": "pending",
