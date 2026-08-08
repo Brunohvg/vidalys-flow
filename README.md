@@ -7,9 +7,10 @@ Plataforma independente de operação de vendas e pós-venda.
 > autenticação ou infraestrutura com o Flowlog.
 
 Este repositório contém a fundação greenfield e os domínios nativos de
-clientes, catálogo operacional de produtos e Orders aprovado. Fulfillment está
-em planejamento; pagamentos, mensagens, integrações e dashboard permanecem
-fora do escopo implementado.
+clientes, catálogo operacional de produtos e o candidato da Fase 3 — Orders.
+Orders ainda depende de Review independente, QA/Segurança e aprovação humana;
+fulfillment, pagamentos, mensagens, integrações e dashboard permanecem fora do
+escopo atual.
 
 Após selecionar uma organização permitida por Membership, as interfaces
 estão disponíveis em:

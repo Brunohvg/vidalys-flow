@@ -5,11 +5,11 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-A Fase 03 — Orders foi aprovada e integrada após Review independente sem
-bloqueadores e QA/Segurança com GO. As evidências estão em
-`project/handoffs/phase-03.json`, `project/reviews/` e `project/qa/`. O próximo
-checkpoint é o planejamento da Fase 04 — Fulfillment; sua implementação ainda
-não está aprovada.
+A Fase 03 — Orders permanece candidata. O checkpoint e as evidências correntes
+estão em `project/handoffs/phase-03.json` e nos relatórios de Review em
+`project/reviews/`. Antes da aprovação humana ainda são obrigatórios Review sem
+bloqueadores e QA/Segurança com GO. Somente depois disso podem ser autorizados
+PR/merge e o planejamento da fase seguinte.
 
 ## Sequência de produto
 
