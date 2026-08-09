@@ -1,0 +1,350 @@
+{
+  "schema_version": 2,
+  "id": 5,
+  "name": "Payments",
+  "dependency_phase": 4,
+  "dependency_head": "888685886d7a17c6eeb008674be86656e4f6fa40",
+  "base_ref": "main",
+  "branch": "phase/05-payments",
+  "status": "planned",
+  "plan_status": "pending",
+  "implementation_status": "blocked",
+  "review_status": "blocked",
+  "qa_status": "blocked",
+  "human_approval_status": "pending",
+  "allowed_status_values": {
+    "status": [
+      "planned",
+      "in_progress",
+      "candidate",
+      "approved",
+      "rejected"
+    ],
+    "plan_status": [
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "implementation_status": [
+      "blocked",
+      "pending",
+      "in_progress",
+      "complete"
+    ],
+    "review_status": [
+      "blocked",
+      "pending",
+      "in_progress",
+      "complete",
+      "changes_requested"
+    ],
+    "qa_status": [
+      "blocked",
+      "pending",
+      "in_progress",
+      "go",
+      "no_go"
+    ],
+    "human_approval_status": [
+      "pending",
+      "approved",
+      "rejected"
+    ]
+  },
+  "planning_reference": {
+    "flowlog_consulted": false,
+    "technical_link_allowed": false,
+    "reason": "The approved Vidalys Flow contracts and current official provider documentation are sufficient. No Flowlog code, runtime, data, IDs, migrations, credentials, infrastructure, endpoints, or behavior is required.",
+    "official_provider_research_date": "2026-08-08",
+    "sources": [
+      "https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/overview",
+      "https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/payment-notifications",
+      "https://docs.pagar.me/reference/criar-link",
+      "https://docs.pagar.me/docs/webhooks",
+      "https://www.appmax.org/"
+    ]
+  },
+  "recommended_rollout": {
+    "canonical_core": "Implement the provider-neutral payment aggregate before any adapter.",
+    "provider_a": "Mercado Pago Checkout Pro hosted checkout, because the official documentation exposes signed webhook validation and a test flow.",
+    "provider_b": "Pagar.me v5 Payment Links after its webhook authenticity contract is confirmed with official support or account documentation; provider-resource re-fetch is mandatory and raw callbacks are never trusted as canonical facts.",
+    "deferred_provider": "Appmax remains deferred until the canonical core and both first adapters are stable and account-specific official API, authentication, webhook, idempotency, sandbox, and support contracts are available.",
+    "production_effects": "No production credential, real charge, public webhook registration, or provider enablement belongs to this checkpoint."
+  },
+  "allowed_apps": [
+    "payments",
+    "orders",
+    "audit",
+    "platform",
+    "organizations",
+    "users",
+    "core"
+  ],
+  "forbidden_apps": [
+    "fulfillment",
+    "messaging",
+    "integrations",
+    "dashboard",
+    "inventory",
+    "tax",
+    "accounting",
+    "marketing"
+  ],
+  "expected_models": [
+    {
+      "name": "PaymentIntent",
+      "purpose": "Organization-scoped canonical full-Order payment aggregate with immutable BRL amount snapshot, lifecycle, version, and no provider-specific state."
+    },
+    {
+      "name": "PaymentAttempt",
+      "purpose": "One serialized hosted-checkout attempt for a PaymentIntent, including provider choice, sanitized external identifiers, link lifecycle, expiry, and provider idempotency key."
+    },
+    {
+      "name": "PaymentProviderAccount",
+      "purpose": "Organization-scoped non-secret provider configuration and opaque credential reference; credentials and tokens never enter PostgreSQL."
+    },
+    {
+      "name": "PaymentStatusHistory",
+      "purpose": "Immutable canonical transition history separate from AuditEvent and provider callback history."
+    },
+    {
+      "name": "PaymentCommandReceipt",
+      "purpose": "Organization-scoped idempotency receipt for every mutable payment command."
+    },
+    {
+      "name": "PaymentWebhookReceipt",
+      "purpose": "Deduplication and processing evidence containing only provider, account, external event/resource identifiers, request digest, canonical result, and timestamps; never a raw callback."
+    }
+  ],
+  "expected_features": [
+    "Create one canonical full-value PaymentIntent only for a confirmed, non-cancelled Order and snapshot the persisted Order total in BRL.",
+    "Create hosted-checkout attempts asynchronously through a provider adapter and transactional outbox without holding database locks during network I/O.",
+    "Expose Mercado Pago Checkout Pro and Pagar.me v5 Payment Link adapters behind explicit configuration and disabled external effects.",
+    "Accept provider callbacks only through provider-account-scoped endpoints, authenticate or independently verify them, deduplicate them, discard raw PII, re-fetch the authoritative resource, and map it to canonical states.",
+    "Provide reconciliation commands for stale or inconsistent intents without automatic provider fallback.",
+    "Consume sanitized Order cancellation events to close open intents when safe and surface already-paid cancellations as requires_attention without issuing a refund.",
+    "Provide organization-scoped selectors, manager operations, masked operator visibility, server-rendered HTML, audit, and sanitized internal outbox events."
+  ],
+  "deferred_features": [
+    "partial payments, deposits, split tender, multiple currencies, overpayment allocation, credit balance, and receivables ledger",
+    "automatic refund, partial refund, reversal, dispute, chargeback, fraud decisioning, and delivery blocking",
+    "transparent checkout, card tokenization, storage of cardholder data, recurring billing, subscriptions, saved cards, and one-click payment",
+    "automatic fallback or routing between providers, smart retries, fee optimization, MDR accounting, settlement, anticipation, and bank reconciliation",
+    "Appmax adapter, Pix QR rendering inside Vidalys Flow, boleto PDF handling, and direct payment capture",
+    "Messaging delivery of links, public API, importers, fiscal, inventory, dashboard, Coolify, homologation, production credentials, and deploy"
+  ],
+  "states": {
+    "requirement": "Proposed canonical state contract requiring human approval before implementation.",
+    "intent_states": [
+      "pending",
+      "awaiting_payment",
+      "processing",
+      "paid",
+      "cancelled",
+      "expired",
+      "requires_attention"
+    ],
+    "attempt_states": [
+      "requested",
+      "active",
+      "processing",
+      "paid",
+      "failed",
+      "cancelled",
+      "expired"
+    ],
+    "terminal_intent_states": [
+      "paid",
+      "cancelled",
+      "expired"
+    ],
+    "rule": "Provider statuses are evidence mapped by adapters and never persisted as PaymentIntent.status. requires_attention is a non-terminal operational exception that only a verified reconciliation command may resolve.",
+    "single_active_attempt": "At most one requested, active, or processing attempt may exist per PaymentIntent. Switching providers requires verified closure of the prior attempt; fallback is never automatic."
+  },
+  "eligibility_and_order_coordination": [
+    "PaymentIntent creation locks and revalidates the Organization-scoped Order as confirmed and not cancelled.",
+    "Phase 05 supports only exact full-Order payment using Order.grand_total persisted in BRL; Fulfillment state never gates payment.",
+    "Payments imports approved Orders contracts; Orders does not import Payments and its canonical status remains draft, confirmed, or cancelled.",
+    "An order.cancelled event cancels pending or awaiting payment intent work when the provider confirms closure.",
+    "If the Order is cancelled after verified payment, the PaymentIntent becomes requires_attention and emits a sanitized operational event; no automatic refund is invented in this phase.",
+    "A paid intent never marks Order completed and does not release, complete, or rewrite Fulfillment."
+  ],
+  "snapshots": [
+    "PaymentIntent snapshots Order id, display number, currency BRL, exact persisted grand total, customer display name, and only the minimum provider-required customer fields under a closed versioned schema.",
+    "PaymentAttempt stores the hosted URL and sanitized provider identifiers but never credentials, access tokens, signatures, raw headers, raw callbacks, card data, CVV, full PAN, or provider response bodies.",
+    "Provider payload construction reads only confirmed Order snapshots; it never relays current Customer or Product records silently.",
+    "OPERATOR receives payment state, amount, provider display name, expiry, and the active hosted link required for manual sharing; external IDs, reconciliation evidence, provider account metadata, and customer PII remain manager-only.",
+    "AuditEvent and OutboxEvent contain canonical IDs, state, amount, currency, version, and boolean reason flags only."
+  ],
+  "idempotency": [
+    "Every mutable local command uses PaymentCommandReceipt scoped by Organization, operation, and idempotency key with canonical payload hashing.",
+    "Each outbound attempt has one stable provider idempotency key reused after timeout; a retry never creates a new attempt merely because the provider response was lost.",
+    "External resource IDs are unique per PaymentProviderAccount and never globally trusted without Organization and provider account scope.",
+    "Webhook receipts deduplicate by provider event ID when guaranteed, otherwise by a documented canonical digest plus provider resource ID; duplicate and out-of-order callbacks are safe.",
+    "Reconciliation locks Order then PaymentIntent then PaymentAttempt in deterministic order, re-fetches the authoritative resource, and applies only monotonic canonical transitions.",
+    "Network I/O occurs outside database transactions through outbox-driven workers; leases and retries prevent simultaneous provider calls for the same attempt."
+  ],
+  "money_rules": [
+    "Currency is BRL and canonical money uses Decimal(14,2) with ROUND_HALF_UP; provider integer minor units are converted only at adapter boundaries with exact divisibility checks.",
+    "The server copies the persisted confirmed Order grand total and never accepts amount, fee, discount, surcharge, freight, interest, or installment total from the browser.",
+    "Phase 05 supports no partial, split, multi-intent aggregate, fee, interest, provider discount, or currency conversion behavior.",
+    "A verified provider amount or currency mismatch never marks paid; it moves the intent to requires_attention and emits sanitized evidence.",
+    "Provider fees, installments with interest, settlement amounts, receivables, and accounting remain outside the canonical Order total and are deferred."
+  ],
+  "provider_and_webhook_security": [
+    "Hosted checkout is mandatory; Vidalys Flow never renders or receives full card number, CVV, card token, or cardholder authentication data.",
+    "Provider credentials live only in an approved secret channel and are referenced by opaque aliases; they never enter models, fixtures, logs, CI, handoffs, or Git.",
+    "Mercado Pago callbacks require official secret-signature validation before processing and an authoritative API re-fetch before canonical transition.",
+    "Pagar.me callbacks remain disabled until an official authenticity mechanism is confirmed; account/resource correlation and authoritative API re-fetch are mandatory but do not alone replace transport authentication without explicit Security approval.",
+    "Callback bodies may contain documents, contacts, addresses, card metadata, and provider diagnostics; raw bodies and headers are processed ephemerally, size-limited, never logged, and never persisted.",
+    "Public callback endpoints use HTTPS, strict methods/content types, replay protection, rate limits, generic responses, and no Organization ID supplied by the caller.",
+    "Appmax remains outside implementation because current public product material confirms API availability but does not establish the complete technical security contract required by this phase."
+  ],
+  "authorization": [
+    "Organization for human commands comes from authenticated active Membership and is never accepted as a free request identifier.",
+    "OWNER, ADMIN, and MANAGER may create PaymentIntents, choose an enabled provider, request or cancel hosted links, and run reconciliation.",
+    "OWNER, ADMIN, MANAGER, and OPERATOR may list and view canonical payment status and copy the current hosted link for manual sharing; this phase sends no message automatically.",
+    "Only OWNER, ADMIN, and MANAGER may view external identifiers, provider-account metadata, webhook/reconciliation evidence, amount mismatches, and requires_attention details.",
+    "Callback Organization is derived from a configured provider account endpoint and verified provider evidence, never from payload organization fields.",
+    "Every selector, service, worker, callback, and admin surface has direct cross-organization tests."
+  ],
+  "migrations": {
+    "new_only": true,
+    "legacy_reuse": false,
+    "empty_postgresql_required": true,
+    "technical_rollback_required": true,
+    "data_migrations_allowed": false
+  },
+  "tests": {
+    "database": "PostgreSQL 17",
+    "network_access": false,
+    "required": [
+      "full-Order BRL snapshot success and rejection of draft, cancelled, cross-Organization, zero, changed, or mismatched Orders",
+      "manager operations, OPERATOR limited visibility, inactive Membership, admin hardening, and cross-Organization isolation",
+      "single active attempt and concurrency across creation, provider switch, cancellation, callback, reconciliation, and Order cancellation",
+      "command, outbound, webhook, and reconciliation idempotency including timeout-after-provider-success and out-of-order callbacks",
+      "provider contract fixtures for Mercado Pago Checkout Pro and Pagar.me v5 Payment Links without network access",
+      "valid, invalid, missing, replayed, oversized, malformed, cross-account, and cross-Organization callback authentication cases",
+      "verified paid, cancelled, expired, processing, amount mismatch, currency mismatch, unknown status, and duplicate payment mappings",
+      "raw callback PII, credentials, hosted URLs, tokens, signatures, external diagnostics, and free text absent from logs, audit, outbox, receipts, exceptions, and metrics",
+      "Order cancellation of open versus paid intents without refund or Order.status mutation",
+      "empty PostgreSQL migration, technical rollback, and regression of Foundation, Customers, Products, Orders, and Fulfillment"
+    ],
+    "sandbox_contract_validation": "Requires a separate explicit authorization, test-only credentials, redacted evidence, and no real charge; it is not part of ordinary CI."
+  },
+  "coverage": {
+    "minimum_total_percent": 85,
+    "domain_expectation": "Critical money, lifecycle, callback authentication, provider mapping, idempotency, privacy, and concurrency paths require direct behavioral tests regardless of total coverage."
+  },
+  "ci": [
+    "locked dependency installation with no unapproved SDK",
+    "JSON and governance validation",
+    "secret scan and provider credential pattern regression",
+    "independence scan",
+    "Ruff and Django check",
+    "migration consistency, empty PostgreSQL 17 migration, and technical rollback",
+    "PostgreSQL tests and coverage",
+    "provider contract fixtures with outbound network disabled",
+    "Docker build and Compose validation"
+  ],
+  "documentation": [
+    "canonical Payments aggregate, lifecycle, amount, and Order coordination",
+    "provider adapter boundary and status mapping tables",
+    "Mercado Pago and Pagar.me hosted-link flows with Appmax explicitly deferred",
+    "callback authentication, ephemeral raw-payload handling, deduplication, reconciliation, and incident procedures",
+    "credential references, environment separation, sandbox evidence, rotation, and production activation checklist",
+    "permissions, privacy, link handling, operational exceptions, and no automatic Messaging",
+    "updated architecture, system flow, clone/continue guide, roadmap, and handoff"
+  ],
+  "acceptance_criteria": [
+    "The complete canonical lifecycle, full-Order-only rule, provider rollout, paid-Order cancellation handling, permissions, and deferred scope are explicitly approved before implementation.",
+    "The implementation starts exactly from actual_base_sha 4fd3a9259e9e2f31acdab44f13499eade79ab59e and depends on approved Phase 04 head 888685886d7a17c6eeb008674be86656e4f6fa40.",
+    "No Flowlog asset is consulted or reused and no Appmax, Messaging, inventory, fiscal, deploy, refund, subscription, or transparent-checkout code is introduced.",
+    "Order amount and BRL currency are exact, server-derived, immutable per intent, and verified against authoritative provider resources before paid.",
+    "Only one active provider attempt exists per intent and duplicate or excess payment risk is surfaced rather than hidden.",
+    "Callback authenticity, provider-account scope, deduplication, replay protection, PII disposal, and authoritative re-fetch are enforced and directly tested.",
+    "No provider network call occurs in request transactions or CI; external effects remain disabled without separately approved sandbox or production activation.",
+    "Organization isolation, authorization, masking, idempotency, expected_version, deterministic locks, and sanitization are enforced and tested.",
+    "All gates and CI pass on the candidate HEAD, independent Review has no unresolved blocker, and QA/Security emits GO.",
+    "Human approval remains explicit before implementation, sandbox access, PR, merge, release, provider enablement, deploy, state approval, or the next phase."
+  ],
+  "human_decisions_required": [
+    "Approve full-Order-only payments with one active hosted-checkout attempt and no partial payments.",
+    "Approve Mercado Pago Checkout Pro as provider A and Pagar.me v5 Payment Links as provider B, with Appmax deferred.",
+    "Approve disabling Pagar.me callback processing until its authenticity contract is confirmed by official evidence and Security Review.",
+    "Approve OWNER, ADMIN, and MANAGER for mutations, with OPERATOR limited to status visibility and copying an active hosted link.",
+    "Approve requires_attention, without automatic refund, when a paid payment conflicts with Order cancellation or provider amount/currency.",
+    "Approve Pix, boleto, and credit card only through provider-hosted checkout; no transparent checkout, subscriptions, split, fees, or provider discounts.",
+    "Approve that implementation and CI use fakes/contract fixtures only; sandbox calls require a later explicit authorization."
+  ],
+  "checks": [
+    "python scripts/agent_orchestrator.py validate-all",
+    "python scripts/check_secrets.py",
+    "python scripts/check_independence.py",
+    "ruff check",
+    "Django check and migration consistency",
+    "PostgreSQL test suite with coverage",
+    "provider contract fixtures with network blocked",
+    "Docker build and Compose config"
+  ],
+  "report_format": {
+    "required_sections": [
+      "checkpoint",
+      "branch",
+      "dependency_head",
+      "base_ref",
+      "actual_base_sha",
+      "provider_research",
+      "canonical_models_and_states",
+      "order_and_money_rules",
+      "provider_rollout",
+      "webhook_and_security_contract",
+      "authorization_and_privacy",
+      "tests_and_gates",
+      "risks",
+      "deferred",
+      "human_decisions_required"
+    ]
+  },
+  "handoff_format": {
+    "path": "project/handoffs/phase-05.json",
+    "base_sha_semantics": "The exact origin/main SHA resolved before branch creation; this is actual_base_sha in checkpoint reports.",
+    "required_fields": [
+      "schema_version",
+      "phase_id",
+      "phase_name",
+      "status",
+      "branch",
+      "base_sha",
+      "head_sha",
+      "commits",
+      "delivered_scope",
+      "models",
+      "migrations",
+      "tests",
+      "scans",
+      "ci",
+      "organization_isolation",
+      "provider_contracts",
+      "legacy_reuse",
+      "deferred",
+      "risks",
+      "blockers",
+      "human_approval"
+    ]
+  },
+  "allowed_scope": [
+    "Planning and, only after explicit plan approval, a new provider-neutral greenfield Payments domain for exact full-Order BRL hosted-checkout links.",
+    "Minimal one-way adapters from Payments to approved Orders, Organizations, Audit, and Platform contracts without Orders importing Payments.",
+    "Mercado Pago Checkout Pro adapter and Pagar.me v5 Payment Link adapter behind disabled external effects, using fake/contract fixtures in implementation and CI.",
+    "New Payments models, services, selectors, policies, callbacks, workers, tests, migrations, server-rendered interfaces, documentation, audit, and sanitized internal outbox integration."
+  ],
+  "forbidden_scope": [
+    "Implementing code before human approval of this plan or making any provider, sandbox, webhook-registration, credential, production, deploy, or Coolify change.",
+    "Appmax, transparent checkout, card capture/tokenization, subscriptions, recurring billing, saved cards, refunds, disputes, chargebacks, split, partial payment, multi-currency, fees, interest, settlement, receivables, accounting, or automatic provider fallback.",
+    "Starting Messaging, Integrations, Dashboard, inventory, tax, fiscal, infrastructure, homologation, cutover, or a later phase.",
+    "Changing Order canonical states, totals, snapshots, discounts, surcharges, or Fulfillment behavior outside an explicitly approved minimal event adapter.",
+    "Persisting or printing raw callbacks, credentials, tokens, signatures, full hosted URLs in operational evidence, card data, documents, contacts, addresses, provider diagnostics, or free text.",
+    "Reusing or consulting Flowlog code, data, migrations, runtime, IDs, secrets, services, endpoints, providers, machines, or infrastructure."
+  ]
+}

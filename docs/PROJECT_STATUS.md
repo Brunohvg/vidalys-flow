@@ -71,9 +71,12 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments permanece na Fase 5. Mercado Pago e Pagar.me são os primeiros
-conectores planejados para links de pagamento; Appmax permanece posterior e
-todos exigirão contrato, sandbox, webhook e aprovação próprios.
+Payments está no checkpoint de planejamento da Fase 5, na branch
+`phase/05-payments`, criada exatamente de
+`4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
+provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
+segundo e Appmax posteriormente. Nenhum código, credencial, sandbox, callback
+público ou efeito externo está autorizado antes da aprovação humana do plano.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

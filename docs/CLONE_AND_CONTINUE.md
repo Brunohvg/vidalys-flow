@@ -14,10 +14,10 @@ git switch main
 git pull --ff-only
 ```
 
-A branch `main` contém as fases aprovadas até Fulfillment. Confira sempre
-`project/state.json` antes de criar uma branch: Payments é a próxima fase, mas
-nenhum código financeiro pode começar sem manifesto, plano técnico e aprovação
-humana próprios.
+A branch `main` contém as fases aprovadas até Fulfillment. O planejamento de
+Payments está em `phase/05-payments`; confira `project/state.json` e
+`project/phases/05-payments.json`. Nenhum código financeiro pode começar antes
+da aprovação humana explícita desse plano.
 
 ## Ambiente local reproduzível
 
@@ -98,12 +98,14 @@ já foi atingido.
 
 - estado oficial: `project/state.json`;
 - última fase aprovada: `project/phases/04-fulfillment.json`;
+- fase em planejamento: `project/phases/05-payments.json`;
 - contrato do domínio: `docs/domains/FULFILLMENT.md`;
 - ciclo de vida: `docs/decisions/ADR-012-FULFILLMENT-LIFECYCLE.md`;
 - concorrência: `docs/decisions/ADR-013-FULFILLMENT-CONSISTENCY.md`;
 - fluxo completo: `docs/SYSTEM_FLOW.md`;
 - caminho até produção: `docs/ROADMAP_TO_PRODUCTION.md`;
 - processo de agentes: `AGENTS.md` e `docs/agents/`;
+- plano de Payments: `docs/domains/PAYMENTS_VISION.md`;
 - evidência da Fase 4: `project/handoffs/phase-04.json`;
 - incidente de recuperação:
   `project/incidents/phase-04-governance-recovery.md`.
