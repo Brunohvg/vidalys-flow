@@ -71,12 +71,14 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments está no checkpoint de planejamento da Fase 5, na branch
+Payments está no checkpoint de implementação da Fase 5, na branch
 `phase/05-payments`, criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
 provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
-segundo e Appmax posteriormente. Nenhum código, credencial, sandbox, callback
-público ou efeito externo está autorizado antes da aprovação humana do plano.
+segundo e Appmax posteriormente. O plano foi aprovado em 8 de agosto de 2026;
+a implementação candidata está autorizada somente com fakes e fixtures sem
+rede. Credencial, sandbox, callback público e efeito externo continuam
+proibidos.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

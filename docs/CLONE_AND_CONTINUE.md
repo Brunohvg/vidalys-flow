@@ -14,10 +14,10 @@ git switch main
 git pull --ff-only
 ```
 
-A branch `main` contém as fases aprovadas até Fulfillment. O planejamento de
-Payments está em `phase/05-payments`; confira `project/state.json` e
-`project/phases/05-payments.json`. Nenhum código financeiro pode começar antes
-da aprovação humana explícita desse plano.
+A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e a
+implementação candidata de Payments estão em `phase/05-payments`; confira
+`project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
+sandbox, PR, merge e deploy continuam sem autorização.
 
 ## Ambiente local reproduzível
 

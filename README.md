@@ -8,7 +8,7 @@ Plataforma independente de operação de vendas e pós-venda.
 
 Este repositório contém a fundação greenfield e os domínios nativos e
 aprovados de Customers, Products, Orders e Fulfillment. Payments está no
-checkpoint de planejamento da Fase 05; mensagens, integrações e dashboard
+checkpoint de implementação da Fase 05; mensagens, integrações e dashboard
 permanecem em fases posteriores.
 
 Após selecionar uma organização permitida por Membership, as interfaces

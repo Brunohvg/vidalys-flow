@@ -1,6 +1,7 @@
 # Plano proposto de Payments — Fase 5
 
-Status: checkpoint de planejamento pendente de aprovação humana.
+Status: plano aprovado em 8 de agosto de 2026; implementação candidata em
+andamento, sem autorização de sandbox, PR, merge, release ou deploy.
 
 Payments será um domínio greenfield e independente. O planejamento não
 consultou Flowlog e proíbe qualquer reutilização de código, banco, IDs,
@@ -132,7 +133,7 @@ registro público de webhook, cobrança real e deploy continuam proibidos.
 Pesquisa realizada em 8 de agosto de 2026. Capacidades de provider deverão ser
 revalidadas antes da implementação e novamente antes de sandbox/produção.
 
-## Decisões humanas necessárias
+## Decisões humanas aprovadas
 
 1. pagamento integral do Order e somente um attempt ativo;
 2. Mercado Pago primeiro, Pagar.me segundo e Appmax posterior;
@@ -142,5 +143,5 @@ revalidadas antes da implementação e novamente antes de sandbox/produção.
 6. Pix, boleto e cartão apenas no checkout hospedado;
 7. nenhuma rede na implementação/CI e sandbox somente com nova autorização.
 
-A aprovação deste plano liberará somente a implementação candidata. Não
+A aprovação deste plano liberou somente a implementação candidata. Não
 autoriza sandbox, PR, merge, release, provider em produção ou deploy.
