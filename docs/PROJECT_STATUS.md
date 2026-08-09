@@ -91,6 +91,13 @@ pendentes. O candidato técnico é
 `707401a13a4cd493409e6258301a1aaa22cba68b`, validado pelo GitHub Actions run
 `31287810333` com 240 testes, 85% de cobertura e todos os gates verdes.
 
+O Review independente 01 concluiu `CHANGES_REQUESTED`: seis achados altos
+bloqueiam QA/Segurança, principalmente em lease do dispatcher, monotonicidade
+de estados, replay, imutabilidade monetária, matriz obrigatória de testes e
+ordem global de locks. O parecer está em
+`project/reviews/phase-05-review-01.md`; nenhuma correção foi feita pelo
+revisor.
+
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
 produção já foi provisionada; isso será verificado na Fase 9. Deploy continua

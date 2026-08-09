@@ -109,6 +109,19 @@
     "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
   ],
   "blockers": [],
+  "review": {
+    "status": "changes_requested",
+    "report": "project/reviews/phase-05-review-01.md",
+    "candidate_head": "707401a13a4cd493409e6258301a1aaa22cba68b",
+    "blockers": [
+      "P05-R01 dispatcher without a persistent lease or asynchronous consumer",
+      "P05-R02 non-monotonic state transitions and automatic exit from requires_attention",
+      "P05-R03 replay deduplication based on an event identifier not covered by the signature",
+      "P05-R04 mutable financial snapshot fields",
+      "P05-R05 incomplete mandatory concurrency and provider-contract test matrix",
+      "P05-R06 inconsistent lock order with deadlock risk"
+    ]
+  },
   "human_approval": {
     "status": "pending",
     "evidence": "No final Phase 05 approval has been given; only the technical plan was explicitly approved in the project conversation on 2026-08-08.",
