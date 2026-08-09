@@ -36,7 +36,7 @@ def test_valid_state_and_all_artifacts(repository):
     repository.validate_all()
 
     assert state["approved_phase"] == 4
-    assert state["approved_phase_head"] == "7b2e92d939e9fd39b3baec1c12b900297a0d6548"
+    assert state["approved_phase_head"] == "888685886d7a17c6eeb008674be86656e4f6fa40"
     assert state["baseline_branch"] == "main"
     assert state["next_phase"] == 5
     assert state["active_candidate"] is None
@@ -112,7 +112,7 @@ def test_active_candidate_dependency_must_match_its_manifest(governance_root):
             "name": "Payments",
             "branch": "phase/05-payments",
             "dependency_phase": 4,
-            "dependency_head": "7b2e92d939e9fd39b3baec1c12b900297a0d6548",
+            "dependency_head": "888685886d7a17c6eeb008674be86656e4f6fa40",
             "status": "planned",
             "plan_status": "pending",
             "implementation_status": "blocked",
@@ -178,7 +178,7 @@ def test_agent_cannot_self_approve_phase(governance_root):
             "name": "Payments",
             "branch": "phase/05-payments",
             "dependency_phase": 4,
-            "dependency_head": "7b2e92d939e9fd39b3baec1c12b900297a0d6548",
+            "dependency_head": "888685886d7a17c6eeb008674be86656e4f6fa40",
             "status": "planned",
             "plan_status": "pending",
             "implementation_status": "pending",
