@@ -58,3 +58,13 @@ caminho recomendado e a continuação do desenvolvimento. Essa decisão:
 - CI vermelho da regularização: runs `31265206696` e `31265512810`;
 - implementação duplicada não incorporada: PR #4 e branch
   `origin/work/phase-04-fulfillment-001`.
+
+## Fechamento
+
+A recuperação autorizada foi mesclada pela PR #6 em
+`888685886d7a17c6eeb008674be86656e4f6fa40`. Esse merge passa a ser o
+`approved_phase_head` oficial da Fase 4 porque contém conjuntamente o material
+revisado, as evidências de Review/QA, a ratificação humana, a documentação
+portátil corrigida e este registro de incidente. O candidato técnico
+`70364bc7` e o carrier `7b2e92d` continuam preservados em campos próprios e
+não são reclassificados.

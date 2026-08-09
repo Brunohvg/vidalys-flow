@@ -79,7 +79,7 @@
       "dependencies": [
         3
       ],
-      "approved_sha": "7b2e92d939e9fd39b3baec1c12b900297a0d6548",
+      "approved_sha": "888685886d7a17c6eeb008674be86656e4f6fa40",
       "branch": "phase/04-fulfillment",
       "handoff": "project/handoffs/phase-04.json",
       "domains": [
