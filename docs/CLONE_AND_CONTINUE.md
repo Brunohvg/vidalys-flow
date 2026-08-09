@@ -15,7 +15,7 @@ git pull --ff-only
 ```
 
 A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e a
-remediação candidata de Payments estão em `phase/05-payments`; confira
+segunda remediação candidata de Payments estão em `phase/05-payments`; confira
 `project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
 sandbox, PR, merge e deploy continuam sem autorização.
 
@@ -74,6 +74,7 @@ Interfaces atuais:
 - `/products/`;
 - `/orders/`;
 - `/fulfillment/`.
+- `/payments/` (somente na branch candidata da Fase 5).
 
 ## Gate antes de entregar mudanças
 
@@ -114,11 +115,11 @@ já foi atingido.
 
 ## Continuação segura
 
-Não pule checkpoints. O plano de Payments já foi aprovado, o Review 01 pediu
-correções e a remediação autorizada ocorre em branch exclusiva. Ao concluir:
-CI no novo SHA candidato (já verde no material `0ca4ae6`),
-Review independente, QA/Segurança, handoff, aprovação humana da fase e só então
-PR/merge autorizado.
+Não pule checkpoints. O plano de Payments já foi aprovado e os Reviews 01 e
+02 pediram correções. A segunda remediação autorizada está na branch exclusiva.
+O próximo fluxo é: commit material, CI no SHA material exato, carrier contendo
+somente o handoff, novo Review independente, QA/Segurança, aprovação humana da
+fase e só então PR/merge se autorizados.
 
 Mercado Pago e Pagar.me permanecem planejados para a Fase 5; Appmax vem
 depois. Nenhum provider, webhook, credencial ou máquina do Flowlog pode ser

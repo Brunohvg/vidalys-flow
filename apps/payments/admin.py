@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from apps.organizations.selectors import active_organization_for_user
 from apps.payments.models import (
     PaymentAttempt,
     PaymentCommandReceipt,
@@ -11,6 +12,16 @@ from apps.payments.models import (
 
 
 class ReadOnlyPaymentAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        organization, _ = active_organization_for_user(
+            user=request.user,
+            session=getattr(request, "session", {}),
+        )
+        if organization is None:
+            return queryset.none()
+        return queryset.filter(organization=organization)
+
     def has_add_permission(self, request):
         return False
 

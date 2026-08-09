@@ -80,6 +80,9 @@ class DisabledProviderAdapter:
     def fetch_resource(self, external_resource_id):
         raise ProviderEffectsDisabled("Efeitos externos de Payments estão desabilitados.")
 
+    def cancel_checkout(self, external_resource_id, *, idempotency_key):
+        raise ProviderEffectsDisabled("Efeitos externos de Payments estão desabilitados.")
+
 
 class MercadoPagoCheckoutProAdapter(DisabledProviderAdapter):
     provider = PaymentProviderAccount.Provider.MERCADO_PAGO

@@ -127,6 +127,7 @@ CELERY_TASK_ROUTES = {
     "apps.fulfillment.tasks.consume_order_cancellations": {"queue": "default"},
     "apps.payments.tasks.consume_order_cancellations": {"queue": "default"},
     "apps.payments.tasks.dispatch_checkout_requests": {"queue": "integrations"},
+    "apps.payments.tasks.dispatch_checkout_cancellations": {"queue": "integrations"},
 }
 CELERY_BEAT_SCHEDULE = {
     "platform-outbox-publisher": {
@@ -147,6 +148,10 @@ CELERY_BEAT_SCHEDULE = {
     },
     "payments-checkout-dispatch": {
         "task": "apps.payments.tasks.dispatch_checkout_requests",
+        "schedule": 10.0,
+    },
+    "payments-checkout-cancellations": {
+        "task": "apps.payments.tasks.dispatch_checkout_cancellations",
         "schedule": 10.0,
     },
 }

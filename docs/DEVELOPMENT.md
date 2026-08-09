@@ -68,8 +68,10 @@ usam fakes locais e nunca rede. Não adicione token, signing value ou
 credencial ao `.env.example`, fixture, banco, log ou Git. Sandbox será um gate
 posterior com autorização própria.
 
-O Beat agenda `apps.payments.tasks.dispatch_checkout_requests` na fila
-`integrations`. O consumer só parte de `payment.checkout_requested`, adquire
-lease persistente no PostgreSQL e mantém a chave externa estável. Sem a futura
-ativação explícita do canal de secrets e do guardrail, os adapters padrão
-recusam a chamada e nenhum provider é acessado.
+O Beat agenda `apps.payments.tasks.dispatch_checkout_requests` e
+`apps.payments.tasks.dispatch_checkout_cancellations` na fila `integrations`.
+Os consumers partem somente dos eventos internos aprovados, adquirem lease de
+90 segundos no PostgreSQL, persistem backoff/código controlado e mantêm a chave
+externa estável. Exceções são isoladas por evento. Sem a futura ativação
+explícita do canal de secrets e do guardrail, os adapters padrão recusam a
+chamada e nenhum provider é acessado.

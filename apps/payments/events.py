@@ -1,6 +1,8 @@
 PAYMENT_INTENT_CREATED = "payment.intent_created"
 PAYMENT_CHECKOUT_REQUESTED = "payment.checkout_requested"
 PAYMENT_CHECKOUT_ACTIVATED = "payment.checkout_activated"
+PAYMENT_CHECKOUT_CANCELLATION_REQUESTED = "payment.checkout_cancellation_requested"
+PAYMENT_CHECKOUT_REOPENED = "payment.checkout_reopened"
 PAYMENT_STATUS_CHANGED = "payment.status_changed"
 PAYMENT_REQUIRES_ATTENTION = "payment.requires_attention"
 PAYMENT_CANCELLED = "payment.cancelled"

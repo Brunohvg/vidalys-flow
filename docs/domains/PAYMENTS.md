@@ -1,7 +1,8 @@
 # Payments — contrato implementado no candidato da Fase 5
 
-Status: candidato remediado após Review 01, aguardando nova revisão independente. Este documento não aprova Review, QA,
-sandbox, provider, PR, merge, release ou deploy.
+Status: segunda remediação candidata após Review 02, aguardando nova revisão
+independente. Este documento não aprova Review, QA, sandbox, provider, PR,
+merge, release ou deploy.
 
 ## Limite do domínio
 
@@ -57,11 +58,13 @@ Attempt: `requested`, `active`, `processing`, `paid`, `failed`, `cancelled` e
 `PaymentIntent.status`.
 
 `requires_attention` é usado para divergência de valor/moeda, evento
-regressivo, falha externa inconclusiva e cancelamento de Order com tentativa
-aberta ou pagamento já confirmado. Callback nunca retira o agregado desse
-estado; somente reconciliação gerencial com recurso verificado pode resolvê-lo.
-Uma tabela explícita proíbe regressões como `processing → awaiting_payment`.
-Não existe reembolso automático nesta fase.
+regressivo, resultado externo criado após mudança de contexto e cancelamento
+de Order com tentativa externa aberta ou pagamento já confirmado. Callback
+nunca retira o agregado desse estado; somente reconciliação gerencial ou o
+fechamento verificado solicitado ao provider pode resolvê-lo. Falha conclusiva
+do provider fecha o attempt como `failed` e devolve o intent a `pending`, sem
+fallback automático. Uma tabela explícita proíbe regressões como
+`processing → awaiting_payment`. Não existe reembolso automático nesta fase.
 
 ## Dinheiro
 
@@ -85,11 +88,32 @@ transação.
 
 O service valida `expected_version`, conta ativa da mesma Organization e
 ausência de tentativa concorrente. Ele grava `requested` e outbox; não chama
-rede. O consumidor Celery da fila `integrations` localiza o attempt pelo
-agregado do evento, adquire lease persistente com expiração e executa I/O fora
-da transação. Dois dispatchers não chamam o provider simultaneamente. Em
-timeout, o lease é liberado e a mesma tentativa e chave de idempotência são
-reutilizadas. O adapter padrão continua bloqueando efeitos externos.
+rede. O consumidor Celery da fila `integrations` relê Order, intent, attempt e
+conta antes da chamada, adquire lease de 90 segundos — maior que o hard limit
+de 60 segundos do worker — e executa I/O fora da transação. Dois dispatchers
+não chamam o provider simultaneamente. Timeout, bloqueio de efeito e falha de
+transporte gravam somente código controlado e `dispatch_available_at` com
+backoff; a mesma tentativa e chave externa são reutilizadas. Uma falha fica
+isolada no item do lote e não impede o processamento dos seguintes.
+
+Se Order, intent ou conta mudarem durante a chamada e o provider já tiver
+criado o checkout, o retorno é validado e os identificadores/link são sempre
+persistidos. O attempt fica `active` e o intent vai para
+`requires_attention`, evitando perder evidência de um link potencialmente
+pagável. O adapter padrão continua bloqueando efeitos externos.
+
+### Cancelar link e trocar provider
+
+OWNER, ADMIN ou MANAGER pode solicitar cancelamento. Um attempt `requested`
+sem I/O em curso fecha localmente. Um link externo gera
+`payment.checkout_cancellation_requested`; outro worker chama o adapter fora
+da transação e só fecha o agregado após resposta autoritativa `cancelled` ou
+`expired`. Falhas usam o mesmo lease e backoff controlado.
+
+Troca de provider nunca é fallback. Depois de `failed`, `cancelled` ou
+`expired`, o gerente reabre explicitamente o pagamento quando necessário e
+então envia outro comando escolhendo a nova conta. A constraint continua
+impedindo duas tentativas abertas.
 
 ### Callback e reconciliação
 
@@ -112,22 +136,25 @@ autenticidade tenha evidência oficial e Review de Segurança.
 
 Reconciliação manual usa o mesmo recurso autoritativo, receipt idempotente,
 `expected_version` e a ordem global de locks `Order → PaymentIntent →
-PaymentAttempt`. A conta é validada sem lock concorrente e o fetch ocorre
-antes da transação de aplicação.
+PaymentAttempt`. Membership gerencial ativa, Organization, intent, attempt,
+conta e adapter são validados antes de qualquer guardrail ou I/O; o fetch
+ocorre fora da transação de aplicação.
 
 ## Cancelamento de Order
 
 O consumer interno lê `order.cancelled` da outbox:
 
 - intent pendente sem checkout aberto → `cancelled`;
-- checkout solicitado/ativo/processando ou pagamento confirmado →
-  `requires_attention`;
+- checkout ainda não enviado → attempt e intent fechados localmente;
+- dispatch em curso, checkout ativo/processando ou pagamento confirmado →
+  `requires_attention` e preservação de eventual evidência externa;
 - nenhuma alteração em Order/Fulfillment;
 - nenhum refund ou cancelamento externo automático.
 
 ## Autorização e privacidade
 
-- OWNER, ADMIN, MANAGER: criar intent e solicitar/reconciliar checkout;
+- OWNER, ADMIN, MANAGER: criar intent, solicitar/cancelar/reabrir e reconciliar
+  checkout;
 - OPERATOR: listar, consultar estado e copiar somente link ativo;
 - evidência externa, nome do cliente e códigos de atenção: manager tier;
 - alias de credencial, assinatura, token, callback bruto, documento, contato e
@@ -151,14 +178,16 @@ hospedado; a Vidalys Flow não renderiza QR/PDF nem recebe PAN/CVV.
 - valor/moeda divergente: `requires_attention`, bloquear nova tentativa;
 - dois pagamentos externos: preservar evidência e encaminhar para processo
   manual futuro; não inventar crédito ou refund;
-- indisponibilidade do provider: manter estado canônico, sem fallback;
+- indisponibilidade do provider: backoff persistente, erro sanitizado e sem
+  fallback;
 - rotação de credencial: pertence à ativação posterior do canal de secrets.
 
 ## Testes e execução
 
 Os testes usam PostgreSQL 17 e fakes `external = False`. Cobrem autorização,
-cross-Organization, idempotência, versão, tentativa única, leases, timeout
-após sucesso remoto simulado, concorrência de criação/dispatch/callback/
-reconciliação/cancelamento, ausência de deadlock, assinatura, replay, tamanho,
-imutabilidade no ORM e banco, valor/moeda, masking, schemas fechados, fixtures
-de contrato e rede desabilitada. SQLite e chamadas sandbox não são aceitos.
+Membership inativa, admin e worker cross-Organization, idempotência, versão,
+tentativa única, lease versus hard limit, backoff, falha mista sem starvation,
+cancelamento concorrente ao dispatch, desativação da conta antes/durante I/O,
+fechamento e troca de provider, assinatura, replay, imutabilidade, valor/moeda,
+masking e schemas fechados. Um fixture bloqueia por DNS os hosts conhecidos de
+Mercado Pago e Pagar.me. SQLite e chamadas sandbox não são aceitos.

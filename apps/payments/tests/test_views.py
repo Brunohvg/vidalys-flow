@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 
 from apps.organizations.models import Membership
-from apps.payments.models import PaymentIntent
+from apps.payments.models import PaymentAttempt, PaymentIntent
 from apps.payments.providers import CheckoutResult
 from apps.payments.services import activate_hosted_checkout, create_payment_intent, request_hosted_checkout
 
@@ -39,6 +39,50 @@ def test_manager_creates_intent_and_requests_checkout(
     )
     assert response.status_code == 302
     assert payment.attempts.count() == 1
+
+
+@pytest.mark.django_db
+def test_manager_cancels_undispatched_link_and_operator_cannot_mutate(
+    client,
+    organization,
+    payable_order,
+    mercado_account,
+    manager,
+    manager_membership,
+    user,
+    operator_membership,
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=key(),
+    )
+    attempt = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+    )
+    client.force_login(user)
+    response = client.post(
+        reverse("payments:cancel_checkout", args=(intent.id,)),
+        {"expected_version": 2, "idempotency_key": key()},
+    )
+    attempt.refresh_from_db()
+    assert response.status_code == 302
+    assert attempt.status == PaymentAttempt.Status.REQUESTED
+
+    client.force_login(manager)
+    response = client.post(
+        reverse("payments:cancel_checkout", args=(intent.id,)),
+        {"expected_version": 2, "idempotency_key": key()},
+    )
+    attempt.refresh_from_db()
+    assert response.status_code == 302
+    assert attempt.status == PaymentAttempt.Status.CANCELLED
 
 
 @pytest.mark.django_db

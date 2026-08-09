@@ -7,7 +7,7 @@ import pytest
 
 from apps.orders.models import Order
 from apps.payments.exceptions import InvalidPayment, ProviderEffectsDisabled
-from apps.payments.models import PaymentIntent
+from apps.payments.models import PaymentAttempt, PaymentIntent
 from apps.payments.providers import (
     CheckoutRequest,
     CheckoutResult,
@@ -147,6 +147,9 @@ def test_timeout_after_remote_success_reuses_attempt_and_provider_idempotency_ke
     attempt.refresh_from_db()
     assert attempt.status == "requested"
     assert attempt.dispatch_lease_token is None
+    assert attempt.dispatch_error_code == "timeout"
+    assert attempt.dispatch_available_at is not None
+    PaymentAttempt.objects.filter(id=attempt.id).update(dispatch_available_at=None)
 
     recovered = dispatch_requested_checkout(
         attempt=attempt,

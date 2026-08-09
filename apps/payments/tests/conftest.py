@@ -1,3 +1,4 @@
+import socket
 import uuid
 from decimal import Decimal
 
@@ -7,6 +8,20 @@ from django.utils import timezone
 from apps.customers.models import Customer
 from apps.orders.models import Order
 from apps.payments.models import PaymentProviderAccount
+
+
+@pytest.fixture(autouse=True)
+def block_provider_network(monkeypatch):
+    original = socket.getaddrinfo
+    blocked_suffixes = ("mercadopago.com", "pagar.me")
+
+    def guarded_getaddrinfo(host, *args, **kwargs):
+        normalized = host.decode() if isinstance(host, bytes) else str(host)
+        if normalized.lower().rstrip(".").endswith(blocked_suffixes):
+            raise AssertionError("Provider network is forbidden in the Payments test suite.")
+        return original(host, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", guarded_getaddrinfo)
 
 
 @pytest.fixture

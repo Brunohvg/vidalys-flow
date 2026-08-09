@@ -468,17 +468,18 @@ def test_failed_attempt_allows_explicit_retry_without_automatic_fallback(
     )
     intent.refresh_from_db()
     first.refresh_from_db()
-    assert intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
-    assert first.status == PaymentAttempt.Status.PROCESSING
-    with pytest.raises(InvalidPayment, match="elegível"):
-        request_hosted_checkout(
-            organization=organization,
-            intent=intent,
-            provider_account=mercado_account,
-            actor=manager,
-            expected_version=intent.version,
-            idempotency_key=key(),
-        )
+    assert intent.status == PaymentIntent.Status.PENDING
+    assert first.status == PaymentAttempt.Status.FAILED
+    second = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=intent.version,
+        idempotency_key=key(),
+    )
+    assert second.status == PaymentAttempt.Status.REQUESTED
+    assert intent.attempts.count() == 2
 
 
 @pytest.mark.django_db
@@ -598,9 +599,9 @@ def test_payment_audit_and_outbox_payloads_follow_closed_schema(
     )
     base_keys = {"payment_intent_id", "order_id", "status", "amount", "currency", "version"}
     optional_flags = {"has_order_conflict", "has_provider_inconsistency"}
-    payloads = list(
-        AuditEvent.objects.filter(entity_type="payment_intent").values_list("payload", flat=True)
-    ) + list(OutboxEvent.objects.filter(aggregate_type="payment_intent").values_list("payload", flat=True))
+    payloads = list(AuditEvent.objects.filter(entity_type="payment_intent").values_list("payload", flat=True)) + list(
+        OutboxEvent.objects.filter(aggregate_type="payment_intent").values_list("payload", flat=True)
+    )
     assert payloads
     for payload in payloads:
         assert base_keys <= set(payload)
@@ -609,7 +610,7 @@ def test_payment_audit_and_outbox_payloads_follow_closed_schema(
 
 
 @pytest.mark.django_db
-def test_open_checkout_on_order_cancellation_requires_attention(
+def test_undispatched_checkout_on_order_cancellation_closes_locally(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
     intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
@@ -630,7 +631,8 @@ def test_open_checkout_on_order_cancellation_requires_attention(
         order_id=payable_order.id,
         source_event_id=uuid.uuid4(),
     )
-    assert result.status == PaymentIntent.Status.REQUIRES_ATTENTION
+    assert result.status == PaymentIntent.Status.CANCELLED
+    assert result.attempts.get().status == PaymentAttempt.Status.CANCELLED
 
 
 @pytest.mark.django_db

@@ -40,3 +40,14 @@ class CheckoutRequestForm(forms.Form):
         if not self.is_bound:
             self.initial.setdefault("expected_version", payment.version)
             self.initial.setdefault("idempotency_key", str(uuid.uuid4()))
+
+
+class PaymentCommandForm(forms.Form):
+    expected_version = forms.IntegerField(min_value=1, widget=forms.HiddenInput)
+    idempotency_key = forms.CharField(max_length=64, widget=forms.HiddenInput)
+
+    def __init__(self, *args, payment, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound:
+            self.initial.setdefault("expected_version", payment.version)
+            self.initial.setdefault("idempotency_key", str(uuid.uuid4()))

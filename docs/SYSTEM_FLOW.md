@@ -57,17 +57,21 @@ enviada automaticamente.
 Order confirmed + total BRL positivo
   → PaymentIntent pending
   → PaymentAttempt requested
-  → outbox + worker com lease persistente (adapter real bloqueado)
+  → outbox + worker com revalidação e lease de 90 s (adapter real bloqueado)
   → active / awaiting_payment
-  → processing | paid | cancelled | expired | requires_attention
+  → processing | paid | failed→pending | cancelled | expired | requires_attention
 ```
 
 Somente um attempt pode estar solicitado, ativo ou processando. O provider não
 dita o modelo canônico. Divergência de valor/moeda, evento regressivo ou
 cancelamento de Order com cobrança aberta/paga gera `requires_attention`, sem
 reembolso automático e sem mudar Order ou Fulfillment.
-Dispatch reutiliza a mesma tentativa e chave após timeout; callbacks deduplicam
-somente identificadores autenticados e não resolvem `requires_attention`.
+Dispatch usa backoff persistente e reutiliza a mesma tentativa e chave após
+timeout. Mudança de Order/conta durante I/O preserva o link externo e sinaliza
+atenção. Cancelamento de link externo passa por outbox e confirmação
+autoritativa; só depois há reabertura e escolha humana de outro provider.
+Callbacks deduplicam somente identificadores autenticados e não resolvem
+`requires_attention` sem evidência verificada.
 
 ## Fluxo aprovado da Fase 4
 

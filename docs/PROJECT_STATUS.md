@@ -71,8 +71,8 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments está na remediação autorizada do checkpoint de implementação da Fase
-5 e voltará a Review independente na branch
+Payments concluiu a segunda remediação autorizada do checkpoint de
+implementação da Fase 5 e voltará a Review independente na branch
 `phase/05-payments`, criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
 provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
@@ -104,12 +104,20 @@ global de locks, busca sem oráculo de PII, schemas fechados e a matriz de
 testes concorrentes. O GitHub Actions run `31288840331` passou no SHA material
 exato com 257 testes e cobertura exibida de 85% (85,46% sem arredondamento).
 
-O Review independente 02 também concluiu `CHANGES_REQUESTED`. Permanecem
-bloqueadores no dispatch após cancelamento/desativação, duração do lease,
-fluxos de falha/cancelamento/troca de provider, isolamento de erros do lote,
-matriz normativa de testes e protocolo do carrier. A reconciliação antes da
-autorização foi registrada como achado médio adicional. O parecer está em
-`project/reviews/phase-05-review-02.md`; QA/Segurança continua bloqueado.
+O Review independente 02 também concluiu `CHANGES_REQUESTED`. A segunda
+remediação autorizada corrige os bloqueadores apontados: revalidação antes do
+dispatch, preservação de resultado externo em corrida, lease de 90 segundos,
+backoff persistente, isolamento por evento, falha terminal, cancelamento
+verificado, reabertura/troca explícita, autorização antes de I/O e matriz
+direta de tenant/admin/rede. O parecer original permanece em
+`project/reviews/phase-05-review-02.md`; a branch aguarda nova revisão
+independente e QA/Segurança continua bloqueado até esse parecer.
+
+A validação local da segunda remediação aprovou 268 testes sem skip em
+PostgreSQL 17.10, com cobertura exata de 85,01%. O Compose efêmero também
+comprovou aplicação desde banco vazio e rollback/reaplicação das migrations de
+Payments. CI ainda deve validar o SHA material exato antes do carrier de
+handoff.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

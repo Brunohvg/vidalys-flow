@@ -15,6 +15,16 @@
   <form method="post" action="{% url 'payments:request_checkout' payment.id %}">
     {% csrf_token %}{{ checkout_form.as_p }}<button type="submit">Solicitar link</button>
   </form>
+  <h2>Cancelar checkout hospedado</h2>
+  <p class="muted">Links já enviados só são fechados após confirmação verificada do provider.</p>
+  <form method="post" action="{% url 'payments:cancel_checkout' payment.id %}">
+    {% csrf_token %}{{ cancel_form.as_p }}<button type="submit">Cancelar link</button>
+  </form>
+  <h2>Reabrir após fechamento verificado</h2>
+  <p class="muted">A troca de provider nunca é automática; depois de reabrir, escolha a conta desejada.</p>
+  <form method="post" action="{% url 'payments:reopen' payment.id %}">
+    {% csrf_token %}{{ reopen_form.as_p }}<button type="submit">Reabrir pagamento</button>
+  </form>
 </section>
 {% endif %}
 <section><h2>Tentativas</h2>

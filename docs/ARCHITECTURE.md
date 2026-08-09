@@ -101,9 +101,12 @@ de seus lotes, limita alocações à quantidade confirmada e consome
 
 Payments mantém a ordem global de locks `Order → PaymentIntent →
 PaymentAttempt`; a configuração de provider é validada sem introduzir lock em
-ordem inversa. O dispatcher usa lease persistente e expirável no attempt, e a
-mesma chave externa sobrevive a timeout e retry. Rede nunca ocorre dentro de
-transação. Callback bruto existe somente em
+ordem inversa. Dispatch e cancelamento usam lease persistente de 90 segundos,
+backoff e erro controlado no attempt; uma falha de provider não interrompe o
+lote. A mesma chave externa sobrevive a timeout e retry. Rede nunca ocorre
+dentro de transação, e autorização/tenant são validados antes de I/O. Um
+resultado externo válido é persistido mesmo se Order, intent ou conta mudarem
+durante a chamada. Callback bruto existe somente em
 memória, tem tamanho limitado, assinatura e janela antirreplay, é substituído
 por consulta autoritativa e não entra em banco, audit, outbox ou logs.
 Organization vem do `PaymentProviderAccount` resolvido pela rota, nunca do

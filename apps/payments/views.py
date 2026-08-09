@@ -11,7 +11,7 @@ from apps.organizations.selectors import active_organization_for_user
 from apps.payments import policies, selectors, services
 from apps.payments.callbacks import enforce_callback_rate_limit, process_mercado_pago_callback
 from apps.payments.exceptions import PaymentDomainError, ProviderEffectsDisabled
-from apps.payments.forms import CheckoutRequestForm, PaymentFilterForm, PaymentIntentCreateForm
+from apps.payments.forms import CheckoutRequestForm, PaymentCommandForm, PaymentFilterForm, PaymentIntentCreateForm
 from apps.payments.models import PaymentProviderAccount
 
 
@@ -42,9 +42,7 @@ def payment_list(request):
         filters["query"] = filters.pop("q")
     payments = Paginator(
         selectors.search_payments(organization=organization, membership=membership, **filters), 25
-    ).get_page(
-        request.GET.get("page")
-    )
+    ).get_page(request.GET.get("page"))
     return render(
         request,
         "payments/list.html",
@@ -103,6 +101,8 @@ def payment_detail(request, payment_id):
                 organization=organization,
                 payment=payment,
             ),
+            "cancel_form": PaymentCommandForm(payment=payment),
+            "reopen_form": PaymentCommandForm(payment=payment),
             "can_operate": policies.can_operate_payments(user=request.user, organization=organization),
         },
     )
@@ -131,6 +131,58 @@ def payment_request_checkout(request, payment_id):
             messages.success(request, "Solicitação registrada sem chamada externa.")
     else:
         messages.error(request, "Comando de checkout inválido.")
+    return redirect("payments:detail", payment_id=payment.id)
+
+
+@login_required
+@require_POST
+def payment_cancel_checkout(request, payment_id):
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    payment = _payment_or_404(organization=organization, payment_id=payment_id)
+    form = PaymentCommandForm(request.POST, payment=payment)
+    if form.is_valid():
+        try:
+            services.request_hosted_checkout_cancellation(
+                organization=organization,
+                intent=payment,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except PaymentDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Cancelamento do link registrado para confirmação do provider.")
+    else:
+        messages.error(request, "Comando de cancelamento inválido.")
+    return redirect("payments:detail", payment_id=payment.id)
+
+
+@login_required
+@require_POST
+def payment_reopen(request, payment_id):
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    payment = _payment_or_404(organization=organization, payment_id=payment_id)
+    form = PaymentCommandForm(request.POST, payment=payment)
+    if form.is_valid():
+        try:
+            services.reopen_payment_after_verified_closure(
+                organization=organization,
+                intent=payment,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except PaymentDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Pagamento reaberto; escolha explicitamente o próximo provider.")
+    else:
+        messages.error(request, "Comando de reabertura inválido.")
     return redirect("payments:detail", payment_id=payment.id)
 
 

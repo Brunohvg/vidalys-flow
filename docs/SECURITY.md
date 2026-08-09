@@ -81,5 +81,12 @@ O publisher desta fase é interno, determinístico e não executa I/O externo.
 - OPERATOR não pesquisa por nome de cliente e não recebe evidência externa;
 - audit e outbox usam allowlist fechada de IDs canônicos, estado, valor,
   moeda, versão e flags booleanas;
-- leases impedem dispatch simultâneo; adapters reais, secrets, sandbox e rede
-  continuam bloqueados.
+- autorização gerencial, tenant, conta e adapter são verificados antes de
+  reconciliação produzir qualquer I/O;
+- leases de 90 segundos superam o hard limit do worker; retry persiste apenas
+  horário e código controlado, sem texto ou diagnóstico externo;
+- resultado externo obtido durante cancelamento/desativação é preservado e
+  sinalizado como `requires_attention`, nunca descartado;
+- admin financeiro é somente leitura e filtrado pela Organization ativa;
+- a suíte bloqueia resolução DNS dos hosts de providers; adapters reais,
+  secrets, sandbox e rede continuam bloqueados.
