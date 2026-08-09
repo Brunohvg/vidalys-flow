@@ -53,7 +53,7 @@
   "tests": {
     "count": 257,
     "skipped": 0,
-    "coverage_percent": 86,
+    "coverage_percent": 85,
     "database": "PostgreSQL 17",
     "result": "passed",
     "empty_database_migration": "passed",
@@ -108,16 +108,31 @@
     "public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
   ],
   "risks": [
-    "Aggregate coverage is 86%; Review must still prioritize the directly tested financial, callback, isolation, idempotency, lease, and concurrency paths.",
+    "Coverage displays 85% (85.46% unrounded), above the 85% gate; Review must still prioritize direct financial, callback, isolation, idempotency, lease, and concurrency paths.",
     "The callback rate limiter depends on Redis and intentionally fails closed when cache is unavailable; operational alerting belongs to homologation.",
     "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
     "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
   ],
-  "blockers": [],
+  "blockers": [
+    "P05-R10 dispatch may create and lose evidence of a payable checkout after Order cancellation or provider-account deactivation",
+    "P05-R11 dispatch lease is shorter than the Celery task hard limit",
+    "P05-R12 failed, explicit cancellation, retry, and verified provider-switch flows are incomplete",
+    "P05-R13 transport failures can abort and starve the dispatch batch",
+    "P05-R14 mandatory worker, authorization, tenant, cancellation, switch, race, and network-blocking tests remain incomplete",
+    "P05-R15 candidate carrier changed files beyond the handoff protocol"
+  ],
   "review": {
-    "status": "pending",
+    "status": "changes_requested",
     "candidate_head": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
-    "blockers": [],
+    "report": "project/reviews/phase-05-review-02.md",
+    "blockers": [
+      "P05-R10",
+      "P05-R11",
+      "P05-R12",
+      "P05-R13",
+      "P05-R14",
+      "P05-R15"
+    ],
     "previous_review": {
       "status": "changes_requested",
       "report": "project/reviews/phase-05-review-01.md",

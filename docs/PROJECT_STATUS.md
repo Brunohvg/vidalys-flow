@@ -87,7 +87,7 @@ Pago com assinatura e consulta autoritativa injetável, bloqueio do callback
 Pagar.me, reconciliação, cancelamento interno de Order, masking, HTML e testes
 PostgreSQL. Isso ainda não representa implementação aprovada: Review
 independente, QA/Segurança, CI no SHA candidato e aprovação humana continuam
-pendentes. O candidato técnico é
+pendentes. O primeiro candidato técnico foi
 `707401a13a4cd493409e6258301a1aaa22cba68b`, validado pelo GitHub Actions run
 `31287810333` com 240 testes, 85% de cobertura e todos os gates verdes.
 
@@ -102,8 +102,14 @@ transições monotônicas com `requires_attention` protegido, replay baseado no
 `X-Request-Id` autenticado, snapshots imutáveis também no PostgreSQL, ordem
 global de locks, busca sem oráculo de PII, schemas fechados e a matriz de
 testes concorrentes. O GitHub Actions run `31288840331` passou no SHA material
-exato com 257 testes e 86% de cobertura. Um novo Review independente ainda é
-obrigatório antes de QA/Segurança.
+exato com 257 testes e cobertura exibida de 85% (85,46% sem arredondamento).
+
+O Review independente 02 também concluiu `CHANGES_REQUESTED`. Permanecem
+bloqueadores no dispatch após cancelamento/desativação, duração do lease,
+fluxos de falha/cancelamento/troca de provider, isolamento de erros do lote,
+matriz normativa de testes e protocolo do carrier. A reconciliação antes da
+autorização foi registrada como achado médio adicional. O parecer está em
+`project/reviews/phase-05-review-02.md`; QA/Segurança continua bloqueado.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
