@@ -56,4 +56,3 @@ def test_concurrent_checkout_requests_produce_only_one_active_attempt(
     assert len(successes) == 1
     assert len(expected_errors) == 1
     assert intent.attempts.filter(status="requested").count() == 1
-

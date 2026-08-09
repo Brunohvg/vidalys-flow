@@ -4,4 +4,3 @@ PAYMENT_CHECKOUT_ACTIVATED = "payment.checkout_activated"
 PAYMENT_STATUS_CHANGED = "payment.status_changed"
 PAYMENT_REQUIRES_ATTENTION = "payment.requires_attention"
 PAYMENT_CANCELLED = "payment.cancelled"
-

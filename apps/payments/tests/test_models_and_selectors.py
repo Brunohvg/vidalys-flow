@@ -14,12 +14,8 @@ def key():
 
 
 @pytest.mark.django_db
-def test_financial_records_and_history_are_immutable(
-    organization, payable_order, manager, manager_membership
-):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+def test_financial_records_and_history_are_immutable(organization, payable_order, manager, manager_membership):
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     history = intent.status_history.get()
     with pytest.raises(TypeError):
         intent.delete()
@@ -33,9 +29,7 @@ def test_financial_records_and_history_are_immutable(
 def test_database_enforces_one_active_attempt(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     PaymentAttempt.objects.create(
         organization=organization,
         intent=intent,
@@ -64,9 +58,7 @@ def test_selectors_scope_and_mask_operator_detail(
     manager,
     manager_membership,
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,

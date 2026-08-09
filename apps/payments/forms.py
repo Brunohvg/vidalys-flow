@@ -40,4 +40,3 @@ class CheckoutRequestForm(forms.Form):
         if not self.is_bound:
             self.initial.setdefault("expected_version", payment.version)
             self.initial.setdefault("idempotency_key", str(uuid.uuid4()))
-

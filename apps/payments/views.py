@@ -137,10 +137,14 @@ def payment_request_checkout(request, payment_id):
 def mercado_pago_callback(request, provider_account_id):
     if request.content_type != "application/json":
         return HttpResponse(status=415)
-    account = PaymentProviderAccount.objects.select_related("organization").filter(
-        id=provider_account_id,
-        provider=PaymentProviderAccount.Provider.MERCADO_PAGO,
-    ).first()
+    account = (
+        PaymentProviderAccount.objects.select_related("organization")
+        .filter(
+            id=provider_account_id,
+            provider=PaymentProviderAccount.Provider.MERCADO_PAGO,
+        )
+        .first()
+    )
     if account is None:
         raise Http404
     try:

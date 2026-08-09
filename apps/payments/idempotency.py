@@ -59,4 +59,3 @@ def complete_command(*, receipt, intent, attempt=None):
     receipt.resulting_version = intent.version
     receipt.completed = True
     receipt.save(update_fields=("intent", "attempt", "resulting_version", "completed", "updated_at"))
-

@@ -31,4 +31,3 @@ class ProviderEffectsDisabled(PaymentDomainError):
 
 class CallbackRejected(PaymentDomainError):
     pass
-

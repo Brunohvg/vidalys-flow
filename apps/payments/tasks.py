@@ -30,4 +30,3 @@ def consume_order_cancellations(limit=20):
         )
         processed += 1
     return processed
-

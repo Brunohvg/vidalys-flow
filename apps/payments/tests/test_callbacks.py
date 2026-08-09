@@ -113,9 +113,7 @@ def test_callback_uses_signature_and_authoritative_resource_without_storing_body
         request_id="req-callback",
         signature_header=f"ts={timestamp},v1={signature}",
         signing_resolver=lambda **kwargs: signing_value,
-        resource_loader=lambda **kwargs: ProviderResource(
-            "resource-callback", "approved", 12540, "BRL"
-        ),
+        resource_loader=lambda **kwargs: ProviderResource("resource-callback", "approved", 12540, "BRL"),
     )
 
     intent.refresh_from_db()

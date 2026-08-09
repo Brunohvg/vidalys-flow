@@ -42,9 +42,7 @@ def test_provider_contract_mapping_and_disabled_network():
 def test_provider_payload_contracts_and_fake_dispatch(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     request = build_checkout_request(intent=intent, idempotency_key=key())
     mercado_payload = MercadoPagoCheckoutProAdapter.contract_payload(request)
     pagarme_payload = PagarmePaymentLinkAdapter.contract_payload(request)
@@ -82,12 +80,8 @@ def test_provider_payload_contracts_and_fake_dispatch(
 
 
 @pytest.mark.django_db
-def test_order_cancellation_consumer_is_idempotent(
-    organization, payable_order, manager, manager_membership
-):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+def test_order_cancellation_consumer_is_idempotent(organization, payable_order, manager, manager_membership):
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     payable_order.status = Order.Status.CANCELLED
     payable_order.cancelled_at = payable_order.confirmed_at
     payable_order.cancel_reason = "Cancelamento comercial"

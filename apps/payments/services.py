@@ -77,9 +77,7 @@ def _lock_intent(*, organization, intent_id):
 
 def _ensure_version(*, intent, expected_version):
     if intent.version != expected_version:
-        raise VersionConflict(
-            f"Pagamento alterado (versão atual {intent.version}, recebida {expected_version})."
-        )
+        raise VersionConflict(f"Pagamento alterado (versão atual {intent.version}, recebida {expected_version}).")
 
 
 def _audit(*, intent, actor, action, payload=None):
@@ -190,9 +188,7 @@ def create_payment_intent(*, organization, order, actor, idempotency_key):
 
 
 @transaction.atomic
-def request_hosted_checkout(
-    *, organization, intent, provider_account, actor, expected_version, idempotency_key
-):
+def request_hosted_checkout(*, organization, intent, provider_account, actor, expected_version, idempotency_key):
     _require_manager(actor=actor, organization=organization)
     payload = {
         "intent_id": str(intent.id),
@@ -219,10 +215,14 @@ def request_hosted_checkout(
     )
     if account is None:
         raise OrganizationMismatch("Conta de provider não pertence à organização ou está inativa.")
-    if PaymentAttempt.objects.select_for_update().filter(
-        intent=intent,
-        status__in=ACTIVE_ATTEMPT_STATUSES,
-    ).exists():
+    if (
+        PaymentAttempt.objects.select_for_update()
+        .filter(
+            intent=intent,
+            status__in=ACTIVE_ATTEMPT_STATUSES,
+        )
+        .exists()
+    ):
         raise InvalidPayment("Já existe um checkout solicitado ou ativo.")
     attempt = PaymentAttempt.objects.create(
         organization=organization,
@@ -276,9 +276,7 @@ def dispatch_requested_checkout(*, attempt, adapter, idempotency_key):
 
 
 @transaction.atomic
-def activate_hosted_checkout(
-    *, organization, attempt, result, idempotency_key
-):
+def activate_hosted_checkout(*, organization, attempt, result, idempotency_key):
     payload = {
         "attempt_id": str(attempt.id),
         "external_resource_id": result.external_resource_id,
@@ -293,11 +291,15 @@ def activate_hosted_checkout(
     if not is_new:
         return _existing_attempt(receipt)
     order, intent = _lock_intent(organization=organization, intent_id=attempt.intent_id)
-    attempt = PaymentAttempt.objects.select_for_update().filter(
-        organization=organization,
-        intent=intent,
-        id=attempt.id,
-    ).first()
+    attempt = (
+        PaymentAttempt.objects.select_for_update()
+        .filter(
+            organization=organization,
+            intent=intent,
+            id=attempt.id,
+        )
+        .first()
+    )
     if attempt is None:
         raise OrganizationMismatch("Tentativa não pertence à organização.")
     if order.status != Order.Status.CONFIRMED or attempt.status != PaymentAttempt.Status.REQUESTED:
@@ -407,16 +409,18 @@ def _apply_resource_to_locked_attempt(*, intent, attempt, account, resource, com
 
 
 @transaction.atomic
-def apply_verified_provider_resource(
-    *, provider_account, external_event_id, request_digest, resource
-):
+def apply_verified_provider_resource(*, provider_account, external_event_id, request_digest, resource):
     organization = provider_account.organization
-    account = PaymentProviderAccount.objects.select_for_update().filter(
-        organization=organization,
-        id=provider_account.id,
-        is_active=True,
-        callbacks_enabled=True,
-    ).first()
+    account = (
+        PaymentProviderAccount.objects.select_for_update()
+        .filter(
+            organization=organization,
+            id=provider_account.id,
+            is_active=True,
+            callbacks_enabled=True,
+        )
+        .first()
+    )
     if account is None or account.provider != PaymentProviderAccount.Provider.MERCADO_PAGO:
         raise InvalidPayment("Callback não está habilitado para esta conta.")
     existing = PaymentWebhookReceipt.objects.filter(
@@ -425,11 +429,15 @@ def apply_verified_provider_resource(
     ).first()
     if existing:
         return existing
-    attempt_ref = PaymentAttempt.objects.filter(
-        organization=organization,
-        provider_account=account,
-        external_resource_id=resource.external_resource_id,
-    ).values("intent_id").first()
+    attempt_ref = (
+        PaymentAttempt.objects.filter(
+            organization=organization,
+            provider_account=account,
+            external_resource_id=resource.external_resource_id,
+        )
+        .values("intent_id")
+        .first()
+    )
     if attempt_ref is None:
         raise OrganizationMismatch("Recurso externo não pertence à conta configurada.")
     _, intent = _lock_intent(organization=organization, intent_id=attempt_ref["intent_id"])
@@ -474,9 +482,7 @@ def apply_verified_provider_resource(
 
 
 @transaction.atomic
-def reconcile_verified_resource(
-    *, organization, intent, actor, expected_version, idempotency_key, resource
-):
+def reconcile_verified_resource(*, organization, intent, actor, expected_version, idempotency_key, resource):
     _require_manager(actor=actor, organization=organization)
     payload = {
         "intent_id": str(intent.id),
@@ -497,11 +503,16 @@ def reconcile_verified_resource(
         return _existing_intent(receipt)
     _, intent = _lock_intent(organization=organization, intent_id=intent.id)
     _ensure_version(intent=intent, expected_version=expected_version)
-    attempt = PaymentAttempt.objects.select_for_update().filter(
-        organization=organization,
-        intent=intent,
-        external_resource_id=resource.external_resource_id,
-    ).select_related("provider_account").first()
+    attempt = (
+        PaymentAttempt.objects.select_for_update()
+        .filter(
+            organization=organization,
+            intent=intent,
+            external_resource_id=resource.external_resource_id,
+        )
+        .select_related("provider_account")
+        .first()
+    )
     if attempt is None:
         raise OrganizationMismatch("Recurso não pertence ao PaymentIntent da organização.")
     changed, reason_code = _apply_resource_to_locked_attempt(
@@ -529,9 +540,7 @@ def reconcile_verified_resource(
     return intent
 
 
-def fetch_and_reconcile(
-    *, organization, intent, actor, expected_version, idempotency_key, adapter
-):
+def fetch_and_reconcile(*, organization, intent, actor, expected_version, idempotency_key, adapter):
     attempt = intent.attempts.filter(external_resource_id__gt="").order_by("-created_at").first()
     if attempt is None:
         raise InvalidPayment("Pagamento não possui recurso externo para reconciliar.")
@@ -569,10 +578,14 @@ def consume_order_cancelled(*, organization, order_id, source_event_id):
     intent = PaymentIntent.objects.select_for_update().filter(organization=organization, order=order).first()
     if intent is None:
         raise InvalidPayment("Pedido cancelado não possui PaymentIntent.")
-    attempt = PaymentAttempt.objects.select_for_update().filter(
-        intent=intent,
-        status__in=ACTIVE_ATTEMPT_STATUSES,
-    ).first()
+    attempt = (
+        PaymentAttempt.objects.select_for_update()
+        .filter(
+            intent=intent,
+            status__in=ACTIVE_ATTEMPT_STATUSES,
+        )
+        .first()
+    )
     if intent.status in {PaymentIntent.Status.PAID, PaymentIntent.Status.PROCESSING} or attempt:
         target = PaymentIntent.Status.REQUIRES_ATTENTION
         reason_code = "order_cancelled_with_open_or_paid_payment"

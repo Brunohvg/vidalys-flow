@@ -40,4 +40,3 @@ def mercado_account(organization):
         is_active=True,
         callbacks_enabled=True,
     )
-

@@ -33,4 +33,3 @@ admin.site.register(PaymentAttempt, ReadOnlyPaymentAdmin)
 admin.site.register(PaymentStatusHistory, ReadOnlyPaymentAdmin)
 admin.site.register(PaymentCommandReceipt, ReadOnlyPaymentAdmin)
 admin.site.register(PaymentWebhookReceipt, ReadOnlyPaymentAdmin)
-

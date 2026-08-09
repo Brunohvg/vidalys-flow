@@ -13,8 +13,7 @@ def search_payments(*, organization, query="", status=""):
     query = (query or "").strip()
     if query:
         queryset = queryset.filter(
-            Q(order_number_snapshot__icontains=query)
-            | Q(customer_name_snapshot__icontains=query)
+            Q(order_number_snapshot__icontains=query) | Q(customer_name_snapshot__icontains=query)
         )
     if status:
         queryset = queryset.filter(status=status)
@@ -28,11 +27,7 @@ def payment_for_organization(*, organization, payment_id):
 def payment_detail(*, organization, payment, user, membership):
     if payment.organization_id != organization.id:
         return None
-    if (
-        membership.organization_id != organization.id
-        or membership.user_id != user.id
-        or not membership.is_active
-    ):
+    if membership.organization_id != organization.id or membership.user_id != user.id or not membership.is_active:
         return None
     manager = membership.role in MANAGER_ROLES
     attempts = list(payment.attempts.select_related("provider_account").order_by("created_at"))
@@ -55,4 +50,3 @@ def payment_detail(*, organization, payment, user, membership):
         "attempts": attempt_rows,
         "history": payment.status_history.select_related("actor").all(),
     }
-

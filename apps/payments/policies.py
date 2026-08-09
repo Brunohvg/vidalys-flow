@@ -19,4 +19,3 @@ def can_operate_payments(*, user, organization):
 
 def can_view_provider_evidence(*, user, organization):
     return can_operate_payments(user=user, organization=organization)
-

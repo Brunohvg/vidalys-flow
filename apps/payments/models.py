@@ -107,10 +107,7 @@ class PaymentIntent(BaseModel):
             models.CheckConstraint(condition=models.Q(amount__gt=0), name="payment_intent_amount_positive"),
             models.CheckConstraint(condition=models.Q(version__gte=1), name="payment_intent_version_positive"),
             models.CheckConstraint(
-                condition=(
-                    models.Q(status="paid", paid_at__isnull=False)
-                    | ~models.Q(status="paid")
-                ),
+                condition=(models.Q(status="paid", paid_at__isnull=False) | ~models.Q(status="paid")),
                 name="payment_intent_paid_timestamp",
             ),
             models.CheckConstraint(
@@ -197,8 +194,7 @@ class PaymentAttempt(BaseModel):
             models.CheckConstraint(condition=models.Q(version__gte=1), name="payment_attempt_version_positive"),
             models.CheckConstraint(
                 condition=(
-                    models.Q(status="requested", external_resource_id="", hosted_url="")
-                    | ~models.Q(status="requested")
+                    models.Q(status="requested", external_resource_id="", hosted_url="") | ~models.Q(status="requested")
                 ),
                 name="payment_attempt_requested_empty",
             ),

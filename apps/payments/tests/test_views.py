@@ -108,9 +108,7 @@ def test_cross_organization_payment_is_404(
 
 
 @pytest.mark.django_db
-def test_callback_endpoint_is_generic_and_disabled_without_secret_channel(
-    client, mercado_account
-):
+def test_callback_endpoint_is_generic_and_disabled_without_secret_channel(client, mercado_account):
     url = reverse("payments:mercado_pago_callback", args=(mercado_account.id,))
     assert client.post(url, data="{}", content_type="text/plain").status_code == 415
     response = client.post(
@@ -121,4 +119,3 @@ def test_callback_endpoint_is_generic_and_disabled_without_secret_channel(
         HTTP_X_SIGNATURE="ts=1,v1=invalid",
     )
     assert response.status_code == 503
-

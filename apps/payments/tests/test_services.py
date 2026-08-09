@@ -39,9 +39,7 @@ def key():
 
 
 @pytest.mark.django_db
-def test_create_intent_snapshots_order_and_is_idempotent(
-    organization, payable_order, manager, manager_membership
-):
+def test_create_intent_snapshots_order_and_is_idempotent(organization, payable_order, manager, manager_membership):
     command = key()
     intent = create_payment_intent(
         organization=organization,
@@ -207,9 +205,7 @@ def test_request_checkout_serializes_attempt_and_checks_version_and_account(
 def test_activate_checkout_validates_https_and_does_not_leak_url_to_evidence(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -245,9 +241,7 @@ def test_activate_checkout_validates_https_and_does_not_leak_url_to_evidence(
 def test_verified_provider_resource_marks_paid_and_deduplicates(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -288,9 +282,7 @@ def test_verified_provider_resource_marks_paid_and_deduplicates(
 def test_amount_mismatch_and_pagarme_callback_go_to_safe_paths(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -335,9 +327,7 @@ def test_amount_mismatch_and_pagarme_callback_go_to_safe_paths(
 def test_callback_cannot_cross_provider_accounts(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -370,12 +360,8 @@ def test_callback_cannot_cross_provider_accounts(
 
 
 @pytest.mark.django_db
-def test_order_cancellation_closes_pending_but_flags_paid(
-    organization, payable_order, manager, manager_membership
-):
-    create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+def test_order_cancellation_closes_pending_but_flags_paid(organization, payable_order, manager, manager_membership):
+    create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     payable_order.status = Order.Status.CANCELLED
     payable_order.cancelled_at = payable_order.confirmed_at
     payable_order.cancel_reason = "Cliente desistiu"
@@ -389,12 +375,8 @@ def test_order_cancellation_closes_pending_but_flags_paid(
 
 
 @pytest.mark.django_db
-def test_stale_version_does_not_overwrite(
-    organization, payable_order, mercado_account, manager, manager_membership
-):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+def test_stale_version_does_not_overwrite(organization, payable_order, mercado_account, manager, manager_membership):
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     with pytest.raises(VersionConflict):
         request_hosted_checkout(
             organization=organization,
@@ -410,9 +392,7 @@ def test_stale_version_does_not_overwrite(
 def test_manager_reconciliation_uses_authoritative_resource_and_is_idempotent(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -454,9 +434,7 @@ def test_manager_reconciliation_uses_authoritative_resource_and_is_idempotent(
 def test_failed_attempt_allows_explicit_retry_without_automatic_fallback(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     first = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -496,9 +474,7 @@ def test_failed_attempt_allows_explicit_retry_without_automatic_fallback(
 def test_non_monotonic_event_after_paid_requires_attention(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -529,9 +505,7 @@ def test_non_monotonic_event_after_paid_requires_attention(
 def test_open_checkout_on_order_cancellation_requires_attention(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     request_hosted_checkout(
         organization=organization,
         intent=intent,
@@ -556,9 +530,7 @@ def test_open_checkout_on_order_cancellation_requires_attention(
 def test_fake_fetch_and_reconcile_keeps_network_outside_transaction(
     organization, payable_order, mercado_account, manager, manager_membership
 ):
-    intent = create_payment_intent(
-        organization=organization, order=payable_order, actor=manager, idempotency_key=key()
-    )
+    intent = create_payment_intent(organization=organization, order=payable_order, actor=manager, idempotency_key=key())
     attempt = request_hosted_checkout(
         organization=organization,
         intent=intent,
