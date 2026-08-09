@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "phase_id": 5,
+  "phase_name": "Payments",
+  "status": "candidate",
+  "branch": "phase/05-payments",
+  "base_sha": "4fd3a9259e9e2f31acdab44f13499eade79ab59e",
+  "head_sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
+  "commits": [
+    {
+      "sha": "640654778332b7306e4a20833a5cd15ef03c27ea",
+      "subject": "docs(payments): plan phase 05"
+    },
+    {
+      "sha": "7a0aeb7039e7196528e925ec8e4e203d94923dbe",
+      "subject": "chore(payments): approve phase 05 implementation"
+    },
+    {
+      "sha": "3ec9c49a7c775b39ff0361f7c2997611e0dce0b4",
+      "subject": "feat(payments): implement phase 05 core"
+    },
+    {
+      "sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
+      "subject": "style(payments): normalize phase 05 sources"
+    }
+  ],
+  "delivered_scope": [
+    "Organization-scoped canonical full-Order BRL PaymentIntent with immutable amount snapshot and versioned lifecycle",
+    "single active hosted-checkout PaymentAttempt enforced by PostgreSQL and pessimistic lock ordering",
+    "manager-tier idempotent creation, checkout request, provider-result activation, reconciliation, and Order cancellation coordination",
+    "Mercado Pago Checkout Pro and Pagar.me Payment Links contract builders behind adapters with external effects disabled",
+    "Mercado Pago signature, five-minute replay window, Redis rate limiting, callback digest, authoritative resource loader, deduplication, and generic responses",
+    "Pagar.me callback disabled in code and by PostgreSQL constraint until authenticity is independently established",
+    "sanitized immutable status/webhook evidence, AuditEvent and OutboxEvent without raw callbacks, credentials, hosted URLs, or customer PII",
+    "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, admin hardening, tasks, documentation, and clone continuity"
+  ],
+  "models": [
+    "payments.PaymentIntent",
+    "payments.PaymentAttempt",
+    "payments.PaymentProviderAccount",
+    "payments.PaymentStatusHistory",
+    "payments.PaymentCommandReceipt",
+    "payments.PaymentWebhookReceipt"
+  ],
+  "migrations": [
+    "apps/payments/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "count": 240,
+    "skipped": 0,
+    "coverage_percent": 85,
+    "database": "PostgreSQL 17",
+    "result": "passed",
+    "empty_database_migration": "passed",
+    "technical_rollback": "passed",
+    "concurrency": "passed",
+    "cross_organization": "passed",
+    "cross_provider_account": "passed",
+    "payments_direct_tests": 33
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed"
+  },
+  "ci": {
+    "workflow_id": 31287810333,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31287810333",
+    "head_sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services/selectors, active Membership policies, Order-first locks, same-Organization provider-account/resource resolution, callback organization derived from its route account, and direct cross-tenant/cross-account tests."
+  },
+  "provider_contracts": {
+    "mercado_pago": "Checkout Pro request builder, signed callback validation, authoritative-resource injection, deduplication, replay/rate controls, and disabled network effects passed contract tests.",
+    "pagarme": "Payment Links request builder and status mapping passed local contract tests; callback remains disabled by design.",
+    "appmax": "deferred and absent",
+    "network_in_ci": false,
+    "sandbox_used": false,
+    "production_effects": false
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_consulted": false
+  },
+  "deferred": [
+    "provider credentials, sandbox calls, public callback registration, real charge, production activation, and deploy",
+    "Appmax and Pagar.me callback activation pending a complete authenticity contract and Security Review",
+    "partial payment, split, multi-currency, automatic fallback, refunds, disputes, chargebacks, fees, interest, settlement, receivables, and accounting",
+    "transparent checkout, card capture/tokenization, subscriptions, recurring billing, saved cards, and Messaging delivery",
+    "public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
+  ],
+  "risks": [
+    "Total coverage meets the 85% gate exactly; Review must prioritize the directly tested financial, callback, isolation, idempotency, and concurrency paths rather than rely only on the aggregate percentage.",
+    "The callback rate limiter depends on Redis and intentionally fails closed when cache is unavailable; operational alerting belongs to homologation.",
+    "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
+    "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
+  ],
+  "blockers": [],
+  "human_approval": {
+    "status": "pending",
+    "evidence": "No final Phase 05 approval has been given; only the technical plan was explicitly approved in the project conversation on 2026-08-08.",
+    "note": "The technical plan was approved. The implementation candidate has not been independently reviewed, QA/Security has not emitted GO, and no PR, merge, provider activation, release, or deploy is authorized."
+  }
+}

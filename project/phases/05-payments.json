@@ -6,12 +6,16 @@
   "dependency_head": "888685886d7a17c6eeb008674be86656e4f6fa40",
   "base_ref": "main",
   "branch": "phase/05-payments",
-  "status": "in_progress",
+  "status": "candidate",
   "plan_status": "approved",
-  "implementation_status": "in_progress",
-  "review_status": "blocked",
+  "implementation_status": "complete",
+  "review_status": "pending",
   "qa_status": "blocked",
   "human_approval_status": "pending",
+  "plan_approval": {
+    "status": "approved",
+    "evidence": "Explicit human message in the project conversation on 2026-08-08; approval applies only to the Phase 05 technical plan and implementation checkpoint."
+  },
   "allowed_status_values": {
     "status": [
       "planned",

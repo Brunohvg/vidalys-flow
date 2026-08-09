@@ -71,7 +71,8 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments está no checkpoint de implementação da Fase 5, na branch
+Payments concluiu o checkpoint de implementação da Fase 5 e aguarda Review
+independente na branch
 `phase/05-payments`, criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
 provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
@@ -86,7 +87,9 @@ Pago com assinatura e consulta autoritativa injetável, bloqueio do callback
 Pagar.me, reconciliação, cancelamento interno de Order, masking, HTML e testes
 PostgreSQL. Isso ainda não representa implementação aprovada: Review
 independente, QA/Segurança, CI no SHA candidato e aprovação humana continuam
-pendentes.
+pendentes. O candidato técnico é
+`707401a13a4cd493409e6258301a1aaa22cba68b`, validado pelo GitHub Actions run
+`31287810333` com 240 testes, 85% de cobertura e todos os gates verdes.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
