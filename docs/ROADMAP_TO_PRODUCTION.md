@@ -5,21 +5,19 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-A Fase 03 — Orders foi aprovada e integrada. A Fase 04 — Fulfillment possui
-implementação candidata em `phase/04-fulfillment`, sobre a baseline
-`a98ceab40f9c40d19dd9c24b666846fb05e63b2d`. O Review 01 solicitou mudanças,
-que foram implementadas e validadas localmente com PostgreSQL 17. O próximo
-checkpoint é CI no SHA remediado, seguido de novo Review independente e
-QA/Segurança. Não há autorização de merge ou deploy.
+As Fases 03 — Orders e 04 — Fulfillment foram aprovadas e integradas.
+Fulfillment recebeu remediação, CI verde no candidato material, Review 02,
+QA/Segurança e ratificação humana final. O desvio de governança do merge foi
+registrado sem reescrever o histórico. O próximo checkpoint de produto é o
+planejamento da Fase 05 — Payments. Não há autorização de deploy.
 
 ## Sequência de produto
 
 1. **Orders (Fase 03, concluída).** Registro comercial, snapshots, valores e
    estados canônicos aprovados; sem cobrança ou logística.
-2. **Fulfillment (Fase 04, candidata).** Revisar a implementação de lotes
-   parciais, separação, entrega e retirada; executar QA/Segurança; produzir o
-   relatório final; obter nova aprovação humana antes de PR/merge.
-3. **Payments (Fase 05).** Modelar cobranças e links de pagamento de forma
+2. **Fulfillment (Fase 04, concluída).** Lotes parciais, separação, entrega e
+   retirada aprovados sem estoque, providers ou mudança em `Order.status`.
+3. **Payments (Fase 05, próxima).** Modelar cobranças e links de pagamento de forma
    provider-agnostic; decidir o primeiro rollout entre Mercado Pago e Pagar.me
    conforme conta e sandbox; estabilizar ambos antes do Appmax.
 4. **Messaging (Fase 06).** Enviar comunicações transacionais somente a partir
@@ -48,6 +46,11 @@ Payments não pode ser antecipado dentro de Fulfillment. Cada conector terá
 credencial exclusiva da Vidalys Flow, checkout hospedado, webhook autenticado,
 deduplicação, reconciliação, sandbox e rollout separado. Nada será reaproveitado
 do Flowlog antigo.
+
+O plano de Payments ainda deve decidir os contratos canônicos, estados,
+idempotência, webhooks, reconciliação, permissões, privacidade, ordem de
+rollout e critérios de sandbox. Mercado Pago e Pagar.me são candidatos ao
+primeiro ciclo; Appmax permanece posterior até decisão humana específica.
 
 ## Gate repetido em cada fase
 

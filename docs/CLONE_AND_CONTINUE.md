@@ -10,13 +10,14 @@ Flowlog ou esta conversa.
 git clone https://github.com/Brunohvg/vidalys-flow.git
 cd vidalys-flow
 git fetch --all --prune
-git switch phase/04-fulfillment
+git switch main
+git pull --ff-only
 ```
 
-A branch `main` contém somente fases aprovadas. Enquanto a Fase 4 não receber
-aprovação final e merge, sua implementação estará em `phase/04-fulfillment`.
-Confira sempre `project/state.json` e `project/phases/04-fulfillment.json`
-antes de continuar.
+A branch `main` contém as fases aprovadas até Fulfillment. Confira sempre
+`project/state.json` antes de criar uma branch: Payments é a próxima fase, mas
+nenhum código financeiro pode começar sem manifesto, plano técnico e aprovação
+humana próprios.
 
 ## Ambiente local reproduzível
 
@@ -72,7 +73,7 @@ Interfaces atuais:
 - `/customers/`;
 - `/products/`;
 - `/orders/`;
-- `/fulfillment/` na branch da Fase 4.
+- `/fulfillment/`.
 
 ## Gate antes de entregar mudanças
 
@@ -96,21 +97,23 @@ já foi atingido.
 ## Onde encontrar cada decisão
 
 - estado oficial: `project/state.json`;
-- escopo e checkpoint: `project/phases/04-fulfillment.json`;
+- última fase aprovada: `project/phases/04-fulfillment.json`;
 - contrato do domínio: `docs/domains/FULFILLMENT.md`;
 - ciclo de vida: `docs/decisions/ADR-012-FULFILLMENT-LIFECYCLE.md`;
 - concorrência: `docs/decisions/ADR-013-FULFILLMENT-CONSISTENCY.md`;
 - fluxo completo: `docs/SYSTEM_FLOW.md`;
 - caminho até produção: `docs/ROADMAP_TO_PRODUCTION.md`;
 - processo de agentes: `AGENTS.md` e `docs/agents/`;
-- evidência do candidato: `project/handoffs/phase-04.json`, quando gerada.
+- evidência da Fase 4: `project/handoffs/phase-04.json`;
+- incidente de recuperação:
+  `project/incidents/phase-04-governance-recovery.md`.
 
 ## Continuação segura
 
-Não pule checkpoints. Depois da implementação: CI no SHA candidato, Review
-independente, correções autorizadas, novo CI, QA/Segurança, handoff, aprovação
-humana da fase e só então PR/merge autorizado. Payments começa apenas da main
-que contenha Fulfillment aprovado.
+Não pule checkpoints. Para Payments: planejamento somente leitura, aprovação
+humana do plano, implementação em branch exclusiva, CI no SHA candidato,
+Review independente, QA/Segurança, handoff, aprovação humana da fase e só então
+PR/merge autorizado.
 
 Mercado Pago e Pagar.me permanecem planejados para a Fase 5; Appmax vem
 depois. Nenhum provider, webhook, credencial ou máquina do Flowlog pode ser

@@ -7,9 +7,9 @@ Plataforma independente de operação de vendas e pós-venda.
 > autenticação ou infraestrutura com o Flowlog.
 
 Este repositório contém a fundação greenfield e os domínios nativos e
-aprovados de clientes, catálogo operacional e Orders. A Fase 4 — Fulfillment
-está em implementação na branch candidata; pagamentos, mensagens, integrações
-e dashboard permanecem em fases posteriores.
+aprovados de Customers, Products, Orders e Fulfillment. Payments é a próxima
+fase planejada; mensagens, integrações e dashboard permanecem em fases
+posteriores.
 
 Após selecionar uma organização permitida por Membership, as interfaces
 estão disponíveis em:
@@ -17,11 +17,11 @@ estão disponíveis em:
 - `/customers/`;
 - `/products/`;
 - `/orders/`;
-- `/fulfillment/` na branch candidata `phase/04-fulfillment`.
+- `/fulfillment/`.
 
 Consulte [Customers](docs/domains/CUSTOMERS.md),
-[Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md), o
-[plano de Fulfillment](docs/domains/FULFILLMENT.md) e o
+[Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md),
+[Fulfillment](docs/domains/FULFILLMENT.md) e o
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e
 decisões de escopo.
 

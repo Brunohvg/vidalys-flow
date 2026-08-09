@@ -57,14 +57,14 @@ O publisher desta fase é interno, determinístico e não executa I/O externo.
 - motivos livres permanecem no agregado e nunca entram em AuditEvent ou OutboxEvent;
 - admin é somente leitura para impedir que contorne services, locks e policies.
 
-## Fulfillment planejado
+## Fulfillment
 
-- todo lote, item, histórico e recibo pertencerá explicitamente à Organization;
-- criação e transições relerão o Order confirmado dentro da mesma Organization;
-- alocações concorrentes usarão locks PostgreSQL e nunca excederão o vendido;
-- OPERATOR continuará com endereço, contato e documento mascarados;
-- somente manager tier cancelará lotes e verá dados operacionais sem máscara;
+- todo lote, item, histórico e recibo pertence explicitamente à Organization;
+- criação e transições releem o Order confirmado dentro da mesma Organization;
+- alocações concorrentes usam locks PostgreSQL e nunca excedem o vendido;
+- OPERATOR recebe endereço, contato e documento mascarados;
+- somente manager tier cancela lotes e vê dados operacionais sem máscara;
 - snapshots de entrega, motivos e instruções não entrarão em logs, audit,
   outbox, métricas, receipts ou exceções;
-- o evento interno de cancelamento será deduplicado e não carregará PII;
+- o evento interno de cancelamento é deduplicado e não carrega PII;
 - não haverá chamadas de transportadora, payment provider ou Flowlog.

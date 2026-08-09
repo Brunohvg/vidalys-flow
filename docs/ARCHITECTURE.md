@@ -12,6 +12,8 @@ A Vidalys Flow é um monólito modular Django. A fundação possui somente:
 - `customers`: identidade, contatos, endereços, notas e merge;
 - `products`: catálogo operacional, variantes e identificadores.
 - `orders`: pedidos comerciais, itens snapshot, estados e totais.
+- `fulfillment`: lotes parciais de entrega ou retirada, alocações e ciclo
+  logístico.
 
 O grafo permitido é:
 
@@ -23,6 +25,7 @@ platform      → core, audit, organizations
 customers     → core, users, organizations, audit, platform
 products      → core, users, organizations, audit, platform
 orders        → core, users, organizations, customers, products, audit, platform
+fulfillment   → core, users, organizations, orders, audit, platform
 ```
 
 `core` nunca importa outro app local. Não existem runtime alternativo,
@@ -30,10 +33,11 @@ middleware de organização, hostname tenancy ou compatibilidade de tabelas.
 Customers e Products não importam um ao outro nem importam Orders. Orders
 consome apenas os contratos aprovados desses domínios.
 
-## Módulo candidato da Fase 4
+## Módulo aprovado da Fase 4
 
-Fulfillment foi implementado na branch candidata depois da aprovação humana
-de seu plano. O grafo acrescenta uma dependência unidirecional:
+Fulfillment foi implementado depois da aprovação humana de seu plano e
+ratificado após Review e QA/Segurança. O grafo acrescenta uma dependência
+unidirecional:
 
 ```text
 fulfillment → core, users, organizations, orders, audit, platform
@@ -69,3 +73,7 @@ independente por organização e trata o pedido como agregado concorrente.
 Comandos mutáveis possuem recibo idempotente; edições e transições bloqueiam
 o agregado e validam sua versão esperada. Eventos da outbox permanecem
 internos e não publicam para providers nesta fase.
+
+Fulfillment também recebe Organization explicitamente, bloqueia `Order` antes
+de seus lotes, limita alocações à quantidade confirmada e consome
+`order.cancelled` de forma idempotente. Orders não importa Fulfillment.

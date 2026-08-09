@@ -21,6 +21,7 @@ login
   → Products e variantes
   → Order draft e itens
   → validação, snapshots e confirmação
+  → Fulfillment parcial de entrega ou retirada
   → histórico + AuditEvent + OutboxEvent internos
 ```
 
@@ -40,11 +41,10 @@ login
    eventos internos na mesma transação.
 
 Orders não cobra, separa, entrega, envia mensagens, emite documento fiscal ou
-chama providers. A branch candidata da Fase 4 implementa separação, entrega e
-retirada em um módulo novo, ainda pendente de Review, QA/Segurança e aprovação
-humana da fase.
+chama providers. Fulfillment executa separação, entrega e retirada em módulo
+próprio, sem alterar o estado comercial do pedido.
 
-## Fluxo candidato da Fase 4
+## Fluxo aprovado da Fase 4
 
 ```text
 Order confirmed
@@ -76,7 +76,7 @@ Customer + Product
         ↓
       Order
         ↓
-   Fulfillment aprovado
+   Fulfillment
         ↓
 Payment link ──→ provider externo ──→ webhook verificado
         ↓                              ↓
