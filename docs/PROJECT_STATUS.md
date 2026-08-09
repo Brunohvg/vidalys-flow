@@ -80,6 +80,14 @@ a implementação candidata está autorizada somente com fakes e fixtures sem
 rede. Credencial, sandbox, callback público e efeito externo continuam
 proibidos.
 
+O candidato implementa o agregado provider-neutral, migration nova,
+idempotência, locks, tentativa única, adapters desabilitados, callback Mercado
+Pago com assinatura e consulta autoritativa injetável, bloqueio do callback
+Pagar.me, reconciliação, cancelamento interno de Order, masking, HTML e testes
+PostgreSQL. Isso ainda não representa implementação aprovada: Review
+independente, QA/Segurança, CI no SHA candidato e aprovação humana continuam
+pendentes.
+
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
 produção já foi provisionada; isso será verificado na Fase 9. Deploy continua

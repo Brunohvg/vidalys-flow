@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.products",
     "apps.orders",
     "apps.fulfillment",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -124,6 +125,7 @@ CELERY_TASK_ROUTES = {
     "apps.platform.tasks.publish_pending_outbox": {"queue": "default"},
     "apps.platform.tasks.record_beat_heartbeat": {"queue": "default"},
     "apps.fulfillment.tasks.consume_order_cancellations": {"queue": "default"},
+    "apps.payments.tasks.consume_order_cancellations": {"queue": "default"},
 }
 CELERY_BEAT_SCHEDULE = {
     "platform-outbox-publisher": {
@@ -136,6 +138,10 @@ CELERY_BEAT_SCHEDULE = {
     },
     "fulfillment-order-cancellations": {
         "task": "apps.fulfillment.tasks.consume_order_cancellations",
+        "schedule": 10.0,
+    },
+    "payments-order-cancellations": {
+        "task": "apps.payments.tasks.consume_order_cancellations",
         "schedule": 10.0,
     },
 }

@@ -98,7 +98,7 @@ já foi atingido.
 
 - estado oficial: `project/state.json`;
 - última fase aprovada: `project/phases/04-fulfillment.json`;
-- fase em planejamento: `project/phases/05-payments.json`;
+- fase em implementação candidata: `project/phases/05-payments.json`;
 - contrato do domínio: `docs/domains/FULFILLMENT.md`;
 - ciclo de vida: `docs/decisions/ADR-012-FULFILLMENT-LIFECYCLE.md`;
 - concorrência: `docs/decisions/ADR-013-FULFILLMENT-CONSISTENCY.md`;
@@ -106,14 +106,16 @@ já foi atingido.
 - caminho até produção: `docs/ROADMAP_TO_PRODUCTION.md`;
 - processo de agentes: `AGENTS.md` e `docs/agents/`;
 - plano de Payments: `docs/domains/PAYMENTS_VISION.md`;
+- contrato implementado de Payments: `docs/domains/PAYMENTS.md`;
+- código e testes: `apps/payments/`;
 - evidência da Fase 4: `project/handoffs/phase-04.json`;
 - incidente de recuperação:
   `project/incidents/phase-04-governance-recovery.md`.
 
 ## Continuação segura
 
-Não pule checkpoints. Para Payments: planejamento somente leitura, aprovação
-humana do plano, implementação em branch exclusiva, CI no SHA candidato,
+Não pule checkpoints. O plano de Payments já foi aprovado e a implementação
+candidata ocorre em branch exclusiva. Ao concluir: CI no SHA candidato,
 Review independente, QA/Segurança, handoff, aprovação humana da fase e só então
 PR/merge autorizado.
 

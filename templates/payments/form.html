@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Criar pagamento · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Criar pagamento</h1>
+<p>Pedido <strong>{{ order.display_number }}</strong> · R$ {{ order.total }} BRL</p>
+<p class="muted">O valor será copiado do pedido confirmado. Nenhuma chamada ao provider ocorre nesta etapa.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Criar PaymentIntent</button></form>
+{% endblock %}
+

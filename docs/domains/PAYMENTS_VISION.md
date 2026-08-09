@@ -1,4 +1,4 @@
-# Plano proposto de Payments — Fase 5
+# Plano aprovado de Payments — Fase 5
 
 Status: plano aprovado em 8 de agosto de 2026; implementação candidata em
 andamento, sem autorização de sandbox, PR, merge, release ou deploy.

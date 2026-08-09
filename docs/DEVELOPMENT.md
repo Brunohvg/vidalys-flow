@@ -50,14 +50,20 @@ Migrations são geradas neste repositório e testadas desde banco vazio.
 Não copiar, editar para compatibilidade ou marcar como aplicadas migrations
 de outro sistema.
 
-Os apps `customers`, `products`, `orders` e `fulfillment` possuem migrations iniciais
-próprias. Para validar separadamente:
+Os apps `customers`, `products`, `orders`, `fulfillment` e `payments` possuem
+migrations próprias. Para validar Payments separadamente:
 
 ```bash
 docker compose -f docker-compose.test.yml run --rm test \
-  .venv/bin/pytest apps/fulfillment
+  .venv/bin/pytest apps/payments
 ```
 
 Views são adaptadores. Escritas devem chamar services com `organization` e
 ator explícitos; leituras devem usar selectors tenant-scoped. Não usar
 `Model.objects.all()` em uma interface operacional.
+
+Payments não usa SDK externo. `MercadoPagoCheckoutProAdapter` e
+`PagarmePaymentLinkAdapter` mantêm efeitos desabilitados; testes de contrato
+usam fakes locais e nunca rede. Não adicione token, signing value ou
+credencial ao `.env.example`, fixture, banco, log ou Git. Sandbox será um gate
+posterior com autorização própria.

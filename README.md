@@ -17,17 +17,19 @@ estão disponíveis em:
 - `/customers/`;
 - `/products/`;
 - `/orders/`;
-- `/fulfillment/`.
+- `/fulfillment/`;
+- `/payments/` (candidato da Fase 05, sem provider externo ativado).
 
 Consulte [Customers](docs/domains/CUSTOMERS.md),
 [Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md),
-[Fulfillment](docs/domains/FULFILLMENT.md) e o
+[Fulfillment](docs/domains/FULFILLMENT.md),
+[Payments](docs/domains/PAYMENTS.md) e o
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e
 decisões de escopo.
 
 Para uma visão integrada, consulte o [fluxo funcional](docs/SYSTEM_FLOW.md), o
 [caminho até produção](docs/ROADMAP_TO_PRODUCTION.md) e a
-[plano proposto de Payments](docs/domains/PAYMENTS_VISION.md). Para assumir o
+[plano aprovado de Payments](docs/domains/PAYMENTS_VISION.md). Para assumir o
 trabalho em outro computador, siga [Clonar e continuar](docs/CLONE_AND_CONTINUE.md).
 
 ## Início rápido
