@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/05-payments",
   "base_sha": "4fd3a9259e9e2f31acdab44f13499eade79ab59e",
-  "head_sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
+  "head_sha": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
   "commits": [
     {
       "sha": "640654778332b7306e4a20833a5cd15ef03c27ea",
@@ -22,16 +22,20 @@
     {
       "sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
       "subject": "style(payments): normalize phase 05 sources"
+    },
+    {
+      "sha": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
+      "subject": "fix(payments): remediate independent review findings"
     }
   ],
   "delivered_scope": [
     "Organization-scoped canonical full-Order BRL PaymentIntent with immutable amount snapshot and versioned lifecycle",
-    "single active hosted-checkout PaymentAttempt enforced by PostgreSQL and pessimistic lock ordering",
+    "single active hosted-checkout PaymentAttempt enforced by PostgreSQL, deterministic Order-first locks, and persistent expiring dispatch leases",
     "manager-tier idempotent creation, checkout request, provider-result activation, reconciliation, and Order cancellation coordination",
     "Mercado Pago Checkout Pro and Pagar.me Payment Links contract builders behind adapters with external effects disabled",
-    "Mercado Pago signature, five-minute replay window, Redis rate limiting, callback digest, authoritative resource loader, deduplication, and generic responses",
+    "Mercado Pago signature, five-minute replay window, Redis rate limiting, authenticated request-ID replay key, authoritative resource loader, pre-fetch deduplication, and generic responses",
     "Pagar.me callback disabled in code and by PostgreSQL constraint until authenticity is independently established",
-    "sanitized immutable status/webhook evidence, AuditEvent and OutboxEvent without raw callbacks, credentials, hosted URLs, or customer PII",
+    "ORM and PostgreSQL-protected immutable financial snapshots plus sanitized status/webhook evidence and closed AuditEvent/OutboxEvent schemas",
     "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, admin hardening, tasks, documentation, and clone continuity"
   ],
   "models": [
@@ -43,12 +47,13 @@
     "payments.PaymentWebhookReceipt"
   ],
   "migrations": [
-    "apps/payments/migrations/0001_initial.py"
+    "apps/payments/migrations/0001_initial.py",
+    "apps/payments/migrations/0002_dispatch_lease_and_integrity.py"
   ],
   "tests": {
-    "count": 240,
+    "count": 257,
     "skipped": 0,
-    "coverage_percent": 85,
+    "coverage_percent": 86,
     "database": "PostgreSQL 17",
     "result": "passed",
     "empty_database_migration": "passed",
@@ -56,7 +61,7 @@
     "concurrency": "passed",
     "cross_organization": "passed",
     "cross_provider_account": "passed",
-    "payments_direct_tests": 33
+    "payments_direct_tests": 50
   },
   "scans": {
     "secret_scan": "passed",
@@ -69,19 +74,19 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 31287810333,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31287810333",
-    "head_sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
+    "workflow_id": 31288840331,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31288840331",
+    "head_sha": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
     "run_attempt": 1,
     "conclusion": "success"
   },
   "organization_isolation": {
     "status": "passed",
-    "evidence": "Organization-explicit services/selectors, active Membership policies, Order-first locks, same-Organization provider-account/resource resolution, callback organization derived from its route account, and direct cross-tenant/cross-account tests."
+    "evidence": "Organization-explicit services/selectors, active Membership policies, Order-PaymentIntent-PaymentAttempt lock order, same-Organization provider-account/resource resolution, callback organization derived from its route account, and direct cross-tenant/cross-account/concurrency tests."
   },
   "provider_contracts": {
-    "mercado_pago": "Checkout Pro request builder, signed callback validation, authoritative-resource injection, deduplication, replay/rate controls, and disabled network effects passed contract tests.",
-    "pagarme": "Payment Links request builder and status mapping passed local contract tests; callback remains disabled by design.",
+    "mercado_pago": "Checkout Pro request builder matches a versioned official-contract fixture; signed callback validation, authenticated replay key, authoritative-resource injection, deduplication, rate controls, and disabled network effects passed direct tests.",
+    "pagarme": "Payment Links v5 builder uses required payment_settings and cart_settings from a versioned official OpenAPI fixture; callback remains disabled by design.",
     "appmax": "deferred and absent",
     "network_in_ci": false,
     "sandbox_used": false,
@@ -103,28 +108,37 @@
     "public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
   ],
   "risks": [
-    "Total coverage meets the 85% gate exactly; Review must prioritize the directly tested financial, callback, isolation, idempotency, and concurrency paths rather than rely only on the aggregate percentage.",
+    "Aggregate coverage is 86%; Review must still prioritize the directly tested financial, callback, isolation, idempotency, lease, and concurrency paths.",
     "The callback rate limiter depends on Redis and intentionally fails closed when cache is unavailable; operational alerting belongs to homologation.",
     "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
     "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
   ],
   "blockers": [],
   "review": {
-    "status": "changes_requested",
-    "report": "project/reviews/phase-05-review-01.md",
-    "candidate_head": "707401a13a4cd493409e6258301a1aaa22cba68b",
-    "blockers": [
-      "P05-R01 dispatcher without a persistent lease or asynchronous consumer",
-      "P05-R02 non-monotonic state transitions and automatic exit from requires_attention",
-      "P05-R03 replay deduplication based on an event identifier not covered by the signature",
-      "P05-R04 mutable financial snapshot fields",
-      "P05-R05 incomplete mandatory concurrency and provider-contract test matrix",
-      "P05-R06 inconsistent lock order with deadlock risk"
-    ]
+    "status": "pending",
+    "candidate_head": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
+    "blockers": [],
+    "previous_review": {
+      "status": "changes_requested",
+      "report": "project/reviews/phase-05-review-01.md",
+      "candidate_head": "707401a13a4cd493409e6258301a1aaa22cba68b",
+      "remediation_commit": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
+      "findings_addressed": [
+        "P05-R01",
+        "P05-R02",
+        "P05-R03",
+        "P05-R04",
+        "P05-R05",
+        "P05-R06",
+        "P05-R07",
+        "P05-R08",
+        "P05-R09"
+      ]
+    }
   },
   "human_approval": {
     "status": "pending",
     "evidence": "No final Phase 05 approval has been given; only the technical plan was explicitly approved in the project conversation on 2026-08-08.",
-    "note": "The technical plan was approved. The implementation candidate has not been independently reviewed, QA/Security has not emitted GO, and no PR, merge, provider activation, release, or deploy is authorized."
+    "note": "The technical plan and review remediation were authorized. The remediated candidate still requires a new independent Review and QA/Security GO; no PR, merge, provider activation, release, or deploy is authorized."
   }
 }

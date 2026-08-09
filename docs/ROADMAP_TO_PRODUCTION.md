@@ -10,8 +10,8 @@ Fulfillment recebeu remediação, CI verde no candidato material, Review 02,
 QA/Segurança e ratificação humana final. O desvio de governança do merge foi
 registrado sem reescrever o histórico. O plano da Fase 05 — Payments foi
 aprovado; a primeira revisão solicitou mudanças e a remediação autorizada
-aguarda novo candidato e Review independente, com rede e efeitos externos
-bloqueados. Não há autorização de
+produziu novo candidato com CI verde, agora aguardando Review independente,
+com rede e efeitos externos bloqueados. Não há autorização de
 sandbox, provider ou deploy.
 
 ## Sequência de produto

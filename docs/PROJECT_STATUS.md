@@ -96,12 +96,14 @@ bloqueiam QA/Segurança, principalmente em lease do dispatcher, monotonicidade
 de estados, replay, imutabilidade monetária, matriz obrigatória de testes e
 ordem global de locks. O parecer está em
 `project/reviews/phase-05-review-01.md`; nenhuma correção foi feita pelo
-revisor. A remediação implementa lease persistente e worker de outbox,
+revisor. A remediação autorizada foi concluída no candidato material
+`0ca4ae6d4db782e66d5636fd3374033621d4418a` e implementa lease persistente e worker de outbox,
 transições monotônicas com `requires_attention` protegido, replay baseado no
 `X-Request-Id` autenticado, snapshots imutáveis também no PostgreSQL, ordem
 global de locks, busca sem oráculo de PII, schemas fechados e a matriz de
-testes concorrentes. Um novo SHA candidato, CI e Review independente ainda são
-obrigatórios antes de QA/Segurança.
+testes concorrentes. O GitHub Actions run `31288840331` passou no SHA material
+exato com 257 testes e 86% de cobertura. Um novo Review independente ainda é
+obrigatório antes de QA/Segurança.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

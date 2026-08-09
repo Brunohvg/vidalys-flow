@@ -116,7 +116,7 @@ já foi atingido.
 
 Não pule checkpoints. O plano de Payments já foi aprovado, o Review 01 pediu
 correções e a remediação autorizada ocorre em branch exclusiva. Ao concluir:
-CI no novo SHA candidato,
+CI no novo SHA candidato (já verde no material `0ca4ae6`),
 Review independente, QA/Segurança, handoff, aprovação humana da fase e só então
 PR/merge autorizado.
 
