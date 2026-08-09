@@ -3,20 +3,23 @@
 Este contrato foi aprovado para implementação em 8 de agosto de 2026. A
 aprovação não autoriza merge, deploy ou aprovação da fase concluída.
 
-## Implementação candidata
+## Implementação aprovada
 
 O domínio está implementado em `apps.fulfillment`, com migrations novas,
 services transacionais, selectors tenant-scoped, policies, recibos
 idempotentes, histórico imutável, eventos internos, tarefa Celery e interface
-HTML em `/fulfillment/`. O candidato ainda exige Review independente,
-QA/Segurança e aprovação humana antes de merge ou release.
+HTML em `/fulfillment/`. O material em `70364bc7` recebeu Review independente
+02 `APPROVED`, QA/Segurança `GO` e ratificação humana final após a auditoria de
+governança. O código está na `main`; release e deploy continuam separados e
+não autorizados.
 
 O Review independente 01 identificou inversão na ordem de locks e lacunas de
 evidência concorrente, cross-organization e de sanitização. A remediação
 padronizou os locks em `Order -> Fulfillment`, registrou a tarefa no Celery e
-ampliou a suíte direta do domínio. O ambiente Docker local validou PostgreSQL
-17, Redis, migrations, rollback técnico, 208 testes sem skips e 86% de
-cobertura; CI e novo Review permanecem obrigatórios.
+ampliou a suíte direta do domínio. PostgreSQL 17, Redis, migrations, rollback
+técnico, 208 testes sem skips e 86% de cobertura foram validados no candidato.
+O desvio de checkpoint ocorrido durante o merge está preservado em
+`project/incidents/phase-04-governance-recovery.md`.
 
 ## Objetivo e fronteira
 
@@ -134,7 +137,7 @@ AuditEvent, OutboxEvent, logs, métricas, receipts ou mensagens de erro.
 
 ## Interface da fase
 
-A implementação aprovada deverá oferecer HTML server-rendered para lista,
+A implementação oferece HTML server-rendered para lista,
 filtros, detalhe, criação por pedido, edição de draft e comandos de transição.
 Não haverá API pública. A interface sempre deriva Organization da sessão e
 exibe progresso por quantidades sem inventar um estado novo no Order.
@@ -149,9 +152,9 @@ exibe progresso por quantidades sem inventar um estado novo no Order.
 - infraestrutura, Coolify, homologação, produção e qualquer vínculo técnico
   com o Flowlog.
 
-## Decisão humana necessária
+## Decisão vigente
 
-A aprovação do plano deve confirmar conjuntamente: múltiplos lotes parciais,
-métodos `delivery`/`pickup`, seis estados propostos, cancelamento idempotente
-por evento interno, permissões e itens adiados. Aprovar este documento não
-aprova implementação, PR, merge ou deploy.
+Múltiplos lotes parciais, métodos `delivery`/`pickup`, os seis estados,
+cancelamento idempotente por evento interno, permissões e itens adiados foram
+aprovados para a Fase 4. Isso não autoriza deploy nem antecipa Payments,
+inventory, providers, Messaging ou Integrations.

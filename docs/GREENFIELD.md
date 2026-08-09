@@ -19,6 +19,6 @@ sistema. Não existe ETL, sincronização ou reconciliação entre produtos.
 Cada domínio deixa de consultar a referência antiga somente depois de possuir
 contrato greenfield aprovado, migrations novas, testes em PostgreSQL,
 isolamento por organização, Review e QA/Segurança concluídos no presente
-repositório. Orders já concluiu esse processo. O planejamento e a implementação
-candidata de Fulfillment foram produzidos apenas com os contratos da Vidalys
-Flow e não consultaram o Flowlog.
+repositório. Orders e Fulfillment já concluíram esse processo. O planejamento
+e a implementação de Fulfillment foram produzidos apenas com os contratos da
+Vidalys Flow e não consultaram o Flowlog.
