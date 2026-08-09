@@ -71,8 +71,8 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments concluiu o checkpoint de implementação da Fase 5 e aguarda Review
-independente na branch
+Payments está na remediação autorizada do checkpoint de implementação da Fase
+5 e voltará a Review independente na branch
 `phase/05-payments`, criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
 provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
@@ -96,7 +96,12 @@ bloqueiam QA/Segurança, principalmente em lease do dispatcher, monotonicidade
 de estados, replay, imutabilidade monetária, matriz obrigatória de testes e
 ordem global de locks. O parecer está em
 `project/reviews/phase-05-review-01.md`; nenhuma correção foi feita pelo
-revisor.
+revisor. A remediação implementa lease persistente e worker de outbox,
+transições monotônicas com `requires_attention` protegido, replay baseado no
+`X-Request-Id` autenticado, snapshots imutáveis também no PostgreSQL, ordem
+global de locks, busca sem oráculo de PII, schemas fechados e a matriz de
+testes concorrentes. Um novo SHA candidato, CI e Review independente ainda são
+obrigatórios antes de QA/Segurança.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

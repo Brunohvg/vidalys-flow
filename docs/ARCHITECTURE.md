@@ -99,9 +99,13 @@ Fulfillment também recebe Organization explicitamente, bloqueia `Order` antes
 de seus lotes, limita alocações à quantidade confirmada e consome
 `order.cancelled` de forma idempotente. Orders não importa Fulfillment.
 
-Payments mantém a ordem de locks `Order → PaymentIntent → PaymentAttempt`.
-Rede nunca ocorre dentro de transação. Callback bruto existe somente em
+Payments mantém a ordem global de locks `Order → PaymentIntent →
+PaymentAttempt`; a configuração de provider é validada sem introduzir lock em
+ordem inversa. O dispatcher usa lease persistente e expirável no attempt, e a
+mesma chave externa sobrevive a timeout e retry. Rede nunca ocorre dentro de
+transação. Callback bruto existe somente em
 memória, tem tamanho limitado, assinatura e janela antirreplay, é substituído
 por consulta autoritativa e não entra em banco, audit, outbox ou logs.
 Organization vem do `PaymentProviderAccount` resolvido pela rota, nunca do
-payload externo.
+payload externo. Replay é deduplicado pelo recurso e pelo digest do
+`X-Request-Id` autenticado; IDs superiores não assinados são ignorados.

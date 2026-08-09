@@ -6,4 +6,3 @@
 <p class="muted">O valor será copiado do pedido confirmado. Nenhuma chamada ao provider ocorre nesta etapa.</p>
 <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Criar PaymentIntent</button></form>
 {% endblock %}
-

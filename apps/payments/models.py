@@ -9,6 +9,47 @@ class ImmutablePaymentQuerySet(models.QuerySet):
         raise TypeError("Registros financeiros não podem ser excluídos.")
 
 
+IMMUTABLE_INTENT_UPDATE_FIELDS = frozenset(
+    {
+        "organization",
+        "organization_id",
+        "order",
+        "order_id",
+        "currency",
+        "amount",
+        "order_number_snapshot",
+        "customer_name_snapshot",
+        "snapshot_schema_version",
+        "created_by",
+        "created_by_id",
+    }
+)
+IMMUTABLE_INTENT_FIELDS = frozenset(
+    {
+        "organization_id",
+        "order_id",
+        "currency",
+        "amount",
+        "order_number_snapshot",
+        "customer_name_snapshot",
+        "snapshot_schema_version",
+        "created_by_id",
+    }
+)
+
+
+class PaymentIntentQuerySet(ImmutablePaymentQuerySet):
+    def update(self, **kwargs):
+        if IMMUTABLE_INTENT_UPDATE_FIELDS.intersection(kwargs):
+            raise TypeError("Snapshots do PaymentIntent são imutáveis.")
+        return super().update(**kwargs)
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        if IMMUTABLE_INTENT_UPDATE_FIELDS.intersection(fields):
+            raise TypeError("Snapshots do PaymentIntent são imutáveis.")
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
+
 class PaymentProviderAccount(BaseModel):
     class Provider(models.TextChoices):
         MERCADO_PAGO = "mercado_pago", "Mercado Pago"
@@ -52,7 +93,7 @@ class PaymentProviderAccount(BaseModel):
 
 
 class PaymentIntent(BaseModel):
-    objects = ImmutablePaymentQuerySet.as_manager()
+    objects = PaymentIntentQuerySet.as_manager()
 
     class Status(models.TextChoices):
         PENDING = "pending", "Pendente"
@@ -133,6 +174,16 @@ class PaymentIntent(BaseModel):
     def __str__(self):
         return f"{self.order_number_snapshot} / {self.get_status_display()}"
 
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original = type(self).objects.filter(pk=self.pk).values(*IMMUTABLE_INTENT_FIELDS).first()
+            if original is None:
+                raise TypeError("PaymentIntent persistido não foi encontrado.")
+            for field in IMMUTABLE_INTENT_FIELDS:
+                if getattr(self, field) != original[field]:
+                    raise TypeError("Snapshots do PaymentIntent são imutáveis.")
+        return super().save(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
         raise TypeError("PaymentIntent não pode ser excluído.")
 
@@ -166,6 +217,9 @@ class PaymentAttempt(BaseModel):
     external_resource_id = models.CharField(max_length=160, blank=True)
     hosted_url = models.URLField(max_length=1000, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
+    dispatch_lease_token = models.UUIDField(null=True, blank=True, editable=False)
+    dispatch_lease_expires_at = models.DateTimeField(null=True, blank=True, editable=False)
+    dispatch_attempts = models.PositiveIntegerField(default=0, editable=False)
     version = models.PositiveBigIntegerField(default=1)
 
     class Meta:
@@ -192,6 +246,13 @@ class PaymentAttempt(BaseModel):
                 name="payment_attempt_status_valid",
             ),
             models.CheckConstraint(condition=models.Q(version__gte=1), name="payment_attempt_version_positive"),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(dispatch_lease_token__isnull=True, dispatch_lease_expires_at__isnull=True)
+                    | models.Q(dispatch_lease_token__isnull=False, dispatch_lease_expires_at__isnull=False)
+                ),
+                name="payment_attempt_lease_complete",
+            ),
             models.CheckConstraint(
                 condition=(
                     models.Q(status="requested", external_resource_id="", hosted_url="") | ~models.Q(status="requested")
@@ -320,6 +381,7 @@ class PaymentWebhookReceipt(BaseModel):
     provider = models.CharField(max_length=30, choices=PaymentProviderAccount.Provider.choices)
     external_event_id = models.CharField(max_length=160)
     external_resource_id = models.CharField(max_length=160)
+    authenticated_request_id_digest = models.CharField(max_length=64)
     request_digest = models.CharField(max_length=64)
     canonical_result = models.CharField(max_length=30)
     accepted = models.BooleanField(default=False)
@@ -327,8 +389,8 @@ class PaymentWebhookReceipt(BaseModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=("provider_account", "external_event_id"),
-                name="payment_webhook_event_unique",
+                fields=("provider_account", "external_resource_id", "authenticated_request_id_digest"),
+                name="payment_webhook_replay_unique",
             ),
         ]
 

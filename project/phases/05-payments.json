@@ -8,7 +8,7 @@
   "branch": "phase/05-payments",
   "status": "candidate",
   "plan_status": "approved",
-  "implementation_status": "complete",
+  "implementation_status": "in_progress",
   "review_status": "changes_requested",
   "qa_status": "blocked",
   "human_approval_status": "pending",
@@ -61,7 +61,7 @@
     "reason": "The approved Vidalys Flow contracts and current official provider documentation are sufficient. No Flowlog code, runtime, data, IDs, migrations, credentials, infrastructure, endpoints, or behavior is required.",
     "official_provider_research_date": "2026-08-08",
     "sources": [
-      "https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/overview",
+      "https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro/preferences/create-preference/post",
       "https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/payment-notifications",
       "https://docs.pagar.me/reference/criar-link",
       "https://docs.pagar.me/docs/webhooks",
@@ -167,7 +167,7 @@
   },
   "eligibility_and_order_coordination": [
     "PaymentIntent creation locks and revalidates the Organization-scoped Order as confirmed and not cancelled.",
-    "Phase 05 supports only exact full-Order payment using Order.grand_total persisted in BRL; Fulfillment state never gates payment.",
+    "Phase 05 supports only exact full-Order payment using Order.total persisted in BRL; Fulfillment state never gates payment.",
     "Payments imports approved Orders contracts; Orders does not import Payments and its canonical status remains draft, confirmed, or cancelled.",
     "An order.cancelled event cancels pending or awaiting payment intent work when the provider confirms closure.",
     "If the Order is cancelled after verified payment, the PaymentIntent becomes requires_attention and emits a sanitized operational event; no automatic refund is invented in this phase.",

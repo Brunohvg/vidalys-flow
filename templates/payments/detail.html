@@ -23,4 +23,3 @@
 </tbody></table></section>
 <section><h2>Histórico</h2><ul>{% for row in detail.history %}<li>{{ row.created_at }} · {{ row.from_status|default:"início" }} → {{ row.to_status }}</li>{% endfor %}</ul></section>
 {% endblock %}
-

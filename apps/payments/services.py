@@ -1,4 +1,6 @@
 import hashlib
+import uuid
+from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import urlparse
 
@@ -45,6 +47,34 @@ TERMINAL_INTENT_STATUSES = {
     PaymentIntent.Status.CANCELLED,
     PaymentIntent.Status.EXPIRED,
 }
+DISPATCH_LEASE_SECONDS = 45
+ALLOWED_EVIDENCE_FLAGS = {
+    "has_order_conflict",
+    "has_provider_inconsistency",
+}
+MONOTONIC_PROVIDER_TRANSITIONS = {
+    PaymentIntent.Status.PENDING: {
+        PaymentIntent.Status.AWAITING_PAYMENT,
+        PaymentIntent.Status.PROCESSING,
+        PaymentIntent.Status.PAID,
+        PaymentIntent.Status.CANCELLED,
+        PaymentIntent.Status.EXPIRED,
+        PaymentIntent.Status.REQUIRES_ATTENTION,
+    },
+    PaymentIntent.Status.AWAITING_PAYMENT: {
+        PaymentIntent.Status.PROCESSING,
+        PaymentIntent.Status.PAID,
+        PaymentIntent.Status.CANCELLED,
+        PaymentIntent.Status.EXPIRED,
+        PaymentIntent.Status.REQUIRES_ATTENTION,
+    },
+    PaymentIntent.Status.PROCESSING: {
+        PaymentIntent.Status.PAID,
+        PaymentIntent.Status.CANCELLED,
+        PaymentIntent.Status.EXPIRED,
+        PaymentIntent.Status.REQUIRES_ATTENTION,
+    },
+}
 
 
 def _require_manager(*, actor, organization):
@@ -81,6 +111,9 @@ def _ensure_version(*, intent, expected_version):
 
 
 def _audit(*, intent, actor, action, payload=None):
+    payload = payload or {}
+    if set(payload) - ALLOWED_EVIDENCE_FLAGS or any(not isinstance(value, bool) for value in payload.values()):
+        raise InvalidPayment("Payload de evidência financeira fora do schema aprovado.")
     record_event(
         organization=intent.organization,
         actor=actor,
@@ -94,12 +127,15 @@ def _audit(*, intent, actor, action, payload=None):
             "amount": str(intent.amount),
             "currency": intent.currency,
             "version": intent.version,
-            **(payload or {}),
+            **payload,
         },
     )
 
 
 def _outbox(*, intent, event_type, command_id, extra=None):
+    extra = extra or {}
+    if set(extra) - ALLOWED_EVIDENCE_FLAGS or any(not isinstance(value, bool) for value in extra.values()):
+        raise InvalidPayment("Payload de evento financeiro fora do schema aprovado.")
     enqueue_event(
         organization=intent.organization,
         event_type=event_type,
@@ -112,7 +148,7 @@ def _outbox(*, intent, event_type, command_id, extra=None):
             "amount": str(intent.amount),
             "currency": intent.currency,
             "version": intent.version,
-            **(extra or {}),
+            **extra,
         },
         idempotency_key=f"payment:{intent.id}:{event_type}:{command_id}",
     )
@@ -208,11 +244,11 @@ def request_hosted_checkout(*, organization, intent, provider_account, actor, ex
     _ensure_version(intent=intent, expected_version=expected_version)
     if order.status != Order.Status.CONFIRMED or intent.status != PaymentIntent.Status.PENDING:
         raise InvalidPayment("Pagamento não está elegível para novo checkout.")
-    account = (
-        PaymentProviderAccount.objects.select_for_update()
-        .filter(organization=organization, id=provider_account.id, is_active=True)
-        .first()
-    )
+    account = PaymentProviderAccount.objects.filter(
+        organization=organization,
+        id=provider_account.id,
+        is_active=True,
+    ).first()
     if account is None:
         raise OrganizationMismatch("Conta de provider não pertence à organização ou está inativa.")
     if (
@@ -231,52 +267,93 @@ def request_hosted_checkout(*, organization, intent, provider_account, actor, ex
         provider=account.provider,
         provider_idempotency_key=str(idempotency_key),
     )
-    request = build_checkout_request(intent=intent, idempotency_key=str(idempotency_key))
     intent.version += 1
     intent.save(update_fields=("version", "updated_at"))
-    _audit(
-        intent=intent,
-        actor=actor,
-        action=PAYMENT_CHECKOUT_REQUESTED,
-        payload={"provider": account.provider},
-    )
+    _audit(intent=intent, actor=actor, action=PAYMENT_CHECKOUT_REQUESTED)
     _outbox(
         intent=intent,
         event_type=PAYMENT_CHECKOUT_REQUESTED,
         command_id=idempotency_key,
-        extra={
-            "payment_attempt_id": str(attempt.id),
-            "provider": account.provider,
-            "amount_minor": request.amount_minor,
-        },
     )
     complete_command(receipt=receipt, intent=intent, attempt=attempt)
     return attempt
 
 
-def dispatch_requested_checkout(*, attempt, adapter, idempotency_key):
-    attempt = PaymentAttempt.objects.select_related("intent", "provider_account").filter(id=attempt.id).first()
+@transaction.atomic
+def claim_requested_checkout(*, attempt_id):
+    ref = PaymentAttempt.objects.filter(id=attempt_id).values("organization_id", "intent_id").first()
+    if ref is None:
+        raise InvalidPayment("Tentativa não está aguardando envio.")
+    organization = ref["organization_id"]
+    _, intent = _lock_intent(organization=organization, intent_id=ref["intent_id"])
+    attempt = (
+        PaymentAttempt.objects.select_for_update()
+        .select_related("intent", "provider_account", "organization")
+        .filter(id=attempt_id, organization=organization, intent=intent)
+        .first()
+    )
     if attempt is None or attempt.status != PaymentAttempt.Status.REQUESTED:
         raise InvalidPayment("Tentativa não está aguardando envio.")
-    if adapter.provider != attempt.provider:
-        raise InvalidPayment("Adapter não corresponde ao provider da tentativa.")
-    request = build_checkout_request(
-        intent=attempt.intent,
-        idempotency_key=attempt.provider_idempotency_key,
+    now = timezone.now()
+    if attempt.dispatch_lease_expires_at and attempt.dispatch_lease_expires_at > now:
+        raise InvalidPayment("Tentativa já está reservada para envio.")
+    attempt.dispatch_lease_token = uuid.uuid4()
+    attempt.dispatch_lease_expires_at = now + timedelta(seconds=DISPATCH_LEASE_SECONDS)
+    attempt.dispatch_attempts += 1
+    attempt.save(
+        update_fields=(
+            "dispatch_lease_token",
+            "dispatch_lease_expires_at",
+            "dispatch_attempts",
+            "updated_at",
+        )
     )
-    if getattr(adapter, "external", True):
-        require_external_effects_allowed()
-    result = adapter.create_checkout(request)
-    return activate_hosted_checkout(
-        organization=attempt.organization,
-        attempt=attempt,
-        result=result,
-        idempotency_key=idempotency_key,
-    )
+    return attempt
 
 
 @transaction.atomic
-def activate_hosted_checkout(*, organization, attempt, result, idempotency_key):
+def release_checkout_lease(*, attempt_id, lease_token):
+    ref = PaymentAttempt.objects.filter(id=attempt_id).values("organization_id", "intent_id").first()
+    if ref is None:
+        return False
+    organization = ref["organization_id"]
+    _, intent = _lock_intent(organization=organization, intent_id=ref["intent_id"])
+    attempt = PaymentAttempt.objects.select_for_update().filter(id=attempt_id, intent=intent).first()
+    if attempt is None or attempt.dispatch_lease_token != lease_token:
+        return False
+    attempt.dispatch_lease_token = None
+    attempt.dispatch_lease_expires_at = None
+    attempt.save(update_fields=("dispatch_lease_token", "dispatch_lease_expires_at", "updated_at"))
+    return True
+
+
+def dispatch_requested_checkout(*, attempt, adapter, idempotency_key):
+    attempt = claim_requested_checkout(attempt_id=attempt.id)
+    if adapter.provider != attempt.provider:
+        release_checkout_lease(attempt_id=attempt.id, lease_token=attempt.dispatch_lease_token)
+        raise InvalidPayment("Adapter não corresponde ao provider da tentativa.")
+    try:
+        request = build_checkout_request(
+            intent=attempt.intent,
+            idempotency_key=attempt.provider_idempotency_key,
+        )
+        if getattr(adapter, "external", True):
+            require_external_effects_allowed()
+        result = adapter.create_checkout(request)
+        return activate_hosted_checkout(
+            organization=attempt.organization,
+            attempt=attempt,
+            result=result,
+            idempotency_key=idempotency_key,
+            lease_token=attempt.dispatch_lease_token,
+        )
+    except Exception:
+        release_checkout_lease(attempt_id=attempt.id, lease_token=attempt.dispatch_lease_token)
+        raise
+
+
+@transaction.atomic
+def activate_hosted_checkout(*, organization, attempt, result, idempotency_key, lease_token=None):
     payload = {
         "attempt_id": str(attempt.id),
         "external_resource_id": result.external_resource_id,
@@ -304,6 +381,8 @@ def activate_hosted_checkout(*, organization, attempt, result, idempotency_key):
         raise OrganizationMismatch("Tentativa não pertence à organização.")
     if order.status != Order.Status.CONFIRMED or attempt.status != PaymentAttempt.Status.REQUESTED:
         raise InvalidPayment("Tentativa não pode ser ativada.")
+    if attempt.dispatch_lease_token and attempt.dispatch_lease_token != lease_token:
+        raise InvalidPayment("Lease de envio não pertence a este dispatcher.")
     parsed = urlparse(result.hosted_url)
     if parsed.scheme != "https" or not parsed.netloc or not result.external_resource_id:
         raise InvalidPayment("Resposta de checkout hospedado inválida.")
@@ -311,10 +390,21 @@ def activate_hosted_checkout(*, organization, attempt, result, idempotency_key):
     attempt.hosted_url = result.hosted_url
     attempt.expires_at = result.expires_at
     attempt.status = PaymentAttempt.Status.ACTIVE
+    attempt.dispatch_lease_token = None
+    attempt.dispatch_lease_expires_at = None
     attempt.version += 1
     try:
         attempt.save(
-            update_fields=("external_resource_id", "hosted_url", "expires_at", "status", "version", "updated_at")
+            update_fields=(
+                "external_resource_id",
+                "hosted_url",
+                "expires_at",
+                "status",
+                "dispatch_lease_token",
+                "dispatch_lease_expires_at",
+                "version",
+                "updated_at",
+            )
         )
     except IntegrityError as exc:
         raise InvalidPayment("Identificador externo duplicado.") from exc
@@ -329,7 +419,7 @@ def activate_hosted_checkout(*, organization, attempt, result, idempotency_key):
         command_id=idempotency_key,
         source="provider_worker",
     )
-    _audit(intent=intent, actor=None, action=PAYMENT_CHECKOUT_ACTIVATED, payload={"provider": attempt.provider})
+    _audit(intent=intent, actor=None, action=PAYMENT_CHECKOUT_ACTIVATED)
     _outbox(intent=intent, event_type=PAYMENT_CHECKOUT_ACTIVATED, command_id=idempotency_key)
     complete_command(receipt=receipt, intent=intent, attempt=attempt)
     return attempt
@@ -392,10 +482,22 @@ def _apply_resource_to_locked_attempt(*, intent, attempt, account, resource, com
     if resource.currency != intent.currency or resource.amount_minor != expected_minor:
         target = PaymentIntent.Status.REQUIRES_ATTENTION
         reason_code = "amount_or_currency_mismatch"
-    if intent.status in TERMINAL_INTENT_STATUSES and target != intent.status:
+    if target == "failed":
+        target = PaymentIntent.Status.REQUIRES_ATTENTION
+        reason_code = "provider_attempt_failed"
+    if intent.status == PaymentIntent.Status.REQUIRES_ATTENTION and source != "reconciliation":
+        return False, "requires_attention_locked"
+    invalid_terminal_transition = intent.status in TERMINAL_INTENT_STATUSES and target != intent.status
+    invalid_non_terminal_transition = (
+        intent.status not in TERMINAL_INTENT_STATUSES
+        and intent.status != PaymentIntent.Status.REQUIRES_ATTENTION
+        and target != intent.status
+        and target not in MONOTONIC_PROVIDER_TRANSITIONS.get(intent.status, set())
+    )
+    if invalid_terminal_transition or invalid_non_terminal_transition:
         target = PaymentIntent.Status.REQUIRES_ATTENTION
         reason_code = "non_monotonic_provider_event"
-    changed = target != intent.status or target == "failed"
+    changed = target != intent.status
     if changed:
         _canonical_transition(
             intent=intent,
@@ -409,23 +511,27 @@ def _apply_resource_to_locked_attempt(*, intent, attempt, account, resource, com
 
 
 @transaction.atomic
-def apply_verified_provider_resource(*, provider_account, external_event_id, request_digest, resource):
+def apply_verified_provider_resource(
+    *,
+    provider_account,
+    external_event_id,
+    authenticated_request_id_digest,
+    request_digest,
+    resource,
+):
     organization = provider_account.organization
-    account = (
-        PaymentProviderAccount.objects.select_for_update()
-        .filter(
-            organization=organization,
-            id=provider_account.id,
-            is_active=True,
-            callbacks_enabled=True,
-        )
-        .first()
-    )
+    account = PaymentProviderAccount.objects.filter(
+        organization=organization,
+        id=provider_account.id,
+        is_active=True,
+        callbacks_enabled=True,
+    ).first()
     if account is None or account.provider != PaymentProviderAccount.Provider.MERCADO_PAGO:
         raise InvalidPayment("Callback não está habilitado para esta conta.")
     existing = PaymentWebhookReceipt.objects.filter(
         provider_account=account,
-        external_event_id=external_event_id,
+        external_resource_id=resource.external_resource_id,
+        authenticated_request_id_digest=authenticated_request_id_digest,
     ).first()
     if existing:
         return existing
@@ -446,6 +552,13 @@ def apply_verified_provider_resource(*, provider_account, external_event_id, req
         provider_account=account,
         external_resource_id=resource.external_resource_id,
     )
+    existing = PaymentWebhookReceipt.objects.filter(
+        provider_account=account,
+        external_resource_id=resource.external_resource_id,
+        authenticated_request_id_digest=authenticated_request_id_digest,
+    ).first()
+    if existing:
+        return existing
     command_id = hashlib.sha256(f"{account.id}:{external_event_id}".encode()).hexdigest()
     changed, reason_code = _apply_resource_to_locked_attempt(
         intent=intent,
@@ -465,15 +578,21 @@ def apply_verified_provider_resource(*, provider_account, external_event_id, req
             intent=intent,
             actor=None,
             action=event_type,
-            payload={"provider": account.provider, "reason_code": reason_code},
+            payload={"has_provider_inconsistency": bool(reason_code)},
         )
-        _outbox(intent=intent, event_type=event_type, command_id=command_id)
+        _outbox(
+            intent=intent,
+            event_type=event_type,
+            command_id=command_id,
+            extra={"has_provider_inconsistency": bool(reason_code)},
+        )
     receipt = PaymentWebhookReceipt.objects.create(
         organization=organization,
         provider_account=account,
         provider=account.provider,
         external_event_id=external_event_id,
         external_resource_id=resource.external_resource_id,
+        authenticated_request_id_digest=authenticated_request_id_digest,
         request_digest=request_digest,
         canonical_result=intent.status,
         accepted=True,
@@ -533,9 +652,14 @@ def reconcile_verified_resource(*, organization, intent, actor, expected_version
             intent=intent,
             actor=actor,
             action=event_type,
-            payload={"provider": attempt.provider, "reason_code": reason_code},
+            payload={"has_provider_inconsistency": bool(reason_code)},
         )
-        _outbox(intent=intent, event_type=event_type, command_id=idempotency_key)
+        _outbox(
+            intent=intent,
+            event_type=event_type,
+            command_id=idempotency_key,
+            extra={"has_provider_inconsistency": bool(reason_code)},
+        )
     complete_command(receipt=receipt, intent=intent, attempt=attempt)
     return intent
 
@@ -610,7 +734,13 @@ def consume_order_cancelled(*, organization, order_id, source_event_id):
         reason_code=reason_code,
     )
     event_type = PAYMENT_CANCELLED if target == PaymentIntent.Status.CANCELLED else PAYMENT_REQUIRES_ATTENTION
-    _audit(intent=intent, actor=None, action=event_type, payload={"reason_code": reason_code})
-    _outbox(intent=intent, event_type=event_type, command_id=key)
+    conflict = target == PaymentIntent.Status.REQUIRES_ATTENTION
+    _audit(intent=intent, actor=None, action=event_type, payload={"has_order_conflict": conflict})
+    _outbox(
+        intent=intent,
+        event_type=event_type,
+        command_id=key,
+        extra={"has_order_conflict": conflict},
+    )
     complete_command(receipt=receipt, intent=intent, attempt=attempt)
     return intent

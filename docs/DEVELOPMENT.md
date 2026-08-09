@@ -67,3 +67,9 @@ Payments não usa SDK externo. `MercadoPagoCheckoutProAdapter` e
 usam fakes locais e nunca rede. Não adicione token, signing value ou
 credencial ao `.env.example`, fixture, banco, log ou Git. Sandbox será um gate
 posterior com autorização própria.
+
+O Beat agenda `apps.payments.tasks.dispatch_checkout_requests` na fila
+`integrations`. O consumer só parte de `payment.checkout_requested`, adquire
+lease persistente no PostgreSQL e mantém a chave externa estável. Sem a futura
+ativação explícita do canal de secrets e do guardrail, os adapters padrão
+recusam a chamada e nenhum provider é acessado.

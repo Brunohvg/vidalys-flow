@@ -1,0 +1,23 @@
+{
+  "contract": "Mercado Pago Checkout Pro preference",
+  "source": "https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro/preferences/create-preference/post",
+  "verified_on": "2026-08-08",
+  "request": {
+    "reference": "payment-intent-id",
+    "amount_minor": 12540,
+    "currency": "BRL",
+    "idempotency_key": "provider-idempotency-key"
+  },
+  "expected_payload": {
+    "external_reference": "payment-intent-id",
+    "items": [
+      {
+        "id": "payment-intent-id",
+        "title": "Pedido Vidalys Flow",
+        "quantity": 1,
+        "currency_id": "BRL",
+        "unit_price": "125.40"
+      }
+    ]
+  }
+}

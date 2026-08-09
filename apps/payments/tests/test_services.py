@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from decimal import Decimal
 
@@ -36,6 +37,10 @@ from apps.platform.models import OutboxEvent
 
 def key():
     return str(uuid.uuid4())
+
+
+def authenticated_request_digest(value):
+    return hashlib.sha256(value.encode()).hexdigest()
 
 
 @pytest.mark.django_db
@@ -260,12 +265,14 @@ def test_verified_provider_resource_marks_paid_and_deduplicates(
     receipt = apply_verified_provider_resource(
         provider_account=mercado_account,
         external_event_id="event-1",
+        authenticated_request_id_digest=authenticated_request_digest("request-1"),
         request_digest="a" * 64,
         resource=resource,
     )
     duplicate = apply_verified_provider_resource(
         provider_account=mercado_account,
         external_event_id="event-1",
+        authenticated_request_id_digest=authenticated_request_digest("request-1"),
         request_digest="a" * 64,
         resource=resource,
     )
@@ -300,6 +307,7 @@ def test_amount_mismatch_and_pagarme_callback_go_to_safe_paths(
     apply_verified_provider_resource(
         provider_account=mercado_account,
         external_event_id="event-mismatch",
+        authenticated_request_id_digest=authenticated_request_digest("request-mismatch"),
         request_digest="b" * 64,
         resource=ProviderResource("resource-mismatch", "approved", 1, "USD"),
     )
@@ -318,6 +326,7 @@ def test_amount_mismatch_and_pagarme_callback_go_to_safe_paths(
         apply_verified_provider_resource(
             provider_account=pagarme,
             external_event_id="pagar-event",
+            authenticated_request_id_digest=authenticated_request_digest("pagar-request"),
             request_digest="c" * 64,
             resource=ProviderResource("none", "paid", 12540, "BRL"),
         )
@@ -354,6 +363,7 @@ def test_callback_cannot_cross_provider_accounts(
         apply_verified_provider_resource(
             provider_account=other_account,
             external_event_id="cross-account-event",
+            authenticated_request_id_digest=authenticated_request_digest("cross-account-request"),
             request_digest="f" * 64,
             resource=ProviderResource("resource-account", "approved", 12540, "BRL"),
         )
@@ -452,22 +462,23 @@ def test_failed_attempt_allows_explicit_retry_without_automatic_fallback(
     apply_verified_provider_resource(
         provider_account=mercado_account,
         external_event_id="event-failed",
+        authenticated_request_id_digest=authenticated_request_digest("request-failed"),
         request_digest="d" * 64,
         resource=ProviderResource("resource-failed", "rejected", 12540, "BRL"),
     )
     intent.refresh_from_db()
     first.refresh_from_db()
-    assert intent.status == PaymentIntent.Status.PENDING
-    assert first.status == PaymentAttempt.Status.FAILED
-    second = request_hosted_checkout(
-        organization=organization,
-        intent=intent,
-        provider_account=mercado_account,
-        actor=manager,
-        expected_version=intent.version,
-        idempotency_key=key(),
-    )
-    assert second.id != first.id
+    assert intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
+    assert first.status == PaymentAttempt.Status.PROCESSING
+    with pytest.raises(InvalidPayment, match="elegível"):
+        request_hosted_checkout(
+            organization=organization,
+            intent=intent,
+            provider_account=mercado_account,
+            actor=manager,
+            expected_version=intent.version,
+            idempotency_key=key(),
+        )
 
 
 @pytest.mark.django_db
@@ -493,12 +504,108 @@ def test_non_monotonic_event_after_paid_requires_attention(
         apply_verified_provider_resource(
             provider_account=mercado_account,
             external_event_id=event_id,
+            authenticated_request_id_digest=authenticated_request_digest(event_id),
             request_digest="e" * 64,
             resource=ProviderResource("resource-regressive", status, 12540, "BRL"),
         )
     intent.refresh_from_db()
     assert intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
     assert intent.attention_code == "non_monotonic_provider_event"
+
+
+@pytest.mark.django_db
+def test_processing_cannot_regress_and_callback_cannot_resolve_attention(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=key(),
+    )
+    attempt = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+    )
+    activate_hosted_checkout(
+        organization=organization,
+        attempt=attempt,
+        result=CheckoutResult("resource-monotonic", "https://checkout.example.test/monotonic"),
+        idempotency_key=key(),
+    )
+    apply_verified_provider_resource(
+        provider_account=mercado_account,
+        external_event_id="event-processing",
+        authenticated_request_id_digest=authenticated_request_digest("request-processing"),
+        request_digest="1" * 64,
+        resource=ProviderResource("resource-monotonic", "in_process", 12540, "BRL"),
+    )
+    apply_verified_provider_resource(
+        provider_account=mercado_account,
+        external_event_id="event-regression",
+        authenticated_request_id_digest=authenticated_request_digest("request-regression"),
+        request_digest="2" * 64,
+        resource=ProviderResource("resource-monotonic", "pending", 12540, "BRL"),
+    )
+    intent.refresh_from_db()
+    assert intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
+    assert intent.attention_code == "non_monotonic_provider_event"
+
+    apply_verified_provider_resource(
+        provider_account=mercado_account,
+        external_event_id="event-paid-callback",
+        authenticated_request_id_digest=authenticated_request_digest("request-paid-callback"),
+        request_digest="3" * 64,
+        resource=ProviderResource("resource-monotonic", "approved", 12540, "BRL"),
+    )
+    intent.refresh_from_db()
+    assert intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
+
+    reconcile_verified_resource(
+        organization=organization,
+        intent=intent,
+        actor=manager,
+        expected_version=intent.version,
+        idempotency_key=key(),
+        resource=ProviderResource("resource-monotonic", "approved", 12540, "BRL"),
+    )
+    intent.refresh_from_db()
+    assert intent.status == PaymentIntent.Status.PAID
+    assert intent.attention_code == ""
+
+
+@pytest.mark.django_db
+def test_payment_audit_and_outbox_payloads_follow_closed_schema(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=key(),
+    )
+    request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+    )
+    base_keys = {"payment_intent_id", "order_id", "status", "amount", "currency", "version"}
+    optional_flags = {"has_order_conflict", "has_provider_inconsistency"}
+    payloads = list(
+        AuditEvent.objects.filter(entity_type="payment_intent").values_list("payload", flat=True)
+    ) + list(OutboxEvent.objects.filter(aggregate_type="payment_intent").values_list("payload", flat=True))
+    assert payloads
+    for payload in payloads:
+        assert base_keys <= set(payload)
+        assert set(payload) <= base_keys | optional_flags
+        assert all(isinstance(payload[key], bool) for key in set(payload) & optional_flags)
 
 
 @pytest.mark.django_db

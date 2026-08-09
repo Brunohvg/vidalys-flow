@@ -1,8 +1,8 @@
 # Plano aprovado de Payments — Fase 5
 
-Status: plano aprovado em 8 de agosto de 2026; implementação candidata
-concluída e aguardando Review independente, sem autorização de sandbox, PR,
-merge, release ou deploy.
+Status: plano aprovado em 8 de agosto de 2026; o primeiro Review independente
+solicitou mudanças e a remediação autorizada aguarda nova revisão, sem
+autorização de sandbox, PR, merge, release ou deploy.
 
 Payments será um domínio greenfield e independente. O planejamento não
 consultou Flowlog e proíbe qualquer reutilização de código, banco, IDs,
@@ -57,7 +57,7 @@ serão copiados diretamente para o agregado.
 - moeda canônica: BRL;
 - dinheiro: `Decimal(14,2)`, `ROUND_HALF_UP`;
 - conversão para centavos somente no adapter e com validação exata;
-- valor sempre derivado de `Order.grand_total` persistido;
+- valor sempre derivado de `Order.total` persistido;
 - sem pagamentos parciais, split, moeda estrangeira, taxas, juros, desconto
   do provider ou alteração dos totais de Orders;
 - Payments importa Orders; Orders não importa Payments;

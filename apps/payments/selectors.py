@@ -8,13 +8,14 @@ def payments_for_organization(*, organization):
     return PaymentIntent.objects.filter(organization=organization).select_related("order", "created_by")
 
 
-def search_payments(*, organization, query="", status=""):
+def search_payments(*, organization, membership, query="", status=""):
     queryset = payments_for_organization(organization=organization)
     query = (query or "").strip()
     if query:
-        queryset = queryset.filter(
-            Q(order_number_snapshot__icontains=query) | Q(customer_name_snapshot__icontains=query)
-        )
+        search = Q(order_number_snapshot__icontains=query)
+        if membership.organization_id == organization.id and membership.role in MANAGER_ROLES:
+            search |= Q(customer_name_snapshot__icontains=query)
+        queryset = queryset.filter(search)
     if status:
         queryset = queryset.filter(status=status)
     return queryset

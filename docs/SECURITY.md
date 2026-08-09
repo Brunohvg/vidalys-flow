@@ -68,3 +68,18 @@ O publisher desta fase é interno, determinístico e não executa I/O externo.
   outbox, métricas, receipts ou exceções;
 - o evento interno de cancelamento é deduplicado e não carrega PII;
 - não haverá chamadas de transportadora, payment provider ou Flowlog.
+
+## Payments
+
+- snapshots de valor, moeda, Order e cliente são imutáveis no ORM e por
+  trigger PostgreSQL;
+- callbacks validam tamanho, formato, assinatura, janela temporal, conta,
+  recurso e `X-Request-Id` antes de produzir estado canônico;
+- a chave de replay usa somente identificadores cobertos pela assinatura;
+- `requires_attention` só pode ser resolvido por reconciliação gerencial
+  verificada, nunca por callback posterior;
+- OPERATOR não pesquisa por nome de cliente e não recebe evidência externa;
+- audit e outbox usam allowlist fechada de IDs canônicos, estado, valor,
+  moeda, versão e flags booleanas;
+- leases impedem dispatch simultâneo; adapters reais, secrets, sandbox e rede
+  continuam bloqueados.

@@ -14,7 +14,7 @@ from apps.payments.callbacks import (
     verify_mercado_pago_signature,
 )
 from apps.payments.exceptions import CallbackRejected, ProviderEffectsDisabled
-from apps.payments.models import PaymentProviderAccount
+from apps.payments.models import PaymentProviderAccount, PaymentWebhookReceipt
 from apps.payments.providers import CheckoutResult, ProviderResource
 from apps.payments.services import activate_hosted_checkout, create_payment_intent, request_hosted_checkout
 
@@ -145,3 +145,88 @@ def test_callback_rejects_malformed_divergent_and_unconfigured_effects(mercado_a
             request_id="req",
             signature_header="ts=1,v1=invalid",
         )
+
+
+@pytest.mark.django_db
+def test_signed_request_id_deduplicates_replay_when_unsigned_top_level_id_changes(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=key(),
+    )
+    attempt = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+    )
+    activate_hosted_checkout(
+        organization=organization,
+        attempt=attempt,
+        result=CheckoutResult("resource-replay", "https://checkout.example.test/replay"),
+        idempotency_key=key(),
+    )
+    signing_value = "replay-test-value"
+    timestamp = int(time.time())
+    request_id = "req-replay"
+    manifest = f"id:resource-replay;request-id:{request_id};ts:{timestamp};"
+    signature = hmac.new(signing_value.encode(), manifest.encode(), hashlib.sha256).hexdigest()
+    loads = []
+
+    def loader(**kwargs):
+        loads.append(kwargs)
+        return ProviderResource("resource-replay", "approved", 12540, "BRL")
+
+    common = {
+        "provider_account": mercado_account,
+        "request_id": request_id,
+        "signature_header": f"ts={timestamp},v1={signature}",
+        "signing_resolver": lambda **kwargs: signing_value,
+        "resource_loader": loader,
+    }
+    first = process_mercado_pago_callback(
+        raw_body=b'{"id":"unsigned-a","data":{"id":"resource-replay"}}',
+        **common,
+    )
+    replay = process_mercado_pago_callback(
+        raw_body=b'{"id":"unsigned-b","data":{"id":"resource-replay"}}',
+        **common,
+    )
+
+    assert replay.id == first.id
+    assert len(loads) == 1
+    assert PaymentWebhookReceipt.objects.count() == 1
+    assert first.authenticated_request_id_digest == hashlib.sha256(request_id.encode()).hexdigest()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("request_id", "resource_id"),
+    [
+        ("r" * 129, "resource"),
+        ("request", "r" * 161),
+        ("request with spaces", "resource"),
+        ("request", None),
+    ],
+)
+def test_callback_rejects_invalid_identifiers_before_secret_or_provider_io(
+    mercado_account, request_id, resource_id
+):
+    calls = []
+    encoded_resource = "null" if resource_id is None else f'"{resource_id}"'
+    raw = f'{{"id":"ignored","data":{{"id":{encoded_resource}}}}}'.encode()
+    with pytest.raises(CallbackRejected, match="inválido"):
+        process_mercado_pago_callback(
+            provider_account=mercado_account,
+            raw_body=raw,
+            request_id=request_id,
+            signature_header="ts=1,v1=invalid",
+            signing_resolver=lambda **kwargs: calls.append("secret"),
+            resource_loader=lambda **kwargs: calls.append("provider"),
+        )
+    assert calls == []

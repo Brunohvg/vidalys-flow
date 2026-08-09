@@ -35,12 +35,14 @@ def payment_list(request):
     context = _context_or_redirect(request)
     if not isinstance(context, tuple):
         return context
-    organization, _ = context
+    organization, membership = context
     form = PaymentFilterForm(request.GET or None)
     filters = form.cleaned_data if form.is_valid() else {}
     if "q" in filters:
         filters["query"] = filters.pop("q")
-    payments = Paginator(selectors.search_payments(organization=organization, **filters), 25).get_page(
+    payments = Paginator(
+        selectors.search_payments(organization=organization, membership=membership, **filters), 25
+    ).get_page(
         request.GET.get("page")
     )
     return render(

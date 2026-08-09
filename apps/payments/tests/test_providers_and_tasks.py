@@ -1,5 +1,7 @@
+import json
 import uuid
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -7,6 +9,7 @@ from apps.orders.models import Order
 from apps.payments.exceptions import InvalidPayment, ProviderEffectsDisabled
 from apps.payments.models import PaymentIntent
 from apps.payments.providers import (
+    CheckoutRequest,
     CheckoutResult,
     DisabledProviderAdapter,
     MercadoPagoCheckoutProAdapter,
@@ -20,7 +23,7 @@ from apps.payments.services import (
     dispatch_requested_checkout,
     request_hosted_checkout,
 )
-from apps.payments.tasks import consume_order_cancellations
+from apps.payments.tasks import consume_order_cancellations, dispatch_checkout_events
 from apps.platform.services import enqueue_event
 
 
@@ -48,7 +51,7 @@ def test_provider_payload_contracts_and_fake_dispatch(
     pagarme_payload = PagarmePaymentLinkAdapter.contract_payload(request)
     assert mercado_payload["external_reference"] == str(intent.id)
     assert mercado_payload["items"][0]["unit_price"] == Decimal("125.40")
-    assert pagarme_payload["items"][0]["amount"] == 12540
+    assert pagarme_payload["cart_settings"]["items"][0]["amount"] == 12540
     assert set(pagarme_payload["payment_settings"]["accepted_payment_methods"]) == {
         "credit_card",
         "pix",
@@ -77,6 +80,115 @@ def test_provider_payload_contracts_and_fake_dispatch(
         idempotency_key=key(),
     )
     assert dispatched.status == "active"
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "adapter_class"),
+    [
+        ("mercado_pago_checkout_pro.json", MercadoPagoCheckoutProAdapter),
+        ("pagarme_payment_link_v5.json", PagarmePaymentLinkAdapter),
+    ],
+)
+def test_provider_builders_match_versioned_official_contract_fixtures(fixture_name, adapter_class):
+    fixture_path = Path(__file__).parent / "fixtures" / fixture_name
+    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+    request = CheckoutRequest(**fixture["request"])
+    payload = adapter_class.contract_payload(request)
+    if adapter_class is MercadoPagoCheckoutProAdapter:
+        payload["items"][0]["unit_price"] = str(payload["items"][0]["unit_price"])
+    assert payload == fixture["expected_payload"]
+    assert fixture["source"].startswith("https://")
+
+
+@pytest.mark.django_db
+def test_timeout_after_remote_success_reuses_attempt_and_provider_idempotency_key(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=key(),
+    )
+    attempt = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+    )
+    remote_resources = {}
+    observed_keys = []
+
+    class TimeoutThenRecoverAdapter:
+        provider = "mercado_pago"
+        external = False
+
+        def __init__(self, timeout):
+            self.timeout = timeout
+
+        def create_checkout(self, checkout_request):
+            observed_keys.append(checkout_request.idempotency_key)
+            result = remote_resources.setdefault(
+                checkout_request.idempotency_key,
+                CheckoutResult("remote-created-on-timeout", "https://checkout.example.test/recovered"),
+            )
+            if self.timeout:
+                raise TimeoutError("response lost after provider success")
+            return result
+
+    with pytest.raises(TimeoutError):
+        dispatch_requested_checkout(
+            attempt=attempt,
+            adapter=TimeoutThenRecoverAdapter(timeout=True),
+            idempotency_key=key(),
+        )
+    attempt.refresh_from_db()
+    assert attempt.status == "requested"
+    assert attempt.dispatch_lease_token is None
+
+    recovered = dispatch_requested_checkout(
+        attempt=attempt,
+        adapter=TimeoutThenRecoverAdapter(timeout=False),
+        idempotency_key=key(),
+    )
+    assert recovered.status == "active"
+    assert observed_keys == [attempt.provider_idempotency_key, attempt.provider_idempotency_key]
+    assert intent.attempts.count() == 1
+    assert recovered.dispatch_attempts == 2
+
+
+@pytest.mark.django_db
+def test_outbox_checkout_consumer_dispatches_requested_attempt(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=key(),
+    )
+    attempt = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=key(),
+    )
+
+    class FakeAdapter:
+        provider = "mercado_pago"
+        external = False
+
+        def create_checkout(self, checkout_request):
+            return CheckoutResult("worker-resource", "https://checkout.example.test/worker")
+
+    assert dispatch_checkout_events(adapter_resolver=lambda current: FakeAdapter()) == 1
+    attempt.refresh_from_db()
+    assert attempt.status == "active"
+    assert dispatch_checkout_events(adapter_resolver=lambda current: FakeAdapter()) == 0
 
 
 @pytest.mark.django_db

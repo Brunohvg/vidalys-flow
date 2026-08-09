@@ -15,7 +15,7 @@ git pull --ff-only
 ```
 
 A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e a
-implementação candidata de Payments estão em `phase/05-payments`; confira
+remediação candidata de Payments estão em `phase/05-payments`; confira
 `project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
 sandbox, PR, merge e deploy continuam sem autorização.
 
@@ -114,8 +114,9 @@ já foi atingido.
 
 ## Continuação segura
 
-Não pule checkpoints. O plano de Payments já foi aprovado e a implementação
-candidata ocorre em branch exclusiva. Ao concluir: CI no SHA candidato,
+Não pule checkpoints. O plano de Payments já foi aprovado, o Review 01 pediu
+correções e a remediação autorizada ocorre em branch exclusiva. Ao concluir:
+CI no novo SHA candidato,
 Review independente, QA/Segurança, handoff, aprovação humana da fase e só então
 PR/merge autorizado.
 

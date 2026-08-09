@@ -1,6 +1,6 @@
 # Payments — contrato implementado no candidato da Fase 5
 
-Status: implementação candidata. Este documento não aprova Review, QA,
+Status: candidato remediado após Review 01, aguardando nova revisão independente. Este documento não aprova Review, QA,
 sandbox, provider, PR, merge, release ou deploy.
 
 ## Limite do domínio
@@ -35,6 +35,8 @@ runtime, servidor ou infraestrutura compartilhada.
 O banco impõe um único attempt em `requested`, `active` ou `processing` por
 intent. IDs externos são únicos dentro da conta do provider. Entidades
 financeiras usam `PROTECT` e não podem ser excluídas pela aplicação.
+Os snapshots de `PaymentIntent` também são protegidos no model, em `update` e
+`bulk_update` e por trigger PostgreSQL, inclusive após pagamento.
 
 ## Estados
 
@@ -55,8 +57,11 @@ Attempt: `requested`, `active`, `processing`, `paid`, `failed`, `cancelled` e
 `PaymentIntent.status`.
 
 `requires_attention` é usado para divergência de valor/moeda, evento
-regressivo e cancelamento de Order com tentativa aberta ou pagamento já
-confirmado. Não existe reembolso automático nesta fase.
+regressivo, falha externa inconclusiva e cancelamento de Order com tentativa
+aberta ou pagamento já confirmado. Callback nunca retira o agregado desse
+estado; somente reconciliação gerencial com recurso verificado pode resolvê-lo.
+Uma tabela explícita proíbe regressões como `processing → awaiting_payment`.
+Não existe reembolso automático nesta fase.
 
 ## Dinheiro
 
@@ -80,9 +85,11 @@ transação.
 
 O service valida `expected_version`, conta ativa da mesma Organization e
 ausência de tentativa concorrente. Ele grava `requested` e outbox; não chama
-rede. Um dispatcher aceita adapter injetado, executa I/O fora da transação e
-só então ativa o link sob novo lock. O adapter padrão bloqueia efeitos
-externos.
+rede. O consumidor Celery da fila `integrations` localiza o attempt pelo
+agregado do evento, adquire lease persistente com expiração e executa I/O fora
+da transação. Dois dispatchers não chamam o provider simultaneamente. Em
+timeout, o lease é liberado e a mesma tentativa e chave de idempotência são
+reutilizadas. O adapter padrão continua bloqueando efeitos externos.
 
 ### Callback e reconciliação
 
@@ -93,16 +100,20 @@ O callback Mercado Pago:
 3. aplica limite por conta e origem no cache Redis, falhando fechado;
 4. calcula SHA-256 sem persistir o body;
 5. valida `X-Signature`, `X-Request-Id` e janela de cinco minutos;
-6. busca o recurso autoritativo por loader injetado;
-7. valida conta, ID, valor e moeda;
-8. deduplica o evento e aplica transição monotônica.
+6. deriva a chave de replay do ID do recurso e `X-Request-Id` cobertos pela
+   assinatura, ignorando o ID superior não autenticado do body;
+7. deduplica antes de nova consulta quando o replay já é conhecido;
+8. busca o recurso autoritativo por loader injetado;
+9. valida conta, ID, valor e moeda e aplica somente transição monotônica.
 
 Sem canal de secrets e loader aprovados, a rota responde indisponível e não
 faz rede. O callback Pagar.me é bloqueado por código e constraint até que sua
 autenticidade tenha evidência oficial e Review de Segurança.
 
 Reconciliação manual usa o mesmo recurso autoritativo, receipt idempotente,
-`expected_version` e locks. O fetch ocorre antes da transação de aplicação.
+`expected_version` e a ordem global de locks `Order → PaymentIntent →
+PaymentAttempt`. A conta é validada sem lock concorrente e o fetch ocorre
+antes da transação de aplicação.
 
 ## Cancelamento de Order
 
@@ -125,8 +136,10 @@ O consumer interno lê `order.cancelled` da outbox:
 
 ## Providers
 
-Mercado Pago Checkout Pro e Pagar.me Payment Links possuem builders de
-contrato locais. Ambos herdam adapters que recusam rede. Appmax está ausente e
+Mercado Pago Checkout Pro e Pagar.me Payment Links possuem builders comparados
+com fixtures versionadas das referências oficiais. O Pagar.me v5 usa
+`cart_settings.items`, `payment_settings` e limite de uma sessão paga. Ambos
+herdam adapters que recusam rede. Appmax está ausente e
 permanece adiado. Pix, boleto e cartão existem somente como opções do checkout
 hospedado; a Vidalys Flow não renderiza QR/PDF nem recebe PAN/CVV.
 
@@ -144,7 +157,8 @@ hospedado; a Vidalys Flow não renderiza QR/PDF nem recebe PAN/CVV.
 ## Testes e execução
 
 Os testes usam PostgreSQL 17 e fakes `external = False`. Cobrem autorização,
-cross-Organization, idempotência, versão, tentativa única, concorrência,
-assinatura, replay, tamanho, callback duplicado, valor/moeda, cancelamento,
-masking, contracts e rede desabilitada. SQLite e chamadas sandbox não são
-aceitos.
+cross-Organization, idempotência, versão, tentativa única, leases, timeout
+após sucesso remoto simulado, concorrência de criação/dispatch/callback/
+reconciliação/cancelamento, ausência de deadlock, assinatura, replay, tamanho,
+imutabilidade no ORM e banco, valor/moeda, masking, schemas fechados, fixtures
+de contrato e rede desabilitada. SQLite e chamadas sandbox não são aceitos.

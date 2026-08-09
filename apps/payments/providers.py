@@ -91,9 +91,10 @@ class MercadoPagoCheckoutProAdapter(DisabledProviderAdapter):
             "items": [
                 {
                     "id": request.reference,
+                    "title": "Pedido Vidalys Flow",
                     "quantity": 1,
                     "currency_id": request.currency,
-                    "unit_price": Decimal(request.amount_minor) / 100,
+                    "unit_price": (Decimal(request.amount_minor) / 100).quantize(Decimal("0.01")),
                 }
             ],
         }
@@ -107,6 +108,21 @@ class PagarmePaymentLinkAdapter(DisabledProviderAdapter):
         return {
             "type": "order",
             "name": f"Pedido {request.reference}",
-            "items": [{"name": "Pedido", "quantity": 1, "amount": request.amount_minor}],
-            "payment_settings": {"accepted_payment_methods": ["credit_card", "pix", "boleto"]},
+            "order_code": request.reference,
+            "max_paid_sessions": 1,
+            "payment_settings": {
+                "accepted_payment_methods": ["credit_card", "pix", "boleto"],
+                "credit_card_settings": {"operation_type": "auth_and_capture"},
+                "pix_settings": {},
+                "boleto_settings": {},
+            },
+            "cart_settings": {
+                "items": [
+                    {
+                        "name": "Pedido Vidalys Flow",
+                        "amount": request.amount_minor,
+                        "default_quantity": 1,
+                    }
+                ]
+            },
         }

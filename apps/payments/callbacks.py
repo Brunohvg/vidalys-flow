@@ -1,16 +1,27 @@
 import hashlib
 import hmac
 import json
+import re
 import time
 
 from django.core.cache import cache
 
 from apps.payments.exceptions import CallbackRejected, ProviderEffectsDisabled
-from apps.payments.models import PaymentProviderAccount
+from apps.payments.models import PaymentProviderAccount, PaymentWebhookReceipt
 from apps.payments.services import apply_verified_provider_resource
 
 MAX_CALLBACK_BYTES = 64 * 1024
 CALLBACK_RATE_LIMIT_PER_MINUTE = 120
+CALLBACK_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]+$")
+
+
+def _validated_callback_identifier(value, *, label, max_length, allow_integer=False):
+    if isinstance(value, bool) or not isinstance(value, (str, int) if allow_integer else str):
+        raise CallbackRejected(f"{label} de callback inválido.")
+    value = str(value)
+    if not value or len(value) > max_length or CALLBACK_IDENTIFIER_PATTERN.fullmatch(value) is None:
+        raise CallbackRejected(f"{label} de callback inválido.")
+    return value
 
 
 def request_digest(raw_body):
@@ -75,10 +86,15 @@ def process_mercado_pago_callback(
     digest = request_digest(raw_body)
     try:
         payload = json.loads(raw_body)
-        external_event_id = str(payload["id"])
-        external_resource_id = str(payload["data"]["id"])
+        external_resource_id = _validated_callback_identifier(
+            payload["data"]["id"],
+            label="Recurso",
+            max_length=160,
+            allow_integer=True,
+        )
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         raise CallbackRejected("Callback malformado.") from exc
+    request_id = _validated_callback_identifier(request_id, label="Request ID", max_length=128)
     resolver = signing_resolver or resolve_signing_value
     signing_value = resolver(provider_account=provider_account)
     verify_mercado_pago_signature(
@@ -87,6 +103,17 @@ def process_mercado_pago_callback(
         signature_header=signature_header,
         signing_value=signing_value,
     )
+    authenticated_request_id_digest = hashlib.sha256(request_id.encode()).hexdigest()
+    external_event_id = hashlib.sha256(
+        f"{provider_account.id}:{external_resource_id}:{request_id}".encode()
+    ).hexdigest()
+    existing = PaymentWebhookReceipt.objects.filter(
+        provider_account=provider_account,
+        external_resource_id=external_resource_id,
+        authenticated_request_id_digest=authenticated_request_id_digest,
+    ).first()
+    if existing:
+        return existing
     loader = resource_loader or fetch_authoritative_resource
     resource = loader(
         provider_account=provider_account,
@@ -97,6 +124,7 @@ def process_mercado_pago_callback(
     return apply_verified_provider_resource(
         provider_account=provider_account,
         external_event_id=external_event_id,
+        authenticated_request_id_digest=authenticated_request_id_digest,
         request_digest=digest,
         resource=resource,
     )
