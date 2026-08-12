@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/05-payments",
   "base_sha": "4fd3a9259e9e2f31acdab44f13499eade79ab59e",
-  "head_sha": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
+  "head_sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
   "commits": [
     {
       "sha": "640654778332b7306e4a20833a5cd15ef03c27ea",
@@ -30,6 +30,10 @@
     {
       "sha": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
       "subject": "fix(payments): remediate dispatch and closure workflows"
+    },
+    {
+      "sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "subject": "fix(payments): correlate cancellation evidence"
     }
   ],
   "delivered_scope": [
@@ -41,7 +45,8 @@
     "Pagar.me callback disabled in code and by PostgreSQL constraint until authenticity is independently established",
     "ORM and PostgreSQL-protected immutable financial snapshots plus sanitized status/webhook evidence and closed AuditEvent/OutboxEvent schemas",
     "dispatch eligibility revalidation and preservation of valid external evidence when Order, intent, or provider-account context changes during I/O",
-    "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, tenant-scoped read-only admin, executable provider-network blocking, tasks, documentation, and clone continuity"
+    "cancellation commands correlated to one exact attempt and outbox event, with terminal consumption, persistent processing backoff, and canonical paid, mismatch, unknown, cancelled, expired, and failed evidence handling",
+    "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, manager-tier tenant-scoped read-only admin, executable provider-network blocking, tasks, documentation, and clone continuity"
   ],
   "models": [
     "payments.PaymentIntent",
@@ -54,12 +59,13 @@
   "migrations": [
     "apps/payments/migrations/0001_initial.py",
     "apps/payments/migrations/0002_dispatch_lease_and_integrity.py",
-    "apps/payments/migrations/0003_paymentattempt_dispatch_retry.py"
+    "apps/payments/migrations/0003_paymentattempt_dispatch_retry.py",
+    "apps/payments/migrations/0004_paymentattempt_cancellation_correlation.py"
   ],
   "tests": {
-    "count": 268,
+    "count": 275,
     "skipped": 0,
-    "coverage_percent": 85.01,
+    "coverage_percent": 85.39,
     "database": "PostgreSQL 17.10",
     "result": "passed",
     "empty_database_migration": "passed",
@@ -67,7 +73,7 @@
     "concurrency": "passed",
     "cross_organization": "passed",
     "cross_provider_account": "passed",
-    "payments_direct_tests": 61,
+    "payments_direct_tests": 68,
     "provider_network_blocking": "passed",
     "mixed_failure_batch": "passed",
     "dispatch_cancellation_race": "passed",
@@ -84,15 +90,15 @@
     "compose_validation": "passed"
   },
   "ci": {
-    "workflow_id": 31290039417,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31290039417",
-    "head_sha": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
+    "workflow_id": 31556138368,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31556138368",
+    "head_sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
     "run_attempt": 1,
     "conclusion": "success"
   },
   "organization_isolation": {
     "status": "passed",
-    "evidence": "Organization-explicit services/selectors/workers, active Membership policies before provider I/O, Order-PaymentIntent-PaymentAttempt lock order, same-Organization provider-account/resource resolution, callback organization derived from its route account, tenant-scoped admin, and direct cross-tenant/cross-account/concurrency tests."
+    "evidence": "Organization-explicit services/selectors/workers, active Membership policies before provider I/O, Order-PaymentIntent-PaymentAttempt lock order, same-Organization provider-account/resource resolution, callback organization derived from its route account, manager-tier tenant-scoped admin, and direct cross-tenant/cross-account/concurrency tests."
   },
   "provider_contracts": {
     "mercado_pago": "Checkout Pro request builder matches a versioned official-contract fixture; signed callback validation, authenticated replay key, authoritative-resource injection, deduplication, rate controls, and disabled network effects passed direct tests.",
@@ -119,30 +125,29 @@
     "public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
   ],
   "risks": [
-    "Coverage is 85.01% exact, narrowly above the 85% gate; Review must still prioritize direct financial, callback, isolation, idempotency, lease, cancellation, and concurrency paths.",
+    "Coverage is 85.39%, narrowly above the 85% gate; Review must still prioritize direct financial, callback, isolation, idempotency, lease, cancellation, and concurrency paths.",
     "The callback rate limiter depends on Redis and intentionally fails closed when cache is unavailable; operational alerting belongs to homologation.",
     "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
     "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
   ],
-  "blockers": [
-    "P05-R18 stale cancellation event can cancel a later checkout without a matching human command",
-    "P05-R19 authoritative paid or inconsistent cancellation response is discarded instead of applied canonically",
-    "P05-R20 Payments admin does not enforce manager-tier access to provider and financial evidence"
-  ],
+  "blockers": [],
   "review": {
-    "status": "changes_requested",
-    "candidate_head": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
-    "report": "project/reviews/phase-05-review-03.md",
-    "blockers": [
-      "P05-R18",
-      "P05-R19",
-      "P05-R20"
-    ],
+    "status": "pending",
+    "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+    "report": null,
+    "blockers": [],
     "review_03": {
       "status": "changes_requested",
       "report": "project/reviews/phase-05-review-03.md",
       "candidate_head": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
+      "remediation_commit": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
       "findings": [
+        "P05-R18",
+        "P05-R19",
+        "P05-R20",
+        "P05-R21"
+      ],
+      "findings_addressed": [
         "P05-R18",
         "P05-R19",
         "P05-R20",
@@ -185,7 +190,7 @@
   },
   "human_approval": {
     "status": "pending",
-    "evidence": "No final Phase 05 approval has been given; only the technical plan was explicitly approved in the project conversation on 2026-08-08.",
-    "note": "The technical plan and review remediation were authorized. The remediated candidate still requires a new independent Review and QA/Security GO; no PR, merge, provider activation, release, or deploy is authorized."
+    "evidence": "No final Phase 05 approval has been given; the technical plan was approved on 2026-08-08 and Review 03 remediation was authorized on 2026-08-11.",
+    "note": "The technical plan and Review 03 remediation were authorized. Candidate 464c2ac9af1bbeaacf0f33cccec7af5a73feb94e now requires independent Review 04 and QA/Security GO; no PR, merge, provider activation, release, or deploy is authorized."
   }
 }
