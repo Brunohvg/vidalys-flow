@@ -4,6 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from django.conf import settings
 
 from apps.orders.models import Order
 from apps.payments.exceptions import InvalidPayment, ProviderEffectsDisabled
@@ -25,6 +26,31 @@ from apps.payments.services import (
 )
 from apps.payments.tasks import consume_order_cancellations, dispatch_checkout_events
 from apps.platform.services import enqueue_event
+from config.celery import app as celery_app
+
+
+def test_payment_tasks_are_registered_by_celery():
+    celery_app.loader.import_default_modules()
+
+    assert {
+        "apps.payments.tasks.consume_order_cancellations",
+        "apps.payments.tasks.dispatch_checkout_requests",
+        "apps.payments.tasks.dispatch_checkout_cancellations",
+    } <= set(celery_app.tasks)
+
+
+def test_payment_dispatch_tasks_have_isolated_integration_routes():
+    queues = {queue.name: queue for queue in settings.CELERY_TASK_QUEUES}
+
+    assert queues["default"].routing_key == "default"
+    assert queues["integrations"].routing_key == "integrations"
+    assert queues["default"].exchange.name == queues["integrations"].exchange.name == "vidalys"
+    assert settings.CELERY_TASK_ROUTES["apps.payments.tasks.dispatch_checkout_requests"] == {
+        "queue": "integrations"
+    }
+    assert settings.CELERY_TASK_ROUTES["apps.payments.tasks.dispatch_checkout_cancellations"] == {
+        "queue": "integrations"
+    }
 
 
 def key():

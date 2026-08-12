@@ -12,6 +12,7 @@ coletado no build e healthcheck de liveness. O Compose local demonstra:
 
 - `web`;
 - `worker-default`;
+- `worker-integrations`;
 - `beat`;
 - PostgreSQL 17;
 - Redis;
@@ -26,7 +27,7 @@ Procedimento conceitual:
 1. criar banco e Redis vazios e exclusivos;
 2. construir a imagem pelo commit aprovado;
 3. executar migrations pelo serviço de release;
-4. iniciar web, worker e Beat;
+4. iniciar web, os workers `default` e `integrations` e o Beat;
 5. validar `/health/live/` e `/health/ready/`;
 6. executar o bootstrap e definir a senha por canal seguro.
 

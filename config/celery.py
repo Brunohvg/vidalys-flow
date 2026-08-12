@@ -17,5 +17,6 @@ app.autodiscover_tasks(
         "apps.products",
         "apps.orders",
         "apps.fulfillment",
+        "apps.payments",
     ]
 )

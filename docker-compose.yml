@@ -59,6 +59,19 @@ services:
       retries: 5
       start_period: 20s
 
+  worker-integrations:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: [".venv/bin/celery", "-A", "config", "worker", "--loglevel=INFO", "--queues=integrations"]
+    healthcheck:
+      test: ["CMD-SHELL", ".venv/bin/celery -A config inspect ping -d \"celery@$$HOSTNAME\" --timeout 5 | grep -q pong"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
   beat:
     <<: *app
     depends_on:

@@ -13,9 +13,9 @@ docker compose ps
 ```
 
 O serviço `migrate` aguarda PostgreSQL e Redis saudáveis. `web`,
-`worker-default` e `beat` só iniciam depois que as migrations terminam com
-sucesso. Configure as variáveis a partir de `.env.example`; não versionar
-`.env`.
+`worker-default`, `worker-integrations` e `beat` só iniciam depois que as
+migrations terminam com sucesso. Configure as variáveis a partir de
+`.env.example`; não versionar `.env`.
 
 No WSL com Docker Engine local e sem `systemd`, inicie o daemon antes do
 Compose e aguarde a seção `Server` aparecer:
@@ -28,7 +28,7 @@ docker info
 Para acompanhar ou encerrar o ambiente:
 
 ```bash
-docker compose logs -f web worker-default beat
+docker compose logs -f web worker-default worker-integrations beat
 docker compose down
 ```
 
@@ -37,6 +37,7 @@ docker compose down
 ```bash
 docker compose config
 docker compose -f docker-compose.test.yml config
+.venv/bin/python scripts/check_celery_runtime.py
 docker compose -f docker-compose.test.yml up --build \
   --abort-on-container-exit --exit-code-from test
 ```
@@ -70,6 +71,9 @@ posterior com autorização própria.
 
 O Beat agenda `apps.payments.tasks.dispatch_checkout_requests` e
 `apps.payments.tasks.dispatch_checkout_cancellations` na fila `integrations`.
+O serviço `worker-integrations` consome exclusivamente essa fila; o gate
+`check_celery_runtime.py` falha se uma task agendada não estiver registrada ou
+se uma fila roteada não tiver consumer no Compose.
 Os consumers partem somente dos eventos internos aprovados, adquirem lease de
 90 segundos no PostgreSQL, persistem backoff/código controlado e mantêm a chave
 externa estável. Exceções são isoladas por evento. Sem a futura ativação

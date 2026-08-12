@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Atualizado em 8 de agosto de 2026. Este documento é um índice operacional; em
+Atualizado em 12 de agosto de 2026. Este documento é um índice operacional; em
 caso de divergência prevalecem `project/state.json`, o manifesto da fase,
 `project/constraints.json` e `AGENTS.md`.
 
@@ -71,7 +71,7 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments está na terceira remediação autorizada do checkpoint de implementação
+Payments está em remediação operacional autorizada após NO-GO de QA/Security
 da Fase 5 e voltará a Review independente na branch
 `phase/05-payments`, criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
@@ -85,9 +85,9 @@ O candidato implementa o agregado provider-neutral, migration nova,
 idempotência, locks, tentativa única, adapters desabilitados, callback Mercado
 Pago com assinatura e consulta autoritativa injetável, bloqueio do callback
 Pagar.me, reconciliação, cancelamento interno de Order, masking, HTML e testes
-PostgreSQL. Isso ainda não representa implementação aprovada: Review
-independente, QA/Segurança, CI no SHA candidato e aprovação humana continuam
-pendentes. O primeiro candidato técnico foi
+PostgreSQL. Isso ainda não representa implementação aprovada: novo Review
+independente, novo QA/Segurança e aprovação humana continuam pendentes. O
+primeiro candidato técnico foi
 `707401a13a4cd493409e6258301a1aaa22cba68b`, validado pelo GitHub Actions run
 `31287810333` com 240 testes, 85% de cobertura e todos os gates verdes.
 
@@ -126,16 +126,21 @@ cancelamento e o admin não exige manager tier para evidência financeira. O
 parecer está em `project/reviews/phase-05-review-03.md`; nenhuma correção foi
 feita pelo revisor e QA/Segurança permanece bloqueado.
 
-A terceira remediação correlaciona cada cancelamento ao PaymentAttempt e ao
+A terceira remediação correlacionou cada cancelamento ao PaymentAttempt e ao
 evento exatos, consome o trabalho terminalmente, impede evento antigo de agir
 sobre checkout reaberto, aplica toda resposta autoritativa à máquina canônica
-e exige Membership ativa de manager tier no admin financeiro. O novo candidato
-material e seu CI serão registrados antes do Review 04.
+e exige Membership ativa de manager tier no admin financeiro. O candidato
+material foi `464c2ac9af1bbeaacf0f33cccec7af5a73feb94e`; o Review 04 aprovou
+o domínio sem bloqueadores.
 
 A validação local da terceira remediação aprovou 275 testes sem skip em
-PostgreSQL 17.10, cobertura exata de 85,39%, migrations desde banco vazio e
-rollback/reaplicação completa no Compose. O CI do SHA material permanece o
-próximo gate antes do carrier exclusivo do handoff.
+PostgreSQL 17.10, cobertura acima de 85%, migrations desde banco vazio e
+rollback/reaplicação completa no Compose. O primeiro QA/Security, porém,
+emitiu NO-GO: `apps.payments` não participava do autodiscovery Celery e não
+existia worker para a fila `integrations`. A remediação atual registra as
+tasks, adiciona `worker-integrations` e inclui um gate executável que cruza
+agenda, rotas, registro e filas consumidas. Novo Review e novo QA/Security são
+obrigatórios antes de qualquer aprovação humana final.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

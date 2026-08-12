@@ -58,7 +58,7 @@ Com web e dependências iniciados, crie uma organização de demonstração sem
 passar senha na linha de comando:
 
 ```bash
-docker compose up -d web worker-default beat
+docker compose up -d web worker-default worker-integrations beat
 docker compose exec web .venv/bin/python manage.py bootstrap_organization \
   --organization-name "Minha empresa" \
   --slug "minha-empresa" \
@@ -115,11 +115,12 @@ já foi atingido.
 
 ## Continuação segura
 
-Não pule checkpoints. O plano de Payments já foi aprovado e os Reviews 01, 02
-e 03 pediram correções. A terceira remediação autorizada está na branch
-exclusiva. O próximo fluxo é: commit material, CI no SHA material exato,
-carrier contendo somente o handoff, Review 04 independente, QA/Segurança,
-aprovação humana da fase e só então PR/merge se autorizados.
+Não pule checkpoints. O Review 04 aprovou o candidato de domínio, mas o
+QA/Security emitiu NO-GO porque as tasks de Payments não eram descobertas e a
+fila `integrations` não possuía consumer no Compose. A remediação operacional
+foi autorizada na branch exclusiva. O próximo fluxo é: commit material e CI
+no SHA exato, carrier contendo somente o handoff, novo Review independente,
+novo QA/Security, aprovação humana da fase e só então PR/merge se autorizados.
 
 Mercado Pago e Pagar.me permanecem planejados para a Fase 5; Appmax vem
 depois. Nenhum provider, webhook, credencial ou máquina do Flowlog pode ser

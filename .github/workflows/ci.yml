@@ -104,3 +104,5 @@ jobs:
         run: |
           docker compose config
           docker compose -f docker-compose.test.yml config
+      - name: Celery runtime topology
+        run: uv run python scripts/check_celery_runtime.py

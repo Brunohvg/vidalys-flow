@@ -72,8 +72,10 @@ estoque, pagamento, transportadora, provider ou efeito externo na Fase 4.
 - PostgreSQL 17 é a única base suportada para domínio e testes.
 - Redis DB 0 é o broker Celery.
 - Redis DB 1 é o cache.
-- Celery possui filas declaradas `default` e `integrations`; a fila `default`
-  contém outbox e consumidores internos. Nenhuma tarefa financeira possui
+- Celery possui workers explícitos para as filas `default` e `integrations`;
+  `default` contém outbox e consumidores internos, enquanto `integrations`
+  isola o dispatch e o cancelamento de checkout. Um gate cruza agenda, rotas,
+  tasks registradas e filas consumidas. Nenhuma tarefa financeira possui
   autorização para chamar provider nesta fase.
 - migrations rodam em serviço de release explícito.
 
