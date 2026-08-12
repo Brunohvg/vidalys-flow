@@ -9,8 +9,8 @@
   "status": "candidate",
   "plan_status": "approved",
   "implementation_status": "complete",
-  "review_status": "pending",
-  "qa_status": "blocked",
+  "review_status": "complete",
+  "qa_status": "pending",
   "human_approval_status": "pending",
   "plan_approval": {
     "status": "approved",

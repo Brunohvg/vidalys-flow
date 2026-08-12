@@ -132,10 +132,29 @@
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
+    "status": "approved",
     "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
-    "report": null,
+    "report": "project/reviews/phase-05-review-04.md",
     "blockers": [],
+    "review_04": {
+      "status": "approved",
+      "report": "project/reviews/phase-05-review-04.md",
+      "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "carrier_observed": "7c9ec3ec12f1da482b57ad654a86751a81ce69c5",
+      "material_ci_run": 31556138368,
+      "carrier_ci_run": 31556315913,
+      "local_tests": 275,
+      "local_skipped": 0,
+      "local_coverage_percent": 85.23629489603024,
+      "payments_direct_tests": 68,
+      "findings_revalidated": [
+        "P05-R18",
+        "P05-R19",
+        "P05-R20",
+        "P05-R21"
+      ],
+      "blocking_findings": []
+    },
     "review_03": {
       "status": "changes_requested",
       "report": "project/reviews/phase-05-review-03.md",
@@ -191,6 +210,6 @@
   "human_approval": {
     "status": "pending",
     "evidence": "No final Phase 05 approval has been given; the technical plan was approved on 2026-08-08 and Review 03 remediation was authorized on 2026-08-11.",
-    "note": "The technical plan and Review 03 remediation were authorized. Candidate 464c2ac9af1bbeaacf0f33cccec7af5a73feb94e now requires independent Review 04 and QA/Security GO; no PR, merge, provider activation, release, or deploy is authorized."
+    "note": "Independent Review 04 approved candidate 464c2ac9af1bbeaacf0f33cccec7af5a73feb94e. QA/Security remains a separate pending checkpoint requiring human authorization; no product approval, PR, merge, provider activation, release, or deploy is authorized."
   }
 }
