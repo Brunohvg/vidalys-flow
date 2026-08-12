@@ -1,9 +1,8 @@
-# Payments — contrato implementado no candidato da Fase 5
+# Payments — contrato aprovado da Fase 5
 
-Status: remediação operacional candidata após o NO-GO de QA/Security, limitada
-ao registro das tasks de Payments, ao consumer da fila `integrations` e ao
-gate executável da topologia Celery. Este documento não aprova novo Review,
-QA, sandbox, provider, PR, merge, release ou deploy.
+Status: produto aprovado após Review 05, QA/Security final, CI e merge da PR
+#8. A aprovação não ativa sandbox, provider, credencial, callback público,
+release ou deploy.
 
 ## Limite do domínio
 

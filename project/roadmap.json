@@ -95,17 +95,17 @@
     {
       "id": 5,
       "name": "Payments",
-      "status": "planned",
+      "status": "approved",
       "dependencies": [
         4
       ],
-      "approved_sha": null,
+      "approved_sha": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
       "branch": "phase/05-payments",
-      "handoff": null,
+      "handoff": "project/handoffs/phase-05.json",
       "domains": [
         "payments"
       ],
-      "human_approval_status": "pending",
+      "human_approval_status": "approved",
       "known_risks": [
         "A provider callback may contain PII and card metadata that must never be persisted raw or copied to logs, AuditEvent, OutboxEvent, or command receipts.",
         "Multiple active hosted checkout links can create duplicate or excess payment; the canonical domain must serialize attempts and surface inconsistencies for manual reconciliation.",

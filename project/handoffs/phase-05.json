@@ -2,10 +2,10 @@
   "schema_version": 1,
   "phase_id": 5,
   "phase_name": "Payments",
-  "status": "candidate",
+  "status": "approved",
   "branch": "phase/05-payments",
   "base_sha": "4fd3a9259e9e2f31acdab44f13499eade79ab59e",
-  "head_sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+  "head_sha": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
   "commits": [
     {
       "sha": "640654778332b7306e4a20833a5cd15ef03c27ea",
@@ -281,8 +281,37 @@
     }
   },
   "human_approval": {
-    "status": "pending",
-    "evidence": "No final Phase 05 product approval has been given; the focused final QA/Security checkpoint was explicitly authorized on 2026-08-12.",
-    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b has independent Review 05 APPROVED and QA/Security GO. It now requires final human product approval; no project/state.json change, PR, merge, provider activation, release, deploy, or later phase is authorized."
+    "status": "approved",
+    "approved_by": "Bruno Vidal",
+    "approved_at": "2026-08-12",
+    "decision": "approved",
+    "evidence": "Explicit human approval after Review 05 APPROVED and final QA/Security GO, followed by explicit authorization to create PR #8, merge Phase 05, and record the official state.",
+    "note": "Provider activation, sandbox, release, deploy, and Phase 06 implementation remain separate checkpoints."
+  },
+  "approval_record": {
+    "candidate_material": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+    "carrier_evidence": "ed4b64a0c5f55045e9bcb02aaab6a5fa19edb9ef",
+    "merge_commit": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
+    "pull_request": 8,
+    "review": "Review 05: APPROVED",
+    "qa_security": "GO",
+    "ci": {
+      "id": 31587557888,
+      "status": "success",
+      "tests_passed": 277,
+      "skips": 0,
+      "coverage_percent": 85.25
+    },
+    "merge_ci": {
+      "id": 31651576735,
+      "status": "expected_governance_transition_failure",
+      "failed_gate": "approved phase ancestry and governance baseline",
+      "note": "The merge arrived on main before this authorized closeout could advance approved_phase_head from Phase 04 to Phase 05; PR #8 had already passed the complete workflow on the exact merged head."
+    },
+    "migration_validation": "PostgreSQL 17 from empty database with Payments rollback and reapplication validated",
+    "celery_runtime_topology": "Payments tasks registered; default and integrations workers healthy with exclusive direct bindings",
+    "organization_isolation": "validated",
+    "privacy": "validated",
+    "blockers": []
   }
 }

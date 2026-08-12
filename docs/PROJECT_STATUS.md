@@ -71,23 +71,21 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments está em remediação operacional autorizada após NO-GO de QA/Security
-da Fase 5 e voltará a Review independente na branch
-`phase/05-payments`, criada exatamente de
+Payments foi aprovado humanamente após Review 05 `APPROVED`, QA/Security final
+`GO` e CI verde. A branch `phase/05-payments` foi criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
 provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
 segundo e Appmax posteriormente. O plano foi aprovado em 8 de agosto de 2026;
-a implementação candidata está autorizada somente com fakes e fixtures sem
-rede. Credencial, sandbox, callback público e efeito externo continuam
-proibidos.
+a implementação foi validada somente com fakes e fixtures sem rede.
+Credencial, sandbox, callback público e efeito externo continuam proibidos.
 
 O candidato implementa o agregado provider-neutral, migration nova,
 idempotência, locks, tentativa única, adapters desabilitados, callback Mercado
 Pago com assinatura e consulta autoritativa injetável, bloqueio do callback
 Pagar.me, reconciliação, cancelamento interno de Order, masking, HTML e testes
-PostgreSQL. Isso ainda não representa implementação aprovada: novo Review
-independente, novo QA/Segurança e aprovação humana continuam pendentes. O
-primeiro candidato técnico foi
+PostgreSQL. O candidato material final é
+`09fe3615008fe1621e46ecee74d6a2b58667377b`; o merge aprovado é
+`3558ca30a5652be320feb3f28ab46a350ae9cad7`. O primeiro candidato técnico foi
 `707401a13a4cd493409e6258301a1aaa22cba68b`, validado pelo GitHub Actions run
 `31287810333` com 240 testes, 85% de cobertura e todos os gates verdes.
 
@@ -139,8 +137,10 @@ rollback/reaplicação completa no Compose. O primeiro QA/Security, porém,
 emitiu NO-GO: `apps.payments` não participava do autodiscovery Celery e não
 existia worker para a fila `integrations`. A remediação atual registra as
 tasks, adiciona `worker-integrations` e inclui um gate executável que cruza
-agenda, rotas, registro e filas consumidas. Novo Review e novo QA/Security são
-obrigatórios antes de qualquer aprovação humana final.
+agenda, rotas, registro e filas consumidas. O Review 05 aprovou essa
+remediação; o QA/Security final emitiu `GO` com 277 testes, zero skips, 70
+testes diretos de Payments e cobertura de 85,25%. A aprovação humana final e
+o merge da PR #8 foram registrados em 12 de agosto de 2026.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
