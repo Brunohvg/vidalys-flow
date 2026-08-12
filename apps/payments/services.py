@@ -157,6 +157,25 @@ def _outbox(*, intent, event_type, command_id, extra=None):
     )
 
 
+def _cancellation_outbox(*, intent, attempt, command_id):
+    return enqueue_event(
+        organization=intent.organization,
+        event_type=PAYMENT_CHECKOUT_CANCELLATION_REQUESTED,
+        aggregate_type="payment_attempt",
+        aggregate_id=attempt.id,
+        payload={
+            "payment_intent_id": str(intent.id),
+            "payment_attempt_id": str(attempt.id),
+            "order_id": str(intent.order_id),
+            "status": intent.status,
+            "amount": str(intent.amount),
+            "currency": intent.currency,
+            "version": intent.version,
+        },
+        idempotency_key=f"payment:{intent.id}:{PAYMENT_CHECKOUT_CANCELLATION_REQUESTED}:{command_id}",
+    )
+
+
 def _history(*, intent, from_status, actor, command_id, source, reason_code=""):
     PaymentStatusHistory.objects.create(
         organization=intent.organization,
@@ -327,9 +346,7 @@ def claim_requested_checkout(*, attempt_id):
             intent.attention_code = ""
             intent.cancelled_at = now
             intent.version += 1
-            intent.save(
-                update_fields=("status", "attention_code", "cancelled_at", "version", "updated_at")
-            )
+            intent.save(update_fields=("status", "attention_code", "cancelled_at", "version", "updated_at"))
             _history(
                 intent=intent,
                 from_status=from_status,
@@ -543,7 +560,9 @@ def _canonical_transition(*, intent, attempt, target, command_id, source, reason
         intent.status = PaymentIntent.Status.PENDING
         intent.attention_code = ""
     elif target == PaymentIntent.Status.REQUIRES_ATTENTION:
-        if attempt.status not in {
+        if reason_code == "order_cancelled_with_paid_payment":
+            attempt.status = PaymentAttempt.Status.PAID
+        elif attempt.status not in {
             PaymentAttempt.Status.PAID,
             PaymentAttempt.Status.FAILED,
             PaymentAttempt.Status.CANCELLED,
@@ -593,13 +612,23 @@ def _canonical_transition(*, intent, attempt, target, command_id, source, reason
     )
 
 
-def _apply_resource_to_locked_attempt(*, intent, attempt, account, resource, command_id, source):
-    target = map_provider_status(provider=account.provider, status=resource.status)
-    reason_code = ""
+def _apply_resource_to_locked_attempt(*, intent, attempt, account, resource, command_id, source, order_status=None):
+    try:
+        target = map_provider_status(provider=account.provider, status=resource.status)
+    except InvalidPayment:
+        if source != "cancellation_worker":
+            raise
+        target = PaymentIntent.Status.REQUIRES_ATTENTION
+        reason_code = "unknown_provider_status"
+    else:
+        reason_code = ""
     expected_minor = int(intent.amount * 100)
     if resource.currency != intent.currency or resource.amount_minor != expected_minor:
         target = PaymentIntent.Status.REQUIRES_ATTENTION
         reason_code = "amount_or_currency_mismatch"
+    elif order_status == Order.Status.CANCELLED and target == PaymentIntent.Status.PAID:
+        target = PaymentIntent.Status.REQUIRES_ATTENTION
+        reason_code = "order_cancelled_with_paid_payment"
     terminal_attempt_target = {
         PaymentAttempt.Status.PAID: PaymentIntent.Status.PAID,
         PaymentAttempt.Status.FAILED: "failed",
@@ -848,6 +877,8 @@ def request_hosted_checkout_cancellation(*, organization, intent, actor, expecte
     )
     if attempt is None:
         raise InvalidPayment("Pagamento não possui checkout aberto para cancelar.")
+    if attempt.cancellation_event_id and attempt.cancellation_completed_at is None:
+        raise InvalidPayment("Já existe cancelamento pendente para este checkout.")
     if attempt.status == PaymentAttempt.Status.REQUESTED and attempt.dispatch_lease_token is None:
         attempt.status = PaymentAttempt.Status.CANCELLED
         attempt.dispatch_lease_token = None
@@ -867,11 +898,10 @@ def request_hosted_checkout_cancellation(*, organization, intent, actor, expecte
             )
         )
     else:
-        _outbox(
-            intent=intent,
-            event_type=PAYMENT_CHECKOUT_CANCELLATION_REQUESTED,
-            command_id=idempotency_key,
-        )
+        event = _cancellation_outbox(intent=intent, attempt=attempt, command_id=idempotency_key)
+        attempt.cancellation_event_id = event.id
+        attempt.cancellation_completed_at = None
+        attempt.save(update_fields=("cancellation_event_id", "cancellation_completed_at", "updated_at"))
     intent.version += 1
     intent.save(update_fields=("version", "updated_at"))
     _audit(intent=intent, actor=actor, action=PAYMENT_CHECKOUT_CANCELLATION_REQUESTED)
@@ -919,8 +949,35 @@ def claim_checkout_cancellation(*, attempt_id):
 
 
 @transaction.atomic
+def complete_cancellation_event_for_terminal_attempt(*, attempt_id, event_id):
+    ref = PaymentAttempt.objects.filter(id=attempt_id).values("organization_id", "intent_id").first()
+    if ref is None:
+        return False
+    _, intent = _lock_intent(organization=ref["organization_id"], intent_id=ref["intent_id"])
+    attempt = (
+        PaymentAttempt.objects.select_for_update()
+        .filter(id=attempt_id, intent=intent, cancellation_event_id=event_id)
+        .first()
+    )
+    if attempt is None:
+        return False
+    if attempt.cancellation_completed_at is not None:
+        return True
+    if attempt.status not in {
+        PaymentAttempt.Status.PAID,
+        PaymentAttempt.Status.FAILED,
+        PaymentAttempt.Status.CANCELLED,
+        PaymentAttempt.Status.EXPIRED,
+    }:
+        return False
+    attempt.cancellation_completed_at = timezone.now()
+    attempt.save(update_fields=("cancellation_completed_at", "updated_at"))
+    return True
+
+
+@transaction.atomic
 def apply_verified_checkout_cancellation(*, organization, attempt, resource, idempotency_key, lease_token):
-    _, intent = _lock_intent(organization=organization, intent_id=attempt.intent_id)
+    order, intent = _lock_intent(organization=organization, intent_id=attempt.intent_id)
     attempt = (
         PaymentAttempt.objects.select_for_update()
         .select_related("provider_account")
@@ -931,9 +988,6 @@ def apply_verified_checkout_cancellation(*, organization, attempt, resource, ide
         raise InvalidPayment("Lease de cancelamento inválido.")
     if resource.external_resource_id != attempt.external_resource_id:
         raise OrganizationMismatch("Resposta não pertence ao checkout cancelado.")
-    target = map_provider_status(provider=attempt.provider, status=resource.status)
-    if target not in {PaymentIntent.Status.CANCELLED, PaymentIntent.Status.EXPIRED}:
-        raise InvalidPayment("Provider ainda não confirmou o fechamento do checkout.")
     changed, reason_code = _apply_resource_to_locked_attempt(
         intent=intent,
         attempt=attempt,
@@ -941,26 +995,37 @@ def apply_verified_checkout_cancellation(*, organization, attempt, resource, ide
         resource=resource,
         command_id=idempotency_key,
         source="cancellation_worker",
+        order_status=order.status,
     )
+    cancellation_complete = intent.status not in {
+        PaymentIntent.Status.AWAITING_PAYMENT,
+        PaymentIntent.Status.PROCESSING,
+    }
     attempt.dispatch_lease_token = None
     attempt.dispatch_lease_expires_at = None
-    attempt.dispatch_available_at = None
-    attempt.dispatch_error_code = ""
+    attempt.dispatch_available_at = (
+        None
+        if cancellation_complete
+        else timezone.now()
+        + timedelta(seconds=min(DISPATCH_RETRY_MAX_SECONDS, 5 * (2 ** min(attempt.dispatch_attempts, 6))))
+    )
+    attempt.dispatch_error_code = "" if cancellation_complete else "cancellation_pending"
+    attempt.cancellation_completed_at = timezone.now() if cancellation_complete else None
     attempt.save(
         update_fields=(
             "dispatch_lease_token",
             "dispatch_lease_expires_at",
             "dispatch_available_at",
             "dispatch_error_code",
+            "cancellation_completed_at",
             "updated_at",
         )
     )
     if changed:
-        event_type = (
-            PAYMENT_REQUIRES_ATTENTION
-            if intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
-            else PAYMENT_CANCELLED
-        )
+        event_type = {
+            PaymentIntent.Status.REQUIRES_ATTENTION: PAYMENT_REQUIRES_ATTENTION,
+            PaymentIntent.Status.CANCELLED: PAYMENT_CANCELLED,
+        }.get(intent.status, PAYMENT_STATUS_CHANGED)
         _audit(
             intent=intent,
             actor=None,
@@ -973,7 +1038,7 @@ def apply_verified_checkout_cancellation(*, organization, attempt, resource, ide
             command_id=idempotency_key,
             extra={"has_provider_inconsistency": bool(reason_code)},
         )
-    return attempt
+    return attempt, cancellation_complete
 
 
 def dispatch_checkout_cancellation(*, attempt, adapter, idempotency_key):

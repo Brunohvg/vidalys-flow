@@ -18,7 +18,9 @@ from apps.payments.services import (
     dispatch_requested_checkout,
     reconcile_verified_resource,
     request_hosted_checkout,
+    request_hosted_checkout_cancellation,
 )
+from apps.payments.tasks import dispatch_checkout_cancellation_events
 from apps.users.models import User
 
 
@@ -70,9 +72,7 @@ def test_concurrent_checkout_requests_produce_only_one_active_attempt(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_concurrent_intent_creation_produces_one_aggregate(
-    organization, payable_order, manager, manager_membership
-):
+def test_concurrent_intent_creation_produces_one_aggregate(organization, payable_order, manager, manager_membership):
     barrier = threading.Barrier(2)
     outcomes = []
 
@@ -160,6 +160,82 @@ def test_concurrent_dispatchers_hold_one_persistent_lease_and_call_provider_once
     attempt.refresh_from_db()
     assert attempt.status == PaymentAttempt.Status.ACTIVE
     assert attempt.dispatch_lease_token is None
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_cancellation_workers_call_provider_once_and_consume_exact_event(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent = create_payment_intent(
+        organization=organization,
+        order=payable_order,
+        actor=manager,
+        idempotency_key=str(uuid.uuid4()),
+    )
+    attempt = request_hosted_checkout(
+        organization=organization,
+        intent=intent,
+        provider_account=mercado_account,
+        actor=manager,
+        expected_version=1,
+        idempotency_key=str(uuid.uuid4()),
+    )
+    activate_hosted_checkout(
+        organization=organization,
+        attempt=attempt,
+        result=CheckoutResult("cancel-concurrent", "https://checkout.example.test/cancel-concurrent"),
+        idempotency_key=str(uuid.uuid4()),
+    )
+    intent.refresh_from_db()
+    request_hosted_checkout_cancellation(
+        organization=organization,
+        intent=intent,
+        actor=manager,
+        expected_version=intent.version,
+        idempotency_key=str(uuid.uuid4()),
+    )
+    barrier = threading.Barrier(2)
+    calls = []
+    outcomes = []
+    errors = []
+    call_lock = threading.Lock()
+
+    class CancellationAdapter:
+        provider = "mercado_pago"
+        external = False
+
+        def cancel_checkout(self, external_resource_id, *, idempotency_key):
+            with call_lock:
+                calls.append(external_resource_id)
+            return ProviderResource(external_resource_id, "cancelled", 12540, "BRL")
+
+    def worker():
+        close_old_connections()
+        try:
+            barrier.wait(timeout=5)
+            outcomes.append(
+                dispatch_checkout_cancellation_events(
+                    limit=1,
+                    adapter_resolver=lambda current: CancellationAdapter(),
+                )
+            )
+        except Exception as exc:  # pragma: no cover - asserted below
+            errors.append(exc)
+        finally:
+            connections.close_all()
+
+    threads = [threading.Thread(target=worker) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=10)
+
+    assert errors == []
+    assert sorted(outcomes) == [0, 1]
+    assert calls == ["cancel-concurrent"]
+    attempt.refresh_from_db()
+    assert attempt.status == PaymentAttempt.Status.CANCELLED
+    assert attempt.cancellation_completed_at is not None
 
 
 @pytest.mark.django_db(transaction=True)

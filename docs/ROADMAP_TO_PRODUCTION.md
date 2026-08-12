@@ -10,9 +10,10 @@ Fulfillment recebeu remediação, CI verde no candidato material, Review 02,
 QA/Segurança e ratificação humana final. O desvio de governança do merge foi
 registrado sem reescrever o histórico. O plano da Fase 05 — Payments foi
 aprovado; três revisões independentes solicitaram mudanças. A segunda
-remediação e seu CI estão preservados, mas o Review 03 encontrou bloqueadores
-no cancelamento e na autorização administrativa. QA/Segurança permanece
-bloqueado, com rede e efeitos externos desligados. Não há autorização de
+remediação e seu CI estão preservados, e a terceira remediação autorizada
+endereça os bloqueadores encontrados pelo Review 03 no cancelamento e na
+autorização administrativa. QA/Segurança permanece bloqueado até novo SHA,
+CI e Review 04, com rede e efeitos externos desligados. Não há autorização de
 sandbox, provider ou deploy.
 
 ## Sequência de produto
@@ -21,9 +22,9 @@ sandbox, provider ou deploy.
    estados canônicos aprovados; sem cobrança ou logística.
 2. **Fulfillment (Fase 04, concluída).** Lotes parciais, separação, entrega e
    retirada aprovados sem estoque, providers ou mudança em `Order.status`.
-3. **Payments (Fase 05, mudanças solicitadas no Review 03).** O candidato implementa
-   núcleo canônico provider-neutral, Mercado Pago Checkout Pro como primeiro
-   rollout, Pagar.me v5 Payment Links como segundo e Appmax posterior.
+3. **Payments (Fase 05, terceira remediação em validação).** O candidato
+   implementa núcleo canônico provider-neutral, Mercado Pago Checkout Pro como
+   primeiro rollout, Pagar.me v5 Payment Links como segundo e Appmax posterior.
 4. **Messaging (Fase 06).** Enviar comunicações transacionais somente a partir
    de eventos aprovados, com consentimento e rastreabilidade.
 5. **Integrations (Fase 07).** Adicionar conectores externos com isolamento,

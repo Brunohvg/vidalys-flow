@@ -1,8 +1,8 @@
 # Plano aprovado de Payments — Fase 5
 
-Status: plano aprovado em 8 de agosto de 2026; o primeiro Review independente
-solicitou mudanças e a remediação autorizada aguarda nova revisão, sem
-autorização de sandbox, PR, merge, release ou deploy.
+Status: plano aprovado em 8 de agosto de 2026; três Reviews independentes
+solicitaram mudanças e a terceira remediação autorizada aguarda validação e
+Review 04, sem autorização de sandbox, PR, merge, release ou deploy.
 
 Payments será um domínio greenfield e independente. O planejamento não
 consultou Flowlog e proíbe qualquer reutilização de código, banco, IDs,

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.models import Permission
 from django.utils import timezone
 
 from apps.orders.models import Order
@@ -18,6 +19,7 @@ from apps.payments.providers import CheckoutResult, ProviderResource
 from apps.payments.services import (
     DISPATCH_LEASE_SECONDS,
     activate_hosted_checkout,
+    apply_verified_provider_resource,
     claim_requested_checkout,
     consume_order_cancelled,
     create_payment_intent,
@@ -356,6 +358,29 @@ def test_cancel_verified_then_explicitly_reopen_and_switch_provider(
         expected_version=intent.version,
         idempotency_key=key(),
     )
+    attempt.refresh_from_db()
+    cancellation_event = OutboxEvent.objects.get(id=attempt.cancellation_event_id)
+    assert cancellation_event.aggregate_type == "payment_attempt"
+    assert cancellation_event.aggregate_id == str(attempt.id)
+    assert set(cancellation_event.payload) == {
+        "payment_intent_id",
+        "payment_attempt_id",
+        "order_id",
+        "status",
+        "amount",
+        "currency",
+        "version",
+    }
+    assert cancellation_event.payload["payment_attempt_id"] == str(attempt.id)
+    intent.refresh_from_db()
+    with pytest.raises(InvalidPayment, match="cancelamento pendente"):
+        request_hosted_checkout_cancellation(
+            organization=organization,
+            intent=intent,
+            actor=manager,
+            expected_version=intent.version,
+            idempotency_key=key(),
+        )
 
     class CancellationAdapter:
         provider = "mercado_pago"
@@ -394,6 +419,176 @@ def test_cancel_verified_then_explicitly_reopen_and_switch_provider(
     )
     assert switched.provider == PaymentProviderAccount.Provider.PAGARME
     assert attempt.status == PaymentAttempt.Status.CANCELLED
+    old_event = OutboxEvent.objects.get(id=attempt.cancellation_event_id)
+    assert old_event.status == OutboxEvent.Status.PROCESSED
+
+    calls = 0
+
+    class NewAttemptSpyAdapter:
+        provider = "pagarme"
+        external = False
+
+        def cancel_checkout(self, external_resource_id, *, idempotency_key):
+            nonlocal calls
+            calls += 1
+
+    assert dispatch_checkout_cancellation_events(adapter_resolver=lambda current: NewAttemptSpyAdapter()) == 0
+    switched.refresh_from_db()
+    assert calls == 0
+    assert switched.status == PaymentAttempt.Status.REQUESTED
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("provider_status", "amount_minor", "expected_intent", "expected_attempt", "processed"),
+    [
+        ("approved", 12540, PaymentIntent.Status.PAID, PaymentAttempt.Status.PAID, 1),
+        ("in_process", 12540, PaymentIntent.Status.PROCESSING, PaymentAttempt.Status.PROCESSING, 0),
+        ("cancelled", 1, PaymentIntent.Status.REQUIRES_ATTENTION, PaymentAttempt.Status.PROCESSING, 1),
+        ("future_status", 12540, PaymentIntent.Status.REQUIRES_ATTENTION, PaymentAttempt.Status.PROCESSING, 1),
+    ],
+)
+def test_cancellation_applies_every_authoritative_provider_result(
+    organization,
+    payable_order,
+    mercado_account,
+    manager,
+    manager_membership,
+    provider_status,
+    amount_minor,
+    expected_intent,
+    expected_attempt,
+    processed,
+):
+    intent, attempt = create_intent_and_attempt(
+        organization=organization,
+        order=payable_order,
+        account=mercado_account,
+        manager=manager,
+    )
+    activate_hosted_checkout(
+        organization=organization,
+        attempt=attempt,
+        result=CheckoutResult("cancel-evidence", "https://checkout.example.test/evidence"),
+        idempotency_key=key(),
+    )
+    intent.refresh_from_db()
+    request_hosted_checkout_cancellation(
+        organization=organization,
+        intent=intent,
+        actor=manager,
+        expected_version=intent.version,
+        idempotency_key=key(),
+    )
+
+    class EvidenceAdapter:
+        provider = "mercado_pago"
+        external = False
+
+        def cancel_checkout(self, external_resource_id, *, idempotency_key):
+            return ProviderResource(external_resource_id, provider_status, amount_minor, "BRL")
+
+    assert dispatch_checkout_cancellation_events(adapter_resolver=lambda current: EvidenceAdapter()) == processed
+    intent.refresh_from_db()
+    attempt.refresh_from_db()
+    assert intent.status == expected_intent
+    assert attempt.status == expected_attempt
+    if processed:
+        assert attempt.cancellation_completed_at is not None
+        assert OutboxEvent.objects.get(id=attempt.cancellation_event_id).status == OutboxEvent.Status.PROCESSED
+    else:
+        assert attempt.cancellation_completed_at is None
+        assert attempt.dispatch_error_code == "cancellation_pending"
+        assert attempt.dispatch_available_at is not None
+
+
+@pytest.mark.django_db
+def test_paid_cancellation_result_on_cancelled_order_preserves_paid_attempt_and_attention(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent, attempt = create_intent_and_attempt(
+        organization=organization,
+        order=payable_order,
+        account=mercado_account,
+        manager=manager,
+    )
+    activate_hosted_checkout(
+        organization=organization,
+        attempt=attempt,
+        result=CheckoutResult("cancel-paid", "https://checkout.example.test/cancel-paid"),
+        idempotency_key=key(),
+    )
+    intent.refresh_from_db()
+    request_hosted_checkout_cancellation(
+        organization=organization,
+        intent=intent,
+        actor=manager,
+        expected_version=intent.version,
+        idempotency_key=key(),
+    )
+    payable_order.status = Order.Status.CANCELLED
+    payable_order.cancelled_at = timezone.now()
+    payable_order.cancel_reason = "Cancelado antes da confirmação financeira"
+    payable_order.save(update_fields=("status", "cancelled_at", "cancel_reason"))
+
+    class PaidAdapter:
+        provider = "mercado_pago"
+        external = False
+
+        def cancel_checkout(self, external_resource_id, *, idempotency_key):
+            return ProviderResource(external_resource_id, "approved", 12540, "BRL")
+
+    assert dispatch_checkout_cancellation_events(adapter_resolver=lambda current: PaidAdapter()) == 1
+    intent.refresh_from_db()
+    attempt.refresh_from_db()
+    assert intent.status == PaymentIntent.Status.REQUIRES_ATTENTION
+    assert intent.attention_code == "order_cancelled_with_paid_payment"
+    assert attempt.status == PaymentAttempt.Status.PAID
+
+
+@pytest.mark.django_db
+def test_paid_callback_racing_cancellation_consumes_event_without_second_provider_call(
+    organization, payable_order, mercado_account, manager, manager_membership
+):
+    intent, attempt = create_intent_and_attempt(
+        organization=organization,
+        order=payable_order,
+        account=mercado_account,
+        manager=manager,
+    )
+    activate_hosted_checkout(
+        organization=organization,
+        attempt=attempt,
+        result=CheckoutResult("callback-cancel", "https://checkout.example.test/callback-cancel"),
+        idempotency_key=key(),
+    )
+    intent.refresh_from_db()
+    request_hosted_checkout_cancellation(
+        organization=organization,
+        intent=intent,
+        actor=manager,
+        expected_version=intent.version,
+        idempotency_key=key(),
+    )
+    apply_verified_provider_resource(
+        provider_account=mercado_account,
+        external_event_id="callback-before-cancel-worker",
+        authenticated_request_id_digest="a" * 64,
+        request_digest="b" * 64,
+        resource=ProviderResource("callback-cancel", "approved", 12540, "BRL"),
+    )
+    calls = 0
+
+    def resolver(current):
+        nonlocal calls
+        calls += 1
+
+    assert dispatch_checkout_cancellation_events(adapter_resolver=resolver) == 1
+    attempt.refresh_from_db()
+    assert calls == 0
+    assert attempt.status == PaymentAttempt.Status.PAID
+    assert attempt.cancellation_completed_at is not None
+    assert OutboxEvent.objects.get(id=attempt.cancellation_event_id).status == OutboxEvent.Status.PROCESSED
 
 
 @pytest.mark.django_db
@@ -435,8 +630,14 @@ def test_worker_rejects_forged_cross_tenant_event_before_adapter(
 
 
 @pytest.mark.django_db
-def test_payment_admin_queryset_uses_active_organization(
-    organization, other_organization, mercado_account, manager, manager_membership
+def test_payment_admin_requires_manager_tier_and_active_tenant(
+    organization,
+    other_organization,
+    mercado_account,
+    manager,
+    manager_membership,
+    user,
+    operator_membership,
 ):
     Membership.objects.create(
         organization=other_organization,
@@ -449,13 +650,37 @@ def test_payment_admin_queryset_uses_active_organization(
         display_name="Conta isolada",
         credential_alias="other-admin-test",
     )
-    request = SimpleNamespace(
+    permission = Permission.objects.get(codename="view_paymentprovideraccount")
+    manager.is_staff = True
+    manager.save(update_fields=("is_staff",))
+    manager.user_permissions.add(permission)
+    manager_request = SimpleNamespace(
         user=manager,
         session={ACTIVE_ORGANIZATION_SESSION_KEY: str(organization.id)},
     )
-    queryset = admin.site._registry[PaymentProviderAccount].get_queryset(request)
+    model_admin = admin.site._registry[PaymentProviderAccount]
+    queryset = model_admin.get_queryset(manager_request)
     assert list(queryset) == [mercado_account]
     assert other_account not in queryset
+    assert model_admin.has_view_permission(manager_request, mercado_account)
+    assert not model_admin.has_view_permission(manager_request, other_account)
+
+    user.is_staff = True
+    user.save(update_fields=("is_staff",))
+    user.user_permissions.add(permission)
+    operator_request = SimpleNamespace(
+        user=user,
+        session={ACTIVE_ORGANIZATION_SESSION_KEY: str(organization.id)},
+    )
+    assert list(model_admin.get_queryset(operator_request)) == []
+    assert not model_admin.has_view_permission(operator_request, mercado_account)
+    assert not model_admin.has_module_permission(operator_request)
+
+    operator_membership.is_active = False
+    operator_membership.save(update_fields=("is_active",))
+    assert list(model_admin.get_queryset(operator_request)) == []
+    manager_request.session = {}
+    assert list(model_admin.get_queryset(manager_request)) == []
 
 
 def test_provider_dns_is_executably_blocked():

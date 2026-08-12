@@ -87,6 +87,10 @@ O publisher desta fase é interno, determinístico e não executa I/O externo.
   horário e código controlado, sem texto ou diagnóstico externo;
 - resultado externo obtido durante cancelamento/desativação é preservado e
   sinalizado como `requires_attention`, nunca descartado;
-- admin financeiro é somente leitura e filtrado pela Organization ativa;
+- cancelamento externo é correlacionado ao attempt/evento exatos e o evento
+  terminal é consumido, sem possibilidade de atingir tentativa posterior;
+- resposta autoritativa de cancelamento sempre atualiza ou bloqueia o agregado;
+- admin financeiro é somente leitura, filtrado pela Organization ativa e exige
+  Membership ativa de manager tier;
 - a suíte bloqueia resolução DNS dos hosts de providers; adapters reais,
   secrets, sandbox e rede continuam bloqueados.

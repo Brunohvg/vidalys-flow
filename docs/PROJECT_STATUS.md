@@ -71,8 +71,8 @@ infraestrutura do Flowlog.
 
 ## Pagamentos e infraestrutura
 
-Payments concluiu a segunda remediação autorizada do checkpoint de
-implementação da Fase 5 e voltará a Review independente na branch
+Payments está na terceira remediação autorizada do checkpoint de implementação
+da Fase 5 e voltará a Review independente na branch
 `phase/05-payments`, criada exatamente de
 `4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
 provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
@@ -125,6 +125,17 @@ resposta autoritativa paga ou inconsistente pode ser descartada pelo worker de
 cancelamento e o admin não exige manager tier para evidência financeira. O
 parecer está em `project/reviews/phase-05-review-03.md`; nenhuma correção foi
 feita pelo revisor e QA/Segurança permanece bloqueado.
+
+A terceira remediação correlaciona cada cancelamento ao PaymentAttempt e ao
+evento exatos, consome o trabalho terminalmente, impede evento antigo de agir
+sobre checkout reaberto, aplica toda resposta autoritativa à máquina canônica
+e exige Membership ativa de manager tier no admin financeiro. O novo candidato
+material e seu CI serão registrados antes do Review 04.
+
+A validação local da terceira remediação aprovou 275 testes sem skip em
+PostgreSQL 17.10, cobertura exata de 85,39%, migrations desde banco vazio e
+rollback/reaplicação completa no Compose. O CI do SHA material permanece o
+próximo gate antes do carrier exclusivo do handoff.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de

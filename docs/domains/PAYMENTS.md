@@ -1,8 +1,8 @@
 # Payments — contrato implementado no candidato da Fase 5
 
-Status: segunda remediação candidata após Review 02, aguardando nova revisão
-independente. Este documento não aprova Review, QA, sandbox, provider, PR,
-merge, release ou deploy.
+Status: terceira remediação candidata após Review 03, aguardando validação e
+nova revisão independente. Este documento não aprova Review, QA, sandbox,
+provider, PR, merge, release ou deploy.
 
 ## Limite do domínio
 
@@ -105,10 +105,14 @@ pagável. O adapter padrão continua bloqueando efeitos externos.
 ### Cancelar link e trocar provider
 
 OWNER, ADMIN ou MANAGER pode solicitar cancelamento. Um attempt `requested`
-sem I/O em curso fecha localmente. Um link externo gera
-`payment.checkout_cancellation_requested`; outro worker chama o adapter fora
-da transação e só fecha o agregado após resposta autoritativa `cancelled` ou
-`expired`. Falhas usam o mesmo lease e backoff controlado.
+sem I/O em curso fecha localmente. Um link externo gera trabalho correlacionado
+imutavelmente ao ID do attempt e ao evento. O worker chama o adapter fora da
+transação e marca exatamente esse evento como processado quando o fluxo
+termina, impedindo replay contra checkout posterior. Toda resposta
+autoritativa é aplicada: `paid` preserva pagamento, valor/moeda ou estado
+desconhecido gera `requires_attention`, `processing` mantém retry, e
+`cancelled`/`expired` conclui o fechamento. Falhas transitórias usam o mesmo
+lease e backoff controlado.
 
 Troca de provider nunca é fallback. Depois de `failed`, `cancelled` ou
 `expired`, o gerente reabre explicitamente o pagamento quando necessário e
@@ -160,6 +164,8 @@ O consumer interno lê `order.cancelled` da outbox:
 - alias de credencial, assinatura, token, callback bruto, documento, contato e
   endereço não entram em audit/outbox/log/receipt;
 - URL hospedada fica apenas no PaymentAttempt e na tela operacional autorizada.
+- admin financeiro é somente leitura, tenant-scoped e exige Membership ativa
+  de OWNER, ADMIN ou MANAGER, inclusive para object view.
 
 ## Providers
 
@@ -187,7 +193,9 @@ hospedado; a Vidalys Flow não renderiza QR/PDF nem recebe PAN/CVV.
 Os testes usam PostgreSQL 17 e fakes `external = False`. Cobrem autorização,
 Membership inativa, admin e worker cross-Organization, idempotência, versão,
 tentativa única, lease versus hard limit, backoff, falha mista sem starvation,
-cancelamento concorrente ao dispatch, desativação da conta antes/durante I/O,
-fechamento e troca de provider, assinatura, replay, imutabilidade, valor/moeda,
-masking e schemas fechados. Um fixture bloqueia por DNS os hosts conhecidos de
-Mercado Pago e Pagar.me. SQLite e chamadas sandbox não são aceitos.
+cancelamento concorrente ao dispatch, dois workers no mesmo cancelamento,
+evento antigo após troca de provider, callback concorrente, respostas paid,
+processing, mismatch e desconhecida, desativação da conta antes/durante I/O,
+assinatura, replay, imutabilidade, masking e schemas fechados. Um fixture
+bloqueia por DNS os hosts conhecidos de Mercado Pago e Pagar.me. SQLite e
+chamadas sandbox não são aceitos.

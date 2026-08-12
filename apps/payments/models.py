@@ -222,6 +222,8 @@ class PaymentAttempt(BaseModel):
     dispatch_attempts = models.PositiveIntegerField(default=0, editable=False)
     dispatch_available_at = models.DateTimeField(null=True, blank=True, editable=False)
     dispatch_error_code = models.CharField(max_length=40, blank=True, editable=False)
+    cancellation_event_id = models.UUIDField(null=True, blank=True, unique=True, editable=False)
+    cancellation_completed_at = models.DateTimeField(null=True, blank=True, editable=False)
     version = models.PositiveBigIntegerField(default=1)
 
     class Meta:
