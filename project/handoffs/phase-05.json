@@ -130,7 +130,10 @@
     "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
     "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
   ],
-  "blockers": [],
+  "blockers": [
+    "P05-Q01: config/celery.py does not autodiscover apps.payments, so the runtime worker registers no Payments tasks.",
+    "P05-Q02: checkout dispatch and cancellation tasks route to integrations, but docker-compose.yml provides no worker consuming that queue."
+  ],
   "review": {
     "status": "approved",
     "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
@@ -207,9 +210,28 @@
       ]
     }
   },
+  "qa_security": {
+    "status": "no_go",
+    "report": "project/qa/phase-05-qa-security.md",
+    "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+    "carrier_observed": "b4222299d92901654657d101e98c44d31e17754c",
+    "material_ci_run": 31556138368,
+    "review_carrier_ci_run": 31556713278,
+    "ci_tests": 275,
+    "ci_skipped": 0,
+    "independent_coverage_percent": 85.23629489603024,
+    "payments_direct_tests": 68,
+    "blocking_findings": [
+      "P05-Q01",
+      "P05-Q02"
+    ],
+    "non_blocking_findings": [
+      "P05-Q03"
+    ]
+  },
   "human_approval": {
     "status": "pending",
     "evidence": "No final Phase 05 approval has been given; the technical plan was approved on 2026-08-08 and Review 03 remediation was authorized on 2026-08-11.",
-    "note": "Independent Review 04 approved candidate 464c2ac9af1bbeaacf0f33cccec7af5a73feb94e. QA/Security remains a separate pending checkpoint requiring human authorization; no product approval, PR, merge, provider activation, release, or deploy is authorized."
+    "note": "Independent Review 04 approved candidate 464c2ac9af1bbeaacf0f33cccec7af5a73feb94e, but QA/Security issued NO-GO for P05-Q01 and P05-Q02. Remediation, a new independent Review, and a new QA/Security checkpoint require separate human authorization; no product approval, PR, merge, provider activation, release, or deploy is authorized."
   }
 }
