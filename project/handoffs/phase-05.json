@@ -235,10 +235,25 @@
     }
   },
   "qa_security": {
-    "status": "pending",
+    "status": "go",
     "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
-    "report": null,
+    "report": "project/qa/phase-05-qa-security-02.md",
     "blocking_findings": [],
+    "carrier_observed": "03868a75a3753b165ca2584f53caf6c31a6708a8",
+    "material_ci_run": 31585187061,
+    "material_carrier_ci_run": 31585362155,
+    "review_carrier_ci_run": 31586780875,
+    "local_tests": 277,
+    "local_skipped": 0,
+    "independent_coverage_percent": 85.24744994333207,
+    "payments_direct_tests": 70,
+    "celery_runtime_topology": "passed",
+    "findings_revalidated": [
+      "P05-Q01",
+      "P05-Q02",
+      "P05-Q03",
+      "P05-R22"
+    ],
     "previous_qa": {
       "status": "no_go",
       "report": "project/qa/phase-05-qa-security.md",
@@ -267,7 +282,7 @@
   },
   "human_approval": {
     "status": "pending",
-    "evidence": "No final Phase 05 approval has been given; the QA/Security remediation was explicitly authorized on 2026-08-12.",
-    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b addresses P05-Q01, P05-Q02, and P05-Q03, passed CI run 31585187061, and was approved by independent Review 05 with only non-blocking P05-R22. It requires a new QA/Security checkpoint; no product approval, PR, merge, provider activation, release, or deploy is authorized."
+    "evidence": "No final Phase 05 product approval has been given; the focused final QA/Security checkpoint was explicitly authorized on 2026-08-12.",
+    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b has independent Review 05 APPROVED and QA/Security GO. It now requires final human product approval; no project/state.json change, PR, merge, provider activation, release, deploy, or later phase is authorized."
   }
 }

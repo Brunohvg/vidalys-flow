@@ -14,8 +14,9 @@ git switch main
 git pull --ff-only
 ```
 
-A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e a
-segunda remediação candidata de Payments estão em `phase/05-payments`; confira
+A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e
+o candidato de Payments validado pelo Review 05 e pelo QA/Security final estão
+em `phase/05-payments`; confira
 `project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
 sandbox, PR, merge e deploy continuam sem autorização.
 
