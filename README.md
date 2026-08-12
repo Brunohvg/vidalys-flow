@@ -7,9 +7,9 @@ Plataforma independente de operação de vendas e pós-venda.
 > autenticação ou infraestrutura com o Flowlog.
 
 Este repositório contém a fundação greenfield e os domínios nativos e
-aprovados de Customers, Products, Orders e Fulfillment. Payments é a próxima
-fase planejada; mensagens, integrações e dashboard permanecem em fases
-posteriores.
+aprovados de Customers, Products, Orders e Fulfillment. Payments está no
+checkpoint de implementação da Fase 05; mensagens, integrações e dashboard
+permanecem em fases posteriores.
 
 Após selecionar uma organização permitida por Membership, as interfaces
 estão disponíveis em:
@@ -17,17 +17,19 @@ estão disponíveis em:
 - `/customers/`;
 - `/products/`;
 - `/orders/`;
-- `/fulfillment/`.
+- `/fulfillment/`;
+- `/payments/` (candidato da Fase 05, sem provider externo ativado).
 
 Consulte [Customers](docs/domains/CUSTOMERS.md),
 [Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md),
-[Fulfillment](docs/domains/FULFILLMENT.md) e o
+[Fulfillment](docs/domains/FULFILLMENT.md),
+[Payments](docs/domains/PAYMENTS.md) e o
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e
 decisões de escopo.
 
 Para uma visão integrada, consulte o [fluxo funcional](docs/SYSTEM_FLOW.md), o
 [caminho até produção](docs/ROADMAP_TO_PRODUCTION.md) e a
-[visão futura de Payments](docs/domains/PAYMENTS_VISION.md). Para assumir o
+[plano aprovado de Payments](docs/domains/PAYMENTS_VISION.md). Para assumir o
 trabalho em outro computador, siga [Clonar e continuar](docs/CLONE_AND_CONTINUE.md).
 
 ## Início rápido

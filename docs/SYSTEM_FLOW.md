@@ -21,7 +21,11 @@ login
   → Products e variantes
   → Order draft e itens
   → validação, snapshots e confirmação
-  → Fulfillment parcial de entrega ou retirada
+  ├─→ Fulfillment parcial de entrega ou retirada
+  └─→ PaymentIntent integral em BRL
+       → tentativa única de checkout hospedado
+       → callback autenticado ou reconciliação
+       → estado financeiro canônico
   → histórico + AuditEvent + OutboxEvent internos
 ```
 
@@ -43,6 +47,31 @@ login
 Orders não cobra, separa, entrega, envia mensagens, emite documento fiscal ou
 chama providers. Fulfillment executa separação, entrega e retirada em módulo
 próprio, sem alterar o estado comercial do pedido.
+
+O candidato da Fase 5 adiciona Payments como módulo separado. Apenas manager
+tier cria intents e solicita links. OPERATOR consulta estado e copia um link
+já ativo, com evidências externas e dados pessoais ocultos. Nenhuma mensagem é
+enviada automaticamente.
+
+```text
+Order confirmed + total BRL positivo
+  → PaymentIntent pending
+  → PaymentAttempt requested
+  → outbox + worker com revalidação e lease de 90 s (adapter real bloqueado)
+  → active / awaiting_payment
+  → processing | paid | failed→pending | cancelled | expired | requires_attention
+```
+
+Somente um attempt pode estar solicitado, ativo ou processando. O provider não
+dita o modelo canônico. Divergência de valor/moeda, evento regressivo ou
+cancelamento de Order com cobrança aberta/paga gera `requires_attention`, sem
+reembolso automático e sem mudar Order ou Fulfillment.
+Dispatch usa backoff persistente e reutiliza a mesma tentativa e chave após
+timeout. Mudança de Order/conta durante I/O preserva o link externo e sinaliza
+atenção. Cancelamento de link externo passa por outbox e confirmação
+autoritativa; só depois há reabertura e escolha humana de outro provider.
+Callbacks deduplicam somente identificadores autenticados e não resolvem
+`requires_attention` sem evidência verificada.
 
 ## Fluxo aprovado da Fase 4
 
@@ -87,9 +116,10 @@ Payment link ──→ provider externo ──→ webhook verificado
  homologação isolada → aprovação humana → produção isolada
 ```
 
-Esse fluxo-alvo não significa que os módulos futuros já existam. Cada seta só
-é liberada pela fase correspondente, com contrato, testes, Review,
-QA/Segurança e aprovação humana próprios.
+O núcleo de Payments existe apenas como candidato da Fase 5, ainda sem
+aprovação final, provider ativado ou deploy. Messaging, Integrations,
+Dashboard e ambientes externos continuam futuros. Cada seta externa só é
+liberada por contrato, testes, Review, QA/Segurança e aprovação humana.
 
 ## Regras transversais
 

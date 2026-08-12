@@ -68,3 +68,29 @@ O publisher desta fase é interno, determinístico e não executa I/O externo.
   outbox, métricas, receipts ou exceções;
 - o evento interno de cancelamento é deduplicado e não carrega PII;
 - não haverá chamadas de transportadora, payment provider ou Flowlog.
+
+## Payments
+
+- snapshots de valor, moeda, Order e cliente são imutáveis no ORM e por
+  trigger PostgreSQL;
+- callbacks validam tamanho, formato, assinatura, janela temporal, conta,
+  recurso e `X-Request-Id` antes de produzir estado canônico;
+- a chave de replay usa somente identificadores cobertos pela assinatura;
+- `requires_attention` só pode ser resolvido por reconciliação gerencial
+  verificada, nunca por callback posterior;
+- OPERATOR não pesquisa por nome de cliente e não recebe evidência externa;
+- audit e outbox usam allowlist fechada de IDs canônicos, estado, valor,
+  moeda, versão e flags booleanas;
+- autorização gerencial, tenant, conta e adapter são verificados antes de
+  reconciliação produzir qualquer I/O;
+- leases de 90 segundos superam o hard limit do worker; retry persiste apenas
+  horário e código controlado, sem texto ou diagnóstico externo;
+- resultado externo obtido durante cancelamento/desativação é preservado e
+  sinalizado como `requires_attention`, nunca descartado;
+- cancelamento externo é correlacionado ao attempt/evento exatos e o evento
+  terminal é consumido, sem possibilidade de atingir tentativa posterior;
+- resposta autoritativa de cancelamento sempre atualiza ou bloqueia o agregado;
+- admin financeiro é somente leitura, filtrado pela Organization ativa e exige
+  Membership ativa de manager tier;
+- a suíte bloqueia resolução DNS dos hosts de providers; adapters reais,
+  secrets, sandbox e rede continuam bloqueados.

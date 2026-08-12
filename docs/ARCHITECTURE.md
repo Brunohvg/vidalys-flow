@@ -14,6 +14,8 @@ A Vidalys Flow é um monólito modular Django. A fundação possui somente:
 - `orders`: pedidos comerciais, itens snapshot, estados e totais.
 - `fulfillment`: lotes parciais de entrega ou retirada, alocações e ciclo
   logístico.
+- `payments`: intents financeiros canônicos, tentativas de checkout hospedado,
+  callbacks verificados e reconciliação.
 
 O grafo permitido é:
 
@@ -26,12 +28,30 @@ customers     → core, users, organizations, audit, platform
 products      → core, users, organizations, audit, platform
 orders        → core, users, organizations, customers, products, audit, platform
 fulfillment   → core, users, organizations, orders, audit, platform
+payments      → core, users, organizations, orders, audit, platform
 ```
 
 `core` nunca importa outro app local. Não existem runtime alternativo,
 middleware de organização, hostname tenancy ou compatibilidade de tabelas.
 Customers e Products não importam um ao outro nem importam Orders. Orders
 consome apenas os contratos aprovados desses domínios.
+
+Payments depende de Orders em uma única direção. Orders e Fulfillment não
+importam Payments; Payments não importa Fulfillment, Messaging ou
+Integrations. O scanner de independência executa essas fronteiras.
+
+## Candidato da Fase 5
+
+Payments implementa `PaymentIntent`, `PaymentAttempt`, configuração não
+secreta de provider, histórico imutável, receipts de comandos e callbacks. O
+valor integral é copiado de um Order confirmado em BRL e não altera
+`Order.status` nem Fulfillment.
+
+Os adapters de Mercado Pago Checkout Pro e Pagar.me Payment Links constroem
+contratos locais, mas herdam o bloqueio de efeitos externos. Testes usam fakes
+com `external = False`; produção, sandbox, credenciais e registro público de
+callback não estão habilitados. O callback Pagar.me é bloqueado inclusive por
+constraint de banco até confirmação de autenticidade em fase posterior.
 
 ## Módulo aprovado da Fase 4
 
@@ -52,8 +72,11 @@ estoque, pagamento, transportadora, provider ou efeito externo na Fase 4.
 - PostgreSQL 17 é a única base suportada para domínio e testes.
 - Redis DB 0 é o broker Celery.
 - Redis DB 1 é o cache.
-- Celery possui filas declaradas `default` e `integrations`; somente
-  `default` tem tarefas nesta fase.
+- Celery possui workers explícitos para as filas `default` e `integrations`;
+  `default` contém outbox e consumidores internos, enquanto `integrations`
+  isola o dispatch e o cancelamento de checkout. Um gate cruza agenda, rotas,
+  tasks registradas e filas consumidas. Nenhuma tarefa financeira possui
+  autorização para chamar provider nesta fase.
 - migrations rodam em serviço de release explícito.
 
 ## Segurança multiempresa
@@ -77,3 +100,19 @@ internos e não publicam para providers nesta fase.
 Fulfillment também recebe Organization explicitamente, bloqueia `Order` antes
 de seus lotes, limita alocações à quantidade confirmada e consome
 `order.cancelled` de forma idempotente. Orders não importa Fulfillment.
+
+Payments mantém a ordem global de locks `Order → PaymentIntent →
+PaymentAttempt`; a configuração de provider é validada sem introduzir lock em
+ordem inversa. Dispatch e cancelamento usam lease persistente de 90 segundos,
+backoff e erro controlado no attempt; uma falha de provider não interrompe o
+lote. A mesma chave externa sobrevive a timeout e retry. Rede nunca ocorre
+dentro de transação, e autorização/tenant são validados antes de I/O. Um
+resultado externo válido é persistido mesmo se Order, intent ou conta mudarem
+durante a chamada. Cancelamento usa correlação persistida attempt/evento,
+consome terminalmente o evento exato e aplica qualquer evidência autoritativa
+antes de decidir retry. Callback bruto existe somente em
+memória, tem tamanho limitado, assinatura e janela antirreplay, é substituído
+por consulta autoritativa e não entra em banco, audit, outbox ou logs.
+Organization vem do `PaymentProviderAccount` resolvido pela rota, nunca do
+payload externo. Replay é deduplicado pelo recurso e pelo digest do
+`X-Request-Id` autenticado; IDs superiores não assinados são ignorados.

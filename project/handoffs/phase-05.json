@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "phase_id": 5,
+  "phase_name": "Payments",
+  "status": "candidate",
+  "branch": "phase/05-payments",
+  "base_sha": "4fd3a9259e9e2f31acdab44f13499eade79ab59e",
+  "head_sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+  "commits": [
+    {
+      "sha": "640654778332b7306e4a20833a5cd15ef03c27ea",
+      "subject": "docs(payments): plan phase 05"
+    },
+    {
+      "sha": "7a0aeb7039e7196528e925ec8e4e203d94923dbe",
+      "subject": "chore(payments): approve phase 05 implementation"
+    },
+    {
+      "sha": "3ec9c49a7c775b39ff0361f7c2997611e0dce0b4",
+      "subject": "feat(payments): implement phase 05 core"
+    },
+    {
+      "sha": "707401a13a4cd493409e6258301a1aaa22cba68b",
+      "subject": "style(payments): normalize phase 05 sources"
+    },
+    {
+      "sha": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
+      "subject": "fix(payments): remediate independent review findings"
+    },
+    {
+      "sha": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
+      "subject": "fix(payments): remediate dispatch and closure workflows"
+    },
+    {
+      "sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "subject": "fix(payments): correlate cancellation evidence"
+    },
+    {
+      "sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+      "subject": "fix(payments): wire celery integration workers"
+    }
+  ],
+  "delivered_scope": [
+    "Organization-scoped canonical full-Order BRL PaymentIntent with immutable amount snapshot and versioned lifecycle",
+    "single active hosted-checkout PaymentAttempt enforced by PostgreSQL, deterministic Order-first locks, 90-second leases, persistent sanitized retry control, and per-event failure isolation",
+    "manager-tier idempotent creation, checkout request, verified cancellation, explicit reopen/provider switch, reconciliation, and Order cancellation coordination",
+    "Mercado Pago Checkout Pro and Pagar.me Payment Links contract builders behind adapters with external effects disabled",
+    "Mercado Pago signature, five-minute replay window, Redis rate limiting, authenticated request-ID replay key, authoritative resource loader, pre-fetch deduplication, and generic responses",
+    "Pagar.me callback disabled in code and by PostgreSQL constraint until authenticity is independently established",
+    "ORM and PostgreSQL-protected immutable financial snapshots plus sanitized status/webhook evidence and closed AuditEvent/OutboxEvent schemas",
+    "dispatch eligibility revalidation and preservation of valid external evidence when Order, intent, or provider-account context changes during I/O",
+    "cancellation commands correlated to one exact attempt and outbox event, with terminal consumption, persistent processing backoff, and canonical paid, mismatch, unknown, cancelled, expired, and failed evidence handling",
+    "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, manager-tier tenant-scoped read-only admin, executable provider-network blocking, tasks, documentation, and clone continuity",
+    "Celery autodiscovery for Payments, isolated direct-exchange bindings for default and integrations, explicit Compose workers for both queues, and an executable agenda-route-registration-consumer topology gate"
+  ],
+  "models": [
+    "payments.PaymentIntent",
+    "payments.PaymentAttempt",
+    "payments.PaymentProviderAccount",
+    "payments.PaymentStatusHistory",
+    "payments.PaymentCommandReceipt",
+    "payments.PaymentWebhookReceipt"
+  ],
+  "migrations": [
+    "apps/payments/migrations/0001_initial.py",
+    "apps/payments/migrations/0002_dispatch_lease_and_integrity.py",
+    "apps/payments/migrations/0003_paymentattempt_dispatch_retry.py",
+    "apps/payments/migrations/0004_paymentattempt_cancellation_correlation.py"
+  ],
+  "tests": {
+    "count": 277,
+    "skipped": 0,
+    "coverage_percent": 85.25,
+    "database": "PostgreSQL 17.10",
+    "result": "passed",
+    "empty_database_migration": "passed",
+    "technical_rollback": "passed",
+    "concurrency": "passed",
+    "cross_organization": "passed",
+    "cross_provider_account": "passed",
+    "payments_direct_tests": 70,
+    "provider_network_blocking": "passed",
+    "mixed_failure_batch": "passed",
+    "dispatch_cancellation_race": "passed",
+    "verified_provider_switch": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed",
+    "celery_runtime_topology": "passed"
+  },
+  "ci": {
+    "workflow_id": 31585187061,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31585187061",
+    "head_sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services/selectors/workers, active Membership policies before provider I/O, Order-PaymentIntent-PaymentAttempt lock order, same-Organization provider-account/resource resolution, callback organization derived from its route account, manager-tier tenant-scoped admin, and direct cross-tenant/cross-account/concurrency tests."
+  },
+  "provider_contracts": {
+    "mercado_pago": "Checkout Pro request builder matches a versioned official-contract fixture; signed callback validation, authenticated replay key, authoritative-resource injection, deduplication, rate controls, and disabled network effects passed direct tests.",
+    "pagarme": "Payment Links v5 builder uses required payment_settings and cart_settings from a versioned official OpenAPI fixture; callback remains disabled by design.",
+    "appmax": "deferred and absent",
+    "network_in_ci": false,
+    "network_blocking_evidence": "Autouse Payments fixture rejects DNS resolution for known Mercado Pago and Pagar.me provider hosts; direct test passed.",
+    "sandbox_used": false,
+    "production_effects": false
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_consulted": false
+  },
+  "deferred": [
+    "provider credentials, sandbox calls, public callback registration, real charge, production activation, and deploy",
+    "Appmax and Pagar.me callback activation pending a complete authenticity contract and Security Review",
+    "partial payment, split, multi-currency, automatic fallback, refunds, disputes, chargebacks, fees, interest, settlement, receivables, and accounting",
+    "transparent checkout, card capture/tokenization, subscriptions, recurring billing, saved cards, and Messaging delivery",
+    "public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
+  ],
+  "risks": [
+    "Coverage is 85.25%, narrowly above the 85% gate; Review must still prioritize direct financial, callback, isolation, idempotency, lease, cancellation, concurrency, and Celery topology paths.",
+    "The callback rate limiter depends on Redis and intentionally fails closed when cache is unavailable; operational alerting belongs to homologation.",
+    "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
+    "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
+  ],
+  "blockers": [],
+  "review": {
+    "status": "approved",
+    "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+    "report": "project/reviews/phase-05-review-05.md",
+    "blockers": [],
+    "review_05": {
+      "status": "approved",
+      "report": "project/reviews/phase-05-review-05.md",
+      "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+      "carrier_observed": "570dd8c55c69465ca69dc90fbebfa2ed3c079e81",
+      "material_ci_run": 31585187061,
+      "carrier_ci_run": 31585362155,
+      "local_tests": 277,
+      "local_skipped": 0,
+      "local_coverage_percent": 85.24744994333207,
+      "payments_direct_tests": 70,
+      "findings_revalidated": [
+        "P05-Q01",
+        "P05-Q02",
+        "P05-Q03"
+      ],
+      "non_blocking_findings": [
+        "P05-R22"
+      ],
+      "blocking_findings": []
+    },
+    "review_04": {
+      "status": "approved",
+      "report": "project/reviews/phase-05-review-04.md",
+      "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "carrier_observed": "7c9ec3ec12f1da482b57ad654a86751a81ce69c5",
+      "material_ci_run": 31556138368,
+      "carrier_ci_run": 31556315913,
+      "local_tests": 275,
+      "local_skipped": 0,
+      "local_coverage_percent": 85.23629489603024,
+      "payments_direct_tests": 68,
+      "findings_revalidated": [
+        "P05-R18",
+        "P05-R19",
+        "P05-R20",
+        "P05-R21"
+      ],
+      "blocking_findings": []
+    },
+    "review_03": {
+      "status": "changes_requested",
+      "report": "project/reviews/phase-05-review-03.md",
+      "candidate_head": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
+      "remediation_commit": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "findings": [
+        "P05-R18",
+        "P05-R19",
+        "P05-R20",
+        "P05-R21"
+      ],
+      "findings_addressed": [
+        "P05-R18",
+        "P05-R19",
+        "P05-R20",
+        "P05-R21"
+      ]
+    },
+    "review_02": {
+      "status": "changes_requested",
+      "report": "project/reviews/phase-05-review-02.md",
+      "candidate_head": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
+      "remediation_commit": "ff434938179670ac8a23102dd7b4cceb45dec7a9",
+      "findings_addressed": [
+        "P05-R10",
+        "P05-R11",
+        "P05-R12",
+        "P05-R13",
+        "P05-R14",
+        "P05-R15",
+        "P05-R16",
+        "P05-R17"
+      ]
+    },
+    "previous_review": {
+      "status": "changes_requested",
+      "report": "project/reviews/phase-05-review-01.md",
+      "candidate_head": "707401a13a4cd493409e6258301a1aaa22cba68b",
+      "remediation_commit": "0ca4ae6d4db782e66d5636fd3374033621d4418a",
+      "findings_addressed": [
+        "P05-R01",
+        "P05-R02",
+        "P05-R03",
+        "P05-R04",
+        "P05-R05",
+        "P05-R06",
+        "P05-R07",
+        "P05-R08",
+        "P05-R09"
+      ]
+    }
+  },
+  "qa_security": {
+    "status": "go",
+    "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+    "report": "project/qa/phase-05-qa-security-02.md",
+    "blocking_findings": [],
+    "carrier_observed": "03868a75a3753b165ca2584f53caf6c31a6708a8",
+    "material_ci_run": 31585187061,
+    "material_carrier_ci_run": 31585362155,
+    "review_carrier_ci_run": 31586780875,
+    "local_tests": 277,
+    "local_skipped": 0,
+    "independent_coverage_percent": 85.24744994333207,
+    "payments_direct_tests": 70,
+    "celery_runtime_topology": "passed",
+    "findings_revalidated": [
+      "P05-Q01",
+      "P05-Q02",
+      "P05-Q03",
+      "P05-R22"
+    ],
+    "previous_qa": {
+      "status": "no_go",
+      "report": "project/qa/phase-05-qa-security.md",
+      "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "carrier_observed": "b4222299d92901654657d101e98c44d31e17754c",
+      "material_ci_run": 31556138368,
+      "review_carrier_ci_run": 31556713278,
+      "remediation_commit": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+      "ci_tests": 275,
+      "ci_skipped": 0,
+      "independent_coverage_percent": 85.23629489603024,
+      "payments_direct_tests": 68,
+      "blocking_findings": [
+        "P05-Q01",
+        "P05-Q02"
+      ],
+      "non_blocking_findings": [
+        "P05-Q03"
+      ],
+      "findings_addressed": [
+        "P05-Q01",
+        "P05-Q02",
+        "P05-Q03"
+      ]
+    }
+  },
+  "human_approval": {
+    "status": "pending",
+    "evidence": "No final Phase 05 product approval has been given; the focused final QA/Security checkpoint was explicitly authorized on 2026-08-12.",
+    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b has independent Review 05 APPROVED and QA/Security GO. It now requires final human product approval; no project/state.json change, PR, merge, provider activation, release, deploy, or later phase is authorized."
+  }
+}

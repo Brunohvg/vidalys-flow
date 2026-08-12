@@ -8,8 +8,13 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 As Fases 03 — Orders e 04 — Fulfillment foram aprovadas e integradas.
 Fulfillment recebeu remediação, CI verde no candidato material, Review 02,
 QA/Segurança e ratificação humana final. O desvio de governança do merge foi
-registrado sem reescrever o histórico. O próximo checkpoint de produto é o
-planejamento da Fase 05 — Payments. Não há autorização de deploy.
+registrado sem reescrever o histórico. O plano da Fase 05 — Payments foi
+aprovado e o Review 04 aprovou o candidato de domínio. O primeiro QA/Security
+emitiu NO-GO operacional: o Celery não descobria as tasks de Payments e o
+Compose não consumia a fila `integrations`. A remediação desses dois pontos
+está autorizada e mantém rede e efeitos externos desligados. Ainda serão
+necessários novo Review e novo QA/Security. Não há autorização de sandbox,
+provider ou deploy.
 
 ## Sequência de produto
 
@@ -17,9 +22,10 @@ planejamento da Fase 05 — Payments. Não há autorização de deploy.
    estados canônicos aprovados; sem cobrança ou logística.
 2. **Fulfillment (Fase 04, concluída).** Lotes parciais, separação, entrega e
    retirada aprovados sem estoque, providers ou mudança em `Order.status`.
-3. **Payments (Fase 05, próxima).** Modelar cobranças e links de pagamento de forma
-   provider-agnostic; decidir o primeiro rollout entre Mercado Pago e Pagar.me
-   conforme conta e sandbox; estabilizar ambos antes do Appmax.
+3. **Payments (Fase 05, remediação operacional após NO-GO).** O candidato
+   implementa núcleo canônico provider-neutral, Mercado Pago Checkout Pro como
+   primeiro rollout, Pagar.me v5 Payment Links como segundo e Appmax posterior;
+   a topologia Celery está sendo corrigida antes de novo Review e QA/Security.
 4. **Messaging (Fase 06).** Enviar comunicações transacionais somente a partir
    de eventos aprovados, com consentimento e rastreabilidade.
 5. **Integrations (Fase 07).** Adicionar conectores externos com isolamento,
@@ -47,10 +53,11 @@ credencial exclusiva da Vidalys Flow, checkout hospedado, webhook autenticado,
 deduplicação, reconciliação, sandbox e rollout separado. Nada será reaproveitado
 do Flowlog antigo.
 
-O plano de Payments ainda deve decidir os contratos canônicos, estados,
-idempotência, webhooks, reconciliação, permissões, privacidade, ordem de
-rollout e critérios de sandbox. Mercado Pago e Pagar.me são candidatos ao
-primeiro ciclo; Appmax permanece posterior até decisão humana específica.
+O plano aprovado de Payments define contratos canônicos, estados, idempotência,
+webhooks, reconciliação, permissões, privacidade, ordem de rollout e critérios
+de sandbox em `project/phases/05-payments.json`. Essas decisões estão
+aprovadas. Sandbox, PR, merge, release e deploy continuam dependendo de gates
+e decisões humanas posteriores.
 
 ## Gate repetido em cada fase
 

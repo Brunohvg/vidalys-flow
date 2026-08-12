@@ -106,7 +106,12 @@
         "payments"
       ],
       "human_approval_status": "pending",
-      "known_risks": []
+      "known_risks": [
+        "A provider callback may contain PII and card metadata that must never be persisted raw or copied to logs, AuditEvent, OutboxEvent, or command receipts.",
+        "Multiple active hosted checkout links can create duplicate or excess payment; the canonical domain must serialize attempts and surface inconsistencies for manual reconciliation.",
+        "Pagar.me webhook authenticity requirements are not explicit in the public v5 documentation reviewed and must be confirmed before enabling its callback in any environment.",
+        "Order cancellation after a successful payment requires an explicit no-refund handling rule because refunds and chargebacks are deferred."
+      ]
     },
     {
       "id": 6,

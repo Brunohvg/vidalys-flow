@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Pagamentos · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Pagamentos</h1>
+<p class="muted">{{ organization.name }}</p>
+<form method="get">{{ filter_form.as_p }}<button type="submit">Filtrar</button></form>
+<table class="responsive-table">
+  <thead><tr><th>Pedido</th><th>Valor</th><th>Estado</th><th>Criado</th></tr></thead>
+  <tbody>
+  {% for payment in payments %}
+    <tr>
+      <td data-label="Pedido"><a href="{% url 'payments:detail' payment.id %}">{{ payment.order_number_snapshot }}</a></td>
+      <td data-label="Valor">R$ {{ payment.amount }}</td>
+      <td data-label="Estado"><span class="badge">{{ payment.get_status_display }}</span></td>
+      <td data-label="Criado">{{ payment.created_at }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="4">Nenhum pagamento.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

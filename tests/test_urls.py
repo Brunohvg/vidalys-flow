@@ -68,7 +68,6 @@ def test_logout_requires_post_and_ends_session(client):
     [
         "/clientes-v2/",
         "/pedidos-v2/",
-        "/payments/",
         "/integrations/",
         "/marketing/",
         "/restock/",

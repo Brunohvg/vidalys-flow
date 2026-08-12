@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ payment.order_number_snapshot }} · Pagamento{% endblock %}
+{% block content %}
+<h1>Pagamento de {{ payment.order_number_snapshot }}</h1>
+<div class="grid">
+  <div class="card"><strong>Estado</strong><p><span class="badge">{{ payment.get_status_display }}</span></p></div>
+  <div class="card"><strong>Valor</strong><p>R$ {{ payment.amount }} {{ payment.currency }}</p></div>
+  <div class="card"><strong>Cliente</strong><p>{{ detail.customer_name }}</p></div>
+</div>
+{% if detail.attention_code %}<p class="message">Atenção operacional: {{ detail.attention_code }}</p>{% endif %}
+{% if can_operate %}
+<section>
+  <h2>Solicitar checkout hospedado</h2>
+  <p class="muted">A solicitação cria trabalho idempotente; efeitos externos continuam desabilitados.</p>
+  <form method="post" action="{% url 'payments:request_checkout' payment.id %}">
+    {% csrf_token %}{{ checkout_form.as_p }}<button type="submit">Solicitar link</button>
+  </form>
+  <h2>Cancelar checkout hospedado</h2>
+  <p class="muted">Links já enviados só são fechados após confirmação verificada do provider.</p>
+  <form method="post" action="{% url 'payments:cancel_checkout' payment.id %}">
+    {% csrf_token %}{{ cancel_form.as_p }}<button type="submit">Cancelar link</button>
+  </form>
+  <h2>Reabrir após fechamento verificado</h2>
+  <p class="muted">A troca de provider nunca é automática; depois de reabrir, escolha a conta desejada.</p>
+  <form method="post" action="{% url 'payments:reopen' payment.id %}">
+    {% csrf_token %}{{ reopen_form.as_p }}<button type="submit">Reabrir pagamento</button>
+  </form>
+</section>
+{% endif %}
+<section><h2>Tentativas</h2>
+<table><thead><tr><th>Provider</th><th>Estado</th><th>Link</th><th>Referência</th></tr></thead><tbody>
+{% for attempt in detail.attempts %}<tr><td>{{ attempt.provider }}</td><td>{{ attempt.status }}</td><td>{% if attempt.hosted_url %}<a href="{{ attempt.hosted_url }}" rel="noopener noreferrer">Abrir checkout</a>{% else %}—{% endif %}</td><td>{{ attempt.external_resource_id|default:"—" }}</td></tr>{% empty %}<tr><td colspan="4">Nenhuma tentativa.</td></tr>{% endfor %}
+</tbody></table></section>
+<section><h2>Histórico</h2><ul>{% for row in detail.history %}<li>{{ row.created_at }} · {{ row.from_status|default:"início" }} → {{ row.to_status }}</li>{% endfor %}</ul></section>
+{% endblock %}

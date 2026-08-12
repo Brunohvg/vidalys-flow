@@ -2,7 +2,7 @@ from pathlib import Path
 
 import dj_database_url
 from decouple import Csv, config
-from kombu import Queue
+from kombu import Exchange, Queue
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.products",
     "apps.orders",
     "apps.fulfillment",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -119,11 +120,21 @@ CELERY_TASK_TIME_LIMIT = 60
 CELERY_TASK_SOFT_TIME_LIMIT = 50
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_TASK_DEFAULT_QUEUE = "default"
-CELERY_TASK_QUEUES = (Queue("default"), Queue("integrations"))
+CELERY_TASK_DEFAULT_EXCHANGE = "vidalys"
+CELERY_TASK_DEFAULT_EXCHANGE_TYPE = "direct"
+CELERY_TASK_DEFAULT_ROUTING_KEY = "default"
+celery_task_exchange = Exchange("vidalys", type="direct", durable=True)
+CELERY_TASK_QUEUES = (
+    Queue("default", exchange=celery_task_exchange, routing_key="default"),
+    Queue("integrations", exchange=celery_task_exchange, routing_key="integrations"),
+)
 CELERY_TASK_ROUTES = {
     "apps.platform.tasks.publish_pending_outbox": {"queue": "default"},
     "apps.platform.tasks.record_beat_heartbeat": {"queue": "default"},
     "apps.fulfillment.tasks.consume_order_cancellations": {"queue": "default"},
+    "apps.payments.tasks.consume_order_cancellations": {"queue": "default"},
+    "apps.payments.tasks.dispatch_checkout_requests": {"queue": "integrations"},
+    "apps.payments.tasks.dispatch_checkout_cancellations": {"queue": "integrations"},
 }
 CELERY_BEAT_SCHEDULE = {
     "platform-outbox-publisher": {
@@ -136,6 +147,18 @@ CELERY_BEAT_SCHEDULE = {
     },
     "fulfillment-order-cancellations": {
         "task": "apps.fulfillment.tasks.consume_order_cancellations",
+        "schedule": 10.0,
+    },
+    "payments-order-cancellations": {
+        "task": "apps.payments.tasks.consume_order_cancellations",
+        "schedule": 10.0,
+    },
+    "payments-checkout-dispatch": {
+        "task": "apps.payments.tasks.dispatch_checkout_requests",
+        "schedule": 10.0,
+    },
+    "payments-checkout-cancellations": {
+        "task": "apps.payments.tasks.dispatch_checkout_cancellations",
         "schedule": 10.0,
     },
 }

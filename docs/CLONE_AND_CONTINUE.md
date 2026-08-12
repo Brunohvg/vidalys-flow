@@ -14,10 +14,11 @@ git switch main
 git pull --ff-only
 ```
 
-A branch `main` contém as fases aprovadas até Fulfillment. Confira sempre
-`project/state.json` antes de criar uma branch: Payments é a próxima fase, mas
-nenhum código financeiro pode começar sem manifesto, plano técnico e aprovação
-humana próprios.
+A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e
+o candidato de Payments validado pelo Review 05 e pelo QA/Security final estão
+em `phase/05-payments`; confira
+`project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
+sandbox, PR, merge e deploy continuam sem autorização.
 
 ## Ambiente local reproduzível
 
@@ -58,7 +59,7 @@ Com web e dependências iniciados, crie uma organização de demonstração sem
 passar senha na linha de comando:
 
 ```bash
-docker compose up -d web worker-default beat
+docker compose up -d web worker-default worker-integrations beat
 docker compose exec web .venv/bin/python manage.py bootstrap_organization \
   --organization-name "Minha empresa" \
   --slug "minha-empresa" \
@@ -74,6 +75,7 @@ Interfaces atuais:
 - `/products/`;
 - `/orders/`;
 - `/fulfillment/`.
+- `/payments/` (somente na branch candidata da Fase 5).
 
 ## Gate antes de entregar mudanças
 
@@ -98,22 +100,28 @@ já foi atingido.
 
 - estado oficial: `project/state.json`;
 - última fase aprovada: `project/phases/04-fulfillment.json`;
+- fase em implementação candidata: `project/phases/05-payments.json`;
 - contrato do domínio: `docs/domains/FULFILLMENT.md`;
 - ciclo de vida: `docs/decisions/ADR-012-FULFILLMENT-LIFECYCLE.md`;
 - concorrência: `docs/decisions/ADR-013-FULFILLMENT-CONSISTENCY.md`;
 - fluxo completo: `docs/SYSTEM_FLOW.md`;
 - caminho até produção: `docs/ROADMAP_TO_PRODUCTION.md`;
 - processo de agentes: `AGENTS.md` e `docs/agents/`;
+- plano de Payments: `docs/domains/PAYMENTS_VISION.md`;
+- contrato implementado de Payments: `docs/domains/PAYMENTS.md`;
+- código e testes: `apps/payments/`;
 - evidência da Fase 4: `project/handoffs/phase-04.json`;
 - incidente de recuperação:
   `project/incidents/phase-04-governance-recovery.md`.
 
 ## Continuação segura
 
-Não pule checkpoints. Para Payments: planejamento somente leitura, aprovação
-humana do plano, implementação em branch exclusiva, CI no SHA candidato,
-Review independente, QA/Segurança, handoff, aprovação humana da fase e só então
-PR/merge autorizado.
+Não pule checkpoints. O Review 04 aprovou o candidato de domínio, mas o
+QA/Security emitiu NO-GO porque as tasks de Payments não eram descobertas e a
+fila `integrations` não possuía consumer no Compose. A remediação operacional
+foi autorizada na branch exclusiva. O próximo fluxo é: commit material e CI
+no SHA exato, carrier contendo somente o handoff, novo Review independente,
+novo QA/Security, aprovação humana da fase e só então PR/merge se autorizados.
 
 Mercado Pago e Pagar.me permanecem planejados para a Fase 5; Appmax vem
 depois. Nenhum provider, webhook, credencial ou máquina do Flowlog pode ser

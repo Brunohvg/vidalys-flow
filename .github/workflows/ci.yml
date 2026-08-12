@@ -90,6 +90,10 @@ jobs:
         run: |
           uv run python manage.py migrate fulfillment zero --noinput
           uv run python manage.py migrate fulfillment --noinput
+      - name: Technical rollback and reapply Payments migration
+        run: |
+          uv run python manage.py migrate payments zero --noinput
+          uv run python manage.py migrate payments --noinput
       - name: Tests and coverage
         run: |
           uv run coverage run -m pytest
@@ -100,3 +104,5 @@ jobs:
         run: |
           docker compose config
           docker compose -f docker-compose.test.yml config
+      - name: Celery runtime topology
+        run: uv run python scripts/check_celery_runtime.py

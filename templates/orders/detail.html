@@ -133,6 +133,16 @@
   {% endif %}
 
   {% if order.status == "confirmed" %}
+    <section aria-labelledby="payments">
+      <h2 id="payments">Pagamento</h2>
+      {% if order.payment_intent %}
+        <p><a href="{% url 'payments:detail' order.payment_intent.id %}">Ver pagamento</a></p>
+      {% elif can_adjust %}
+        <p><a href="{% url 'payments:create' order.id %}">Criar pagamento integral</a></p>
+      {% else %}
+        <p class="muted">A gerência ainda não criou o pagamento.</p>
+      {% endif %}
+    </section>
     <section aria-labelledby="fulfillment">
       <h2 id="fulfillment">Fulfillment</h2>
       <p><a href="{% url 'fulfillment:create' order.id %}">Criar lote de entrega ou retirada</a></p>

@@ -1,0 +1,38 @@
+{
+  "contract": "Pagar.me v5 Payment Link",
+  "source": "https://docs.pagar.me/reference/criar-link",
+  "verified_on": "2026-08-08",
+  "request": {
+    "reference": "payment-intent-id",
+    "amount_minor": 12540,
+    "currency": "BRL",
+    "idempotency_key": "provider-idempotency-key"
+  },
+  "expected_payload": {
+    "type": "order",
+    "name": "Pedido payment-intent-id",
+    "order_code": "payment-intent-id",
+    "max_paid_sessions": 1,
+    "payment_settings": {
+      "accepted_payment_methods": [
+        "credit_card",
+        "pix",
+        "boleto"
+      ],
+      "credit_card_settings": {
+        "operation_type": "auth_and_capture"
+      },
+      "pix_settings": {},
+      "boleto_settings": {}
+    },
+    "cart_settings": {
+      "items": [
+        {
+          "name": "Pedido Vidalys Flow",
+          "amount": 12540,
+          "default_quantity": 1
+        }
+      ]
+    }
+  }
+}
