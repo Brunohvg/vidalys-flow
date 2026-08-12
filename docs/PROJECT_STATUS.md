@@ -110,14 +110,21 @@ dispatch, preservação de resultado externo em corrida, lease de 90 segundos,
 backoff persistente, isolamento por evento, falha terminal, cancelamento
 verificado, reabertura/troca explícita, autorização antes de I/O e matriz
 direta de tenant/admin/rede. O parecer original permanece em
-`project/reviews/phase-05-review-02.md`; a branch aguarda nova revisão
-independente e QA/Segurança continua bloqueado até esse parecer.
+`project/reviews/phase-05-review-02.md`.
 
 A validação local da segunda remediação aprovou 268 testes sem skip em
 PostgreSQL 17.10, com cobertura exata de 85,01%. O Compose efêmero também
 comprovou aplicação desde banco vazio e rollback/reaplicação das migrations de
-Payments. CI ainda deve validar o SHA material exato antes do carrier de
-handoff.
+Payments. O GitHub Actions run `31290039417` passou no SHA material exato
+`ff434938179670ac8a23102dd7b4cceb45dec7a9`; o carrier posterior alterou somente
+o handoff.
+
+O Review independente 03 concluiu `CHANGES_REQUESTED`. Foram encontrados três
+bloqueadores: evento antigo de cancelamento pode atingir checkout posterior,
+resposta autoritativa paga ou inconsistente pode ser descartada pelo worker de
+cancelamento e o admin não exige manager tier para evidência financeira. O
+parecer está em `project/reviews/phase-05-review-03.md`; nenhuma correção foi
+feita pelo revisor e QA/Segurança permanece bloqueado.
 
 A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
 exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
