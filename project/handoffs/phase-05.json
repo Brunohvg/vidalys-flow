@@ -138,10 +138,31 @@
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
+    "status": "approved",
     "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
-    "report": null,
+    "report": "project/reviews/phase-05-review-05.md",
     "blockers": [],
+    "review_05": {
+      "status": "approved",
+      "report": "project/reviews/phase-05-review-05.md",
+      "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+      "carrier_observed": "570dd8c55c69465ca69dc90fbebfa2ed3c079e81",
+      "material_ci_run": 31585187061,
+      "carrier_ci_run": 31585362155,
+      "local_tests": 277,
+      "local_skipped": 0,
+      "local_coverage_percent": 85.24744994333207,
+      "payments_direct_tests": 70,
+      "findings_revalidated": [
+        "P05-Q01",
+        "P05-Q02",
+        "P05-Q03"
+      ],
+      "non_blocking_findings": [
+        "P05-R22"
+      ],
+      "blocking_findings": []
+    },
     "review_04": {
       "status": "approved",
       "report": "project/reviews/phase-05-review-04.md",
@@ -214,7 +235,7 @@
     }
   },
   "qa_security": {
-    "status": "blocked",
+    "status": "pending",
     "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
     "report": null,
     "blocking_findings": [],
@@ -247,6 +268,6 @@
   "human_approval": {
     "status": "pending",
     "evidence": "No final Phase 05 approval has been given; the QA/Security remediation was explicitly authorized on 2026-08-12.",
-    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b addresses P05-Q01, P05-Q02, and P05-Q03 and passed CI run 31585187061. It requires a new independent Review before a new QA/Security checkpoint; no product approval, PR, merge, provider activation, release, or deploy is authorized."
+    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b addresses P05-Q01, P05-Q02, and P05-Q03, passed CI run 31585187061, and was approved by independent Review 05 with only non-blocking P05-R22. It requires a new QA/Security checkpoint; no product approval, PR, merge, provider activation, release, or deploy is authorized."
   }
 }
