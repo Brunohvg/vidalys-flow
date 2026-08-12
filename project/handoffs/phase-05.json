@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/05-payments",
   "base_sha": "4fd3a9259e9e2f31acdab44f13499eade79ab59e",
-  "head_sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+  "head_sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
   "commits": [
     {
       "sha": "640654778332b7306e4a20833a5cd15ef03c27ea",
@@ -34,6 +34,10 @@
     {
       "sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
       "subject": "fix(payments): correlate cancellation evidence"
+    },
+    {
+      "sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+      "subject": "fix(payments): wire celery integration workers"
     }
   ],
   "delivered_scope": [
@@ -46,7 +50,8 @@
     "ORM and PostgreSQL-protected immutable financial snapshots plus sanitized status/webhook evidence and closed AuditEvent/OutboxEvent schemas",
     "dispatch eligibility revalidation and preservation of valid external evidence when Order, intent, or provider-account context changes during I/O",
     "cancellation commands correlated to one exact attempt and outbox event, with terminal consumption, persistent processing backoff, and canonical paid, mismatch, unknown, cancelled, expired, and failed evidence handling",
-    "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, manager-tier tenant-scoped read-only admin, executable provider-network blocking, tasks, documentation, and clone continuity"
+    "manager-only external evidence, OPERATOR masked visibility with active hosted-link access, server-rendered HTML, manager-tier tenant-scoped read-only admin, executable provider-network blocking, tasks, documentation, and clone continuity",
+    "Celery autodiscovery for Payments, isolated direct-exchange bindings for default and integrations, explicit Compose workers for both queues, and an executable agenda-route-registration-consumer topology gate"
   ],
   "models": [
     "payments.PaymentIntent",
@@ -63,9 +68,9 @@
     "apps/payments/migrations/0004_paymentattempt_cancellation_correlation.py"
   ],
   "tests": {
-    "count": 275,
+    "count": 277,
     "skipped": 0,
-    "coverage_percent": 85.39,
+    "coverage_percent": 85.25,
     "database": "PostgreSQL 17.10",
     "result": "passed",
     "empty_database_migration": "passed",
@@ -73,7 +78,7 @@
     "concurrency": "passed",
     "cross_organization": "passed",
     "cross_provider_account": "passed",
-    "payments_direct_tests": 68,
+    "payments_direct_tests": 70,
     "provider_network_blocking": "passed",
     "mixed_failure_batch": "passed",
     "dispatch_cancellation_race": "passed",
@@ -87,12 +92,13 @@
     "migration_consistency": "passed",
     "governance_validation": "passed",
     "docker_build": "passed",
-    "compose_validation": "passed"
+    "compose_validation": "passed",
+    "celery_runtime_topology": "passed"
   },
   "ci": {
-    "workflow_id": 31556138368,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31556138368",
-    "head_sha": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+    "workflow_id": 31585187061,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31585187061",
+    "head_sha": "09fe3615008fe1621e46ecee74d6a2b58667377b",
     "run_attempt": 1,
     "conclusion": "success"
   },
@@ -125,19 +131,16 @@
     "public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
   ],
   "risks": [
-    "Coverage is 85.39%, narrowly above the 85% gate; Review must still prioritize direct financial, callback, isolation, idempotency, lease, cancellation, and concurrency paths.",
+    "Coverage is 85.25%, narrowly above the 85% gate; Review must still prioritize direct financial, callback, isolation, idempotency, lease, cancellation, concurrency, and Celery topology paths.",
     "The callback rate limiter depends on Redis and intentionally fails closed when cache is unavailable; operational alerting belongs to homologation.",
     "Pagar.me callback authenticity remains unresolved and is therefore blocked in both application and database contracts.",
     "No sandbox evidence exists because external calls were explicitly outside the approved implementation checkpoint."
   ],
-  "blockers": [
-    "P05-Q01: config/celery.py does not autodiscover apps.payments, so the runtime worker registers no Payments tasks.",
-    "P05-Q02: checkout dispatch and cancellation tasks route to integrations, but docker-compose.yml provides no worker consuming that queue."
-  ],
+  "blockers": [],
   "review": {
-    "status": "approved",
-    "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
-    "report": "project/reviews/phase-05-review-04.md",
+    "status": "pending",
+    "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+    "report": null,
     "blockers": [],
     "review_04": {
       "status": "approved",
@@ -211,27 +214,39 @@
     }
   },
   "qa_security": {
-    "status": "no_go",
-    "report": "project/qa/phase-05-qa-security.md",
-    "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
-    "carrier_observed": "b4222299d92901654657d101e98c44d31e17754c",
-    "material_ci_run": 31556138368,
-    "review_carrier_ci_run": 31556713278,
-    "ci_tests": 275,
-    "ci_skipped": 0,
-    "independent_coverage_percent": 85.23629489603024,
-    "payments_direct_tests": 68,
-    "blocking_findings": [
-      "P05-Q01",
-      "P05-Q02"
-    ],
-    "non_blocking_findings": [
-      "P05-Q03"
-    ]
+    "status": "blocked",
+    "candidate_head": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+    "report": null,
+    "blocking_findings": [],
+    "previous_qa": {
+      "status": "no_go",
+      "report": "project/qa/phase-05-qa-security.md",
+      "candidate_head": "464c2ac9af1bbeaacf0f33cccec7af5a73feb94e",
+      "carrier_observed": "b4222299d92901654657d101e98c44d31e17754c",
+      "material_ci_run": 31556138368,
+      "review_carrier_ci_run": 31556713278,
+      "remediation_commit": "09fe3615008fe1621e46ecee74d6a2b58667377b",
+      "ci_tests": 275,
+      "ci_skipped": 0,
+      "independent_coverage_percent": 85.23629489603024,
+      "payments_direct_tests": 68,
+      "blocking_findings": [
+        "P05-Q01",
+        "P05-Q02"
+      ],
+      "non_blocking_findings": [
+        "P05-Q03"
+      ],
+      "findings_addressed": [
+        "P05-Q01",
+        "P05-Q02",
+        "P05-Q03"
+      ]
+    }
   },
   "human_approval": {
     "status": "pending",
-    "evidence": "No final Phase 05 approval has been given; the technical plan was approved on 2026-08-08 and Review 03 remediation was authorized on 2026-08-11.",
-    "note": "Independent Review 04 approved candidate 464c2ac9af1bbeaacf0f33cccec7af5a73feb94e, but QA/Security issued NO-GO for P05-Q01 and P05-Q02. Remediation, a new independent Review, and a new QA/Security checkpoint require separate human authorization; no product approval, PR, merge, provider activation, release, or deploy is authorized."
+    "evidence": "No final Phase 05 approval has been given; the QA/Security remediation was explicitly authorized on 2026-08-12.",
+    "note": "Candidate 09fe3615008fe1621e46ecee74d6a2b58667377b addresses P05-Q01, P05-Q02, and P05-Q03 and passed CI run 31585187061. It requires a new independent Review before a new QA/Security checkpoint; no product approval, PR, merge, provider activation, release, or deploy is authorized."
   }
 }
