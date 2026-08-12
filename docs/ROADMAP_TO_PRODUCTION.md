@@ -5,15 +5,16 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-As Fases 03 — Orders, 04 — Fulfillment e 05 — Payments foram aprovadas e
-integradas.
+As Fases 03 — Orders e 04 — Fulfillment foram aprovadas e integradas.
 Fulfillment recebeu remediação, CI verde no candidato material, Review 02,
 QA/Segurança e ratificação humana final. O desvio de governança do merge foi
 registrado sem reescrever o histórico. O plano da Fase 05 — Payments foi
-aprovado; o NO-GO operacional do primeiro QA foi remediado com autodiscovery,
-workers e filas isoladas e um gate executável de topologia Celery. Review 05,
-QA/Security final, aprovação humana e merge da PR #8 concluíram a fase. Não há
-autorização de sandbox, provider ou deploy.
+aprovado e o Review 04 aprovou o candidato de domínio. O primeiro QA/Security
+emitiu NO-GO operacional: o Celery não descobria as tasks de Payments e o
+Compose não consumia a fila `integrations`. A remediação desses dois pontos
+está autorizada e mantém rede e efeitos externos desligados. Ainda serão
+necessários novo Review e novo QA/Security. Não há autorização de sandbox,
+provider ou deploy.
 
 ## Sequência de produto
 
@@ -21,9 +22,10 @@ autorização de sandbox, provider ou deploy.
    estados canônicos aprovados; sem cobrança ou logística.
 2. **Fulfillment (Fase 04, concluída).** Lotes parciais, separação, entrega e
    retirada aprovados sem estoque, providers ou mudança em `Order.status`.
-3. **Payments (Fase 05, concluída).** Núcleo canônico provider-neutral,
-   Mercado Pago Checkout Pro como primeiro rollout, Pagar.me v5 Payment Links
-   como segundo e Appmax posterior; providers e sandbox permanecem desligados.
+3. **Payments (Fase 05, remediação operacional após NO-GO).** O candidato
+   implementa núcleo canônico provider-neutral, Mercado Pago Checkout Pro como
+   primeiro rollout, Pagar.me v5 Payment Links como segundo e Appmax posterior;
+   a topologia Celery está sendo corrigida antes de novo Review e QA/Security.
 4. **Messaging (Fase 06).** Enviar comunicações transacionais somente a partir
    de eventos aprovados, com consentimento e rastreabilidade.
 5. **Integrations (Fase 07).** Adicionar conectores externos com isolamento,

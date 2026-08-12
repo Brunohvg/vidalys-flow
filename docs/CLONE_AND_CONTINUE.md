@@ -14,10 +14,11 @@ git switch main
 git pull --ff-only
 ```
 
-A branch `main` contém as fases aprovadas até Payments. A evidência histórica
-permanece em `phase/05-payments`; confira `project/state.json` e
-`project/phases/05-payments.json`. Efeitos externos, sandbox e deploy continuam
-sem autorização.
+A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e
+o candidato de Payments validado pelo Review 05 e pelo QA/Security final estão
+em `phase/05-payments`; confira
+`project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
+sandbox, PR, merge e deploy continuam sem autorização.
 
 ## Ambiente local reproduzível
 
@@ -115,10 +116,12 @@ já foi atingido.
 
 ## Continuação segura
 
-Não pule checkpoints. Payments concluiu implementação, remediações, Review 05,
-QA/Security final, aprovação humana e merge autorizado. A próxima fase é
-Messaging, mas deve começar por planejamento em branch criada do SHA atual de
-`origin/main`; implementação exige aprovação humana separada do plano.
+Não pule checkpoints. O Review 04 aprovou o candidato de domínio, mas o
+QA/Security emitiu NO-GO porque as tasks de Payments não eram descobertas e a
+fila `integrations` não possuía consumer no Compose. A remediação operacional
+foi autorizada na branch exclusiva. O próximo fluxo é: commit material e CI
+no SHA exato, carrier contendo somente o handoff, novo Review independente,
+novo QA/Security, aprovação humana da fase e só então PR/merge se autorizados.
 
 Mercado Pago e Pagar.me permanecem planejados para a Fase 5; Appmax vem
 depois. Nenhum provider, webhook, credencial ou máquina do Flowlog pode ser

@@ -1,9 +1,10 @@
 # Plano aprovado de Payments — Fase 5
 
-Status: plano aprovado em 8 de agosto de 2026 e produto aprovado em 12 de
-agosto de 2026 após remediação operacional, Review 05, QA/Security final e
-merge da PR #8. Sandbox, provider, credencial, callback público, release e
-deploy permanecem sem autorização.
+Status: plano aprovado em 8 de agosto de 2026; o Review 04 aprovou o candidato
+de domínio, mas QA/Security emitiu NO-GO operacional porque o runtime Celery
+não registrava as tasks de Payments nem consumia a fila `integrations`.
+A remediação desses pontos está autorizada, sem autorização de sandbox, PR,
+merge, release ou deploy.
 
 Payments será um domínio greenfield e independente. O planejamento não
 consultou Flowlog e proíbe qualquer reutilização de código, banco, IDs,
