@@ -111,6 +111,8 @@ já foi atingido.
 - plano de Payments: `docs/domains/PAYMENTS_VISION.md`;
 - contrato implementado de Payments: `docs/domains/PAYMENTS.md`;
 - plano de Messaging: `docs/domains/MESSAGING_VISION.md`;
+- auditoria histórica isolada de Messaging/Evolution:
+  `docs/domains/MESSAGING_FLOWLOG_REFERENCE_AUDIT.md`;
 - código e testes: `apps/payments/`;
 - evidência da Fase 5: `project/handoffs/phase-05.json`;
 - incidente de recuperação:
@@ -125,7 +127,8 @@ independente, QA/Security, handoff, aprovação humana final e autorização
 separada de PR/merge. Sandbox e efeitos externos possuem checkpoints próprios.
 
 Mercado Pago e Pagar.me pertencem ao contrato aprovado de Payments; Appmax vem
-depois. Messaging propõe WhatsApp Cloud API e Amazon SES, ambos desligados.
+depois. Messaging propõe Evolution API linked-device, WhatsApp Cloud API
+direta e Amazon SES, todos desligados.
 Nenhum provider, contato, template, mensagem, webhook, credencial ou máquina
 do Flowlog pode ser reutilizado. Homologação e máquina exclusiva de produção
 pertencem à Fase 9; go-live pertence à Fase 10.

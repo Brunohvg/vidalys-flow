@@ -52,14 +52,38 @@
     ]
   },
   "planning_reference": {
-    "flowlog_consulted": false,
+    "flowlog_consulted": true,
     "technical_link_allowed": false,
-    "reason": "The approved Vidalys Flow domains, current repository contracts, and current official channel documentation are sufficient. No Flowlog code, runtime, data, IDs, migrations, credentials, infrastructure, endpoints, templates, contacts, conversations, or behavior is required.",
+    "reason": "The human explicitly authorized a read-only Messaging consultation at the frozen Flowlog SHA. Only the newer provider-neutral Messaging design, its Evolution adapter/tests, and the legacy audit were inspected for ideas and failure modes. No code, runtime, data, IDs, migrations, credentials, infrastructure, endpoints, templates, contacts, conversations, or provider configuration is reused.",
+    "flowlog_frozen_sha": "31a3e7b8fe305b93cdcbcdfa7420b8e597412756",
+    "flowlog_paths_consulted": [
+      "apps/messaging/models.py",
+      "apps/messaging/providers/contracts.py",
+      "apps/messaging/providers/evolution/client.py",
+      "apps/messaging/providers/evolution/adapter.py",
+      "apps/messaging/dispatching.py",
+      "apps/messaging/event_rules.py",
+      "apps/messaging/template_contracts.py",
+      "apps/messaging/tests/test_evolution_provider.py",
+      "apps/messaging/tests/test_event_dispatch.py",
+      "apps/messaging/tests/test_webhooks.py",
+      "docs/v2/EVOLUTION_API_AUDIT.md",
+      "docs/v2/MESSAGING_EVENT_AUDIT.md",
+      "docs/v2/MESSAGING_LEGACY_AUDIT.md",
+      "docs/v2/MESSAGING_PROVIDERS.md",
+      "docs/agents/MESSAGING_AGENT.md",
+      "docs/WHATSAPP.md"
+    ],
     "official_research_date": "2026-08-12",
     "sources": [
       "https://www.postman.com/meta/whatsapp-business-platform/overview",
       "https://www.postman.com/meta/whatsapp-business-platform/folder/o48mro7/messages",
       "https://www.postman.com/meta/whatsapp-business-platform/request/rgtfq23/message-status-update-notifications",
+      "https://docs.evolutionfoundation.com.br/evolution-api",
+      "https://docs.evolutionfoundation.com.br/en/evolution-api/create-instance",
+      "https://docs.evolutionfoundation.com.br/evolution-api/send-text-message",
+      "https://docs.evolutionfoundation.com.br/en/evolution-api/set-webhook",
+      "https://github.com/evolution-foundation/evolution-api/releases/tag/v2.3.7",
       "https://docs.aws.amazon.com/ses/latest/dg/send-email-concepts-process.html",
       "https://docs.aws.amazon.com/ses/latest/dg/monitor-using-event-publishing.html",
       "https://docs.aws.amazon.com/sns/latest/dg/sns-verify-signature-of-message.html",
@@ -69,10 +93,65 @@
   },
   "recommended_rollout": {
     "canonical_core": "Implement the provider-neutral outbound transactional message aggregate before any live channel adapter.",
-    "channel_a": "WhatsApp Business Platform Cloud API using approved utility templates, because the existing Customer contract already distinguishes WhatsApp endpoints and the approved Payments domain provides the first operational link-sharing use case.",
-    "channel_b": "Transactional email through Amazon SES after the canonical WhatsApp path, with multipart text/HTML templates and authenticated SES/SNS delivery feedback.",
-    "deferred_channels": "SMS, inbound conversations, campaigns, marketing automation, chatbot, AI-generated content, attachments, voice, social inbox, and additional providers remain deferred.",
+    "channel_a": "Evolution API v2.3.7 using only WHATSAPP-BAILEYS linked-device instances, explicitly identified as a non-official connection, with pairing, multiple Organization-scoped channels, send_text, delivery receipts, and status reconciliation behind disabled effects.",
+    "channel_b": "Direct WhatsApp Business Platform Cloud API using approved utility templates as the official WhatsApp alternative, isolated from Evolution linked-device sessions.",
+    "channel_c": "Transactional email through Amazon SES after the two WhatsApp adapters, with multipart text/HTML templates and authenticated SES/SNS delivery feedback.",
+    "deferred_channels": "Evolution Go, WAHA, SMS, inbound conversations, campaigns, marketing automation, chatbot, AI-generated content, attachments, voice, social inbox, and additional providers remain deferred.",
     "production_effects": "No production credential, real recipient, public webhook subscription, provider template creation, sender-domain change, sandbox call, or provider enablement belongs to planning or ordinary implementation/CI."
+  },
+  "provider_capability_contract": {
+    "canonical_capabilities": [
+      "linked_device_pairing",
+      "official_templates",
+      "send_text",
+      "delivery_receipts",
+      "message_status_query",
+      "multiple_channels",
+      "webhook_signature",
+      "provider_idempotency"
+    ],
+    "evolution_api_v2_3_7_linked_device": {
+      "implemented_in_phase": [
+        "linked_device_pairing",
+        "send_text",
+        "delivery_receipts",
+        "message_status_query",
+        "multiple_channels"
+      ],
+      "not_claimed": [
+        "official_templates",
+        "webhook_signature",
+        "provider_idempotency"
+      ],
+      "rule": "A configured secret webhook header authenticates possession of a shared secret but is not represented as a payload-bound cryptographic signature."
+    },
+    "meta_cloud_direct": {
+      "implemented_in_phase": [
+        "official_templates",
+        "send_text",
+        "delivery_receipts",
+        "multiple_channels",
+        "webhook_signature"
+      ],
+      "not_claimed": [
+        "linked_device_pairing",
+        "provider_idempotency"
+      ]
+    },
+    "amazon_ses": {
+      "implemented_in_phase": [
+        "send_text",
+        "delivery_receipts",
+        "multiple_channels",
+        "webhook_signature"
+      ],
+      "not_claimed": [
+        "linked_device_pairing",
+        "official_templates",
+        "provider_idempotency"
+      ]
+    },
+    "rule": "Services branch on declared capability rather than provider name; unsupported operations fail canonically and never fall back automatically."
   },
   "allowed_apps": [
     "messaging",
@@ -109,8 +188,12 @@
       "purpose": "Organization-scoped, versioned, immutable-after-use template definition with semantic key, channel, locale, approved parameter schema, provider template reference, and no arbitrary runtime code."
     },
     {
-      "name": "MessagingChannelAccount",
-      "purpose": "Organization-scoped non-secret WhatsApp or email sender configuration and opaque credential reference; secrets never enter PostgreSQL."
+      "name": "MessagingProviderConnection",
+      "purpose": "Organization-scoped provider installation/account configuration, connection mode, capability snapshot, and opaque secret aliases. It distinguishes Evolution linked-device, Meta official, and SES without exposing provider concepts in Message."
+    },
+    {
+      "name": "MessagingChannel",
+      "purpose": "One Organization-scoped sender channel or Evolution instance under a provider connection, with provider-neutral lifecycle, external channel identifier, capability snapshot, and per-channel opaque credential alias. Pairing material is never persisted."
     },
     {
       "name": "MessagingPreference",
@@ -138,7 +221,8 @@
     "Use versioned closed templates and allowlisted variables, rendering only at dispatch while preserving a minimized deterministic parameter snapshot and never persisting a raw provider request or response.",
     "Support manual sending of an active hosted checkout link and event-driven Order confirmation, Fulfillment progress, Payment paid, and checkout-link availability behind independently configurable rules disabled by default.",
     "Dispatch asynchronously through transactional outbox and the integrations Celery queue, with network I/O outside transactions, leases, backoff, deterministic locks, and fail-closed handling of ambiguous provider acceptance.",
-    "Expose provider-neutral adapters for WhatsApp Cloud API utility templates and Amazon SES transactional email behind disabled external effects and offline contract fixtures.",
+    "Expose provider-neutral adapters for Evolution API v2.3.7 linked-device text messaging, direct WhatsApp Cloud API utility templates, and Amazon SES transactional email behind disabled external effects and offline contract fixtures.",
+    "Create, inspect, pair, reconcile, and disconnect Evolution linked-device channels through explicit manager commands; QR and pairing codes are ephemeral secret responses and never persisted, logged, audited, or emitted.",
     "Accept delivery-status callbacks only through channel-account-scoped endpoints, authenticate them, deduplicate them, discard raw PII, and map out-of-order provider evidence monotonically to canonical states.",
     "Enforce active contact, explicit per-purpose messaging permission, customer-merge handling, suppression, channel/template compatibility, and source freshness immediately before dispatch.",
     "Provide organization-scoped selectors, manager configuration, operator manual send using approved templates, masked visibility, server-rendered HTML, audit, and sanitized internal outbox events."
@@ -146,7 +230,7 @@
   "deferred_features": [
     "marketing, campaigns, bulk messaging, segmentation, lead nurturing, promotions, newsletters, abandoned-cart messages, and cross-selling",
     "inbound message bodies, two-way conversations, shared inbox, chatbot, AI-generated text, intent classification, human handoff, and media download",
-    "SMS, voice, push notifications, social networks, attachments, catalogs, WhatsApp Flows, product messages, and additional channel providers",
+    "Evolution Go, WAHA, SMS, voice, push notifications, social networks, attachments, catalogs, WhatsApp Flows, product messages, and additional channel providers",
     "automatic provider or channel fallback, broadcast, best-time optimization, link shortening, click/open tracking, and read-based automation",
     "template creation or approval at providers, sender-domain provisioning, DNS, public webhook registration, sandbox, production credentials, and real delivery",
     "Integrations, public API, importers, fiscal, inventory, dashboard, Coolify, homologation, production deploy, and Flowlog migration or synchronization"
@@ -161,7 +245,7 @@
       "delivered",
       "failed",
       "cancelled",
-      "requires_attention"
+      "uncertain"
     ],
     "attempt_states": [
       "requested",
@@ -170,16 +254,25 @@
       "delivered",
       "failed",
       "cancelled",
-      "unknown"
+      "uncertain"
     ],
     "terminal_message_states": [
       "delivered",
       "failed",
       "cancelled"
     ],
-    "rule": "Provider statuses are mapped by adapters and never copied into Message.status. sent means provider acceptance, not recipient delivery. requires_attention is non-terminal and only explicit manager reconciliation may resolve it.",
+    "rule": "Provider statuses are mapped by adapters and never copied into Message.status. sent means provider acceptance, not recipient delivery. uncertain is non-terminal and only verified reconciliation or an explicit manager decision after preserved evidence may resolve it.",
     "monotonicity": "Authenticated callbacks may arrive duplicated or out of order. delivered cannot regress; read is intentionally not canonical; late failed evidence after delivered is retained as sanitized evidence and surfaced for attention rather than silently rewriting delivery.",
-    "single_active_attempt": "At most one requested, sending, accepted, or unknown attempt may exist per Message. Channel/provider fallback is never automatic."
+    "single_active_attempt": "At most one requested, sending, accepted, or uncertain attempt may exist per Message. Channel/provider fallback is never automatic.",
+    "channel_states": [
+      "inactive",
+      "connecting",
+      "pairing_required",
+      "active",
+      "degraded",
+      "disconnected",
+      "disabled"
+    ]
   },
   "source_event_contract": {
     "automatic_allowlist": [
@@ -199,7 +292,7 @@
     "rules": [
       "Every automatic rule is Organization-scoped, disabled by default, and consumes only the exact allowlisted event version.",
       "The consumer re-fetches and revalidates the source aggregate in the same Organization; sanitized event payloads are routing evidence, never authorization or message content.",
-      "Payment-link dispatch locks and revalidates the exact active PaymentAttempt immediately before send; stale, cancelled, expired, replaced, cross-Organization, or requires_attention links block dispatch.",
+      "Payment-link dispatch locks and revalidates the exact active PaymentAttempt immediately before send; stale, cancelled, expired, replaced, cross-Organization, or requires_attention payment links block dispatch.",
       "Customer merge never silently repoints a pending message. Dispatch is blocked until an authorized user selects the canonical Customer and active ContactPoint explicitly.",
       "Order, Fulfillment, and Payment canonical states are never changed by Messaging."
     ]
@@ -215,8 +308,8 @@
     "Every mutable local command uses MessageCommandReceipt scoped by Organization, operation, and idempotency key with canonical payload hashing.",
     "Automatic creation is unique by Organization, source event id, automation-rule version, template version, channel, and destination snapshot so outbox replay cannot duplicate a message.",
     "Each outbound attempt has one stable internal dispatch key and provider correlation tag; retries reuse the same attempt only when the adapter contract proves retry safety.",
-    "A timeout or transport loss after possible acceptance on a provider without an idempotent send contract becomes unknown/requires_attention and is never blindly resent.",
-    "External message and event IDs are unique per MessagingChannelAccount and never trusted globally without Organization and account scope.",
+    "A timeout or transport loss after possible acceptance on a provider without an idempotent send contract becomes uncertain and is never blindly resent.",
+    "External message and event IDs are unique per MessagingProviderConnection and MessagingChannel scope and never trusted globally without Organization and channel correlation.",
     "Webhook receipts deduplicate authenticated events and apply only monotonic transitions; duplicate and out-of-order status callbacks are safe.",
     "Network I/O occurs outside database transactions; leases and deterministic lock order prevent simultaneous sends of the same Message."
   ],
@@ -235,9 +328,14 @@
   ],
   "provider_and_webhook_security": [
     "Provider credentials live only in an approved secret channel and are referenced by opaque aliases; they never enter models, fixtures, logs, CI, handoffs, or Git.",
+    "Evolution API is pinned for implementation planning to stable v2.3.7 and only WHATSAPP-BAILEYS linked-device mode. It is operationally labeled non-official and is never presented as Meta Cloud API.",
+    "Evolution connection management uses deterministic instance identity, one per-channel secret alias, ephemeral QR/pairing responses, HTTPS, exact deploy host allowlists, DNS/IP validation against SSRF, no embedded credentials, no redirects, explicit timeout, and no HTTP retry.",
+    "Evolution v2.3.7 documents instance/global API keys and arbitrary webhook headers but not a payload-bound cryptographic signature or send idempotency key. A distinct per-connection webhook secret header, constant-time comparison, HTTPS, account/channel correlation, replay deduplication, and Security Review are mandatory before callback activation.",
+    "Evolution subscribes only to the minimum delivery-status event needed. Inbound messages, contacts, chats, presence, history sync, QR updates, media bodies, and API keys received in webhook payloads are discarded and never persisted.",
+    "An Evolution send timeout without a returned provider message ID becomes uncertain. Status query is allowed only when the exact channel and message ID exist and the adopted installation contract supports message persistence; absence of a record never proves failure.",
     "WhatsApp sends only approved utility templates through the official Cloud API; external message IDs are stored only for correlation and status webhooks are treated as potentially duplicated and out of order.",
     "Amazon SES sends one recipient per canonical Message using a verified sender identity and message tags for correlation; provider acceptance is not delivery and ambiguous send errors are not blindly retried.",
-    "WhatsApp and SES/SNS callbacks remain disabled until their official authenticity contracts are implemented and independently reviewed. SNS requires signature verification, trusted HTTPS certificate origin, expected TopicArn, timestamp/replay checks, and SignatureVersion2 where configured.",
+    "Evolution, Meta Cloud, and SES/SNS callbacks remain disabled until their authenticity contracts are implemented and independently reviewed. SNS requires signature verification, trusted HTTPS certificate origin, expected TopicArn, timestamp/replay checks, and SignatureVersion2 where configured.",
     "Callback bodies and headers are size-limited, processed ephemerally, never logged or persisted raw, and reduced to allowlisted canonical evidence after authentication.",
     "Public callback endpoints use HTTPS, strict methods/content types, rate limits, generic responses, account-derived Organization, and no caller-supplied Organization authorization.",
     "Open, click, and read tracking are not canonical and are not collected in this phase. Inbound WhatsApp message bodies are rejected or discarded without persistence."
@@ -245,7 +343,7 @@
   "authorization": [
     "Organization for human commands comes from authenticated active Membership and is never accepted as a free request identifier.",
     "OWNER, ADMIN, MANAGER, and OPERATOR may list messages, view masked canonical status, and manually request an enabled approved transactional template for an eligible source and active permitted contact.",
-    "Only OWNER, ADMIN, and MANAGER may configure channel accounts, templates, automation rules, preferences/suppressions, retry or cancel sends, reconcile attention cases, and view full destinations or sanitized provider evidence.",
+    "Only OWNER, ADMIN, and MANAGER may configure provider connections/channels, request Evolution pairing, templates, automation rules, preferences/suppressions, retry or cancel sends, reconcile uncertain cases, and view full destinations or sanitized provider evidence.",
     "No role may create arbitrary free text, bypass an inactive contact or suppression, change a source aggregate, or activate external effects through the application.",
     "Automatic consumers and workers revalidate Organization, rule version, permission, ContactPoint, source aggregate, template, and channel account before dispatch.",
     "Every selector, service, worker, callback, and admin surface has direct cross-organization tests."
@@ -267,9 +365,10 @@
       "closed template schema, immutable used versions, locale/channel mismatch, forbidden free text, missing parameters, escaped output, and stale provider reference",
       "single active attempt and concurrency across creation, outbox replay, dispatch lease, callback, cancellation, retry, and preference change",
       "command, source-event, outbound, callback, and reconciliation idempotency including timeout after possible provider acceptance",
-      "offline adapter contract fixtures for WhatsApp utility templates and Amazon SES transactional email with outbound network blocked",
+      "offline adapter contract fixtures for Evolution API v2.3.7 linked-device text, direct WhatsApp Cloud utility templates, and Amazon SES transactional email with outbound network blocked",
+      "Evolution safe URL validation, public/private host allowlists, redirects, per-channel secret alias, deterministic instance identity, ephemeral pairing, capability matrix, connection states, timeout uncertainty, and unavailable reconciliation",
       "valid, invalid, missing, replayed, oversized, malformed, cross-account, and cross-Organization callback authentication cases",
-      "out-of-order sent, delivered, failed, duplicate, unknown, hard-bounce, complaint, and suppression mappings without state regression",
+      "out-of-order sent, delivered, failed, duplicate, uncertain, hard-bounce, complaint, and suppression mappings without state regression",
       "stale, cancelled, expired, replaced, paid, and requires_attention checkout link behavior with no Payment or Order mutation",
       "destination, rendered content, checkout URL, raw callbacks, credentials, tokens, signatures, provider diagnostics, and arbitrary free text absent from logs, audit, outbox, receipts, exceptions, and metrics",
       "Celery registration, Beat schedule, route, queue declaration, and dedicated worker consumption for every Messaging task",
@@ -296,7 +395,9 @@
   "documentation": [
     "canonical Messaging aggregate, lifecycle, source-event allowlist, manual commands, and cross-domain boundaries",
     "template versioning, closed parameter schemas, channel mappings, escaping, and retention",
-    "WhatsApp Cloud API utility-template and Amazon SES transactional-email adapter contracts",
+    "Evolution API v2.3.7 linked-device, direct WhatsApp Cloud API utility-template, and Amazon SES transactional-email adapter contracts and capability matrix",
+    "Evolution installation/channel separation, non-official labeling, pairing secrecy, webhook limitation, SSRF controls, version pin, licensing check, and upgrade procedure",
+    "recorded Flowlog frozen-SHA Messaging reference audit separating reusable ideas from rejected legacy failures and prohibiting all technical linkage",
     "permission, LGPD evidence, suppression, opt-out, bounce, complaint, merge, and contact-correction procedures",
     "callback authentication, ephemeral payload handling, deduplication, ordering, reconciliation, and incident procedures",
     "credential references, environment separation, test recipients, sandbox evidence, rotation, and production activation checklist",
@@ -306,7 +407,7 @@
   "acceptance_criteria": [
     "The complete transactional-only scope, channels, source allowlist, states, permission evidence, templates, roles, retry ambiguity, and deferred scope are explicitly approved before implementation.",
     "The implementation starts exactly from actual_base_sha 3e4fcfb064fbee350d3df131b2946974c8557098 and depends on approved Phase 05 head 3558ca30a5652be320feb3f28ab46a350ae9cad7.",
-    "No Flowlog asset is consulted or reused and no marketing, inbound conversation, SMS, Integrations, dashboard, infrastructure, provider activation, or deploy code is introduced.",
+    "The explicitly authorized Flowlog consultation remains limited to the frozen SHA and recorded Messaging paths; no code, model, migration, data, ID, credential, endpoint, template, contact, runtime, provider configuration, machine, or infrastructure is copied or linked.",
     "Every message belongs to Organization, an approved source/template/channel/purpose, exact active ContactPoint, and valid permission evidence; missing evidence fails closed.",
     "Only one active attempt exists per Message and an ambiguous provider result is surfaced rather than retried into a possible duplicate.",
     "Payment links are resolved and revalidated against the exact active PaymentAttempt immediately before dispatch; stale links never send silently.",
@@ -318,11 +419,12 @@
   ],
   "human_decisions_required": [
     "Approve transactional outbound Messaging only, with marketing, campaigns, inbound conversations, chatbot, AI content, SMS, and attachments deferred.",
-    "Approve WhatsApp Cloud API utility templates as channel A and Amazon SES transactional email as channel B, both disabled by default and tested offline.",
+    "Approve Evolution API stable v2.3.7 linked-device as WhatsApp provider A, direct WhatsApp Cloud API utility templates as the official WhatsApp provider B, and Amazon SES as email provider C, all disabled by default and tested offline.",
+    "Approve Evolution as explicitly non-official, with per-Organization instances/channels, ephemeral pairing, no inbound content, no media in this phase, and no production use before separate Security and infrastructure approval.",
     "Approve the automatic event allowlist and that every automation rule starts disabled per Organization; manual sends must also reference an approved source and template.",
     "Approve that ContactPoint existence alone is insufficient: each dispatch requires active endpoint plus recorded per-purpose permission evidence, and suppression always fails closed.",
     "Approve OWNER, ADMIN, MANAGER, and OPERATOR for approved manual sends, with configuration, automation, retries, reconciliation, preferences, full destinations, and evidence restricted to manager tier.",
-    "Approve pending, queued, sending, sent, delivered, failed, cancelled, and requires_attention as Message states, with provider read/open/click signals excluded from the canonical lifecycle.",
+    "Approve pending, queued, sending, sent, delivered, failed, cancelled, and uncertain as Message states plus inactive, connecting, pairing_required, active, degraded, disconnected, and disabled as channel states; provider read/open/click signals remain outside the canonical lifecycle.",
     "Approve no blind retry after ambiguous provider acceptance and no automatic channel/provider fallback.",
     "Approve that implementation and CI use fakes/contract fixtures only; sandbox, public callbacks, real recipients, DNS/sender changes, and production effects require later explicit authorization."
   ],
@@ -387,7 +489,7 @@
   "allowed_scope": [
     "Planning and, only after explicit plan approval, a new provider-neutral greenfield outbound transactional Messaging domain driven by approved Vidalys Flow sources.",
     "Minimal one-way adapters from Messaging to approved Customers, Orders, Fulfillment, Payments, Organizations, Audit, and Platform contracts without those domains importing Messaging.",
-    "WhatsApp Cloud API utility-template and Amazon SES transactional-email adapters behind disabled external effects, using fake/contract fixtures in implementation and CI.",
+    "Evolution API v2.3.7 linked-device text, direct WhatsApp Cloud API utility-template, and Amazon SES transactional-email adapters behind disabled external effects, using fake/contract fixtures in implementation and CI.",
     "New Messaging models, services, selectors, policies, status-only callbacks, workers, tests, migrations, server-rendered interfaces, documentation, audit, and sanitized internal outbox integration."
   ],
   "forbidden_scope": [
@@ -396,6 +498,6 @@
     "Starting Integrations, Dashboard, inventory, tax, fiscal, infrastructure, homologation, cutover, or a later phase.",
     "Changing Customer, Order, Fulfillment, or Payment canonical states, snapshots, totals, permissions, or behavior outside an explicitly approved minimal read/event adapter.",
     "Persisting or printing rendered bodies, raw callbacks, inbound content, credentials, tokens, signatures, full checkout URLs in operational evidence, documents, addresses, notes, provider diagnostics, or arbitrary free text.",
-    "Reusing or consulting Flowlog code, data, migrations, runtime, IDs, contacts, templates, messages, conversations, secrets, services, endpoints, providers, machines, or infrastructure."
+    "Any Flowlog access beyond the already recorded frozen Messaging reference paths, and any reuse or linkage of its code, data, migrations, runtime, IDs, contacts, templates, messages, conversations, secrets, services, endpoints, provider configuration, machines, or infrastructure."
   ]
 }

@@ -65,9 +65,12 @@ messaging → core, users, organizations, customers, orders,
 ```
 
 O plano limita o módulo a mensagens transacionais, templates fechados,
-permissão/supressão, dispatch assíncrono e callbacks de status. WhatsApp e
-e-mail ficam atrás de adapters com efeitos externos desligados. Esse grafo só
-se torna contrato de implementação após aprovação humana do plano.
+permissão/supressão, dispatch assíncrono e callbacks de status. Evolution API
+v2.3.7 linked-device, WhatsApp Cloud API direta e Amazon SES ficam atrás de
+adapters e uma matriz de capabilities, com efeitos externos desligados.
+Evolution é não oficial, possui conexões e canais/instâncias separados e não
+compartilha secrets com a Meta Cloud. Esse grafo só se torna contrato de
+implementação após aprovação humana do plano.
 
 ## Módulo aprovado da Fase 4
 

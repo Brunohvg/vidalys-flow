@@ -25,6 +25,8 @@ Consulte [Customers](docs/domains/CUSTOMERS.md),
 [Fulfillment](docs/domains/FULFILLMENT.md),
 [Payments](docs/domains/PAYMENTS.md), o
 [plano proposto de Messaging](docs/domains/MESSAGING_VISION.md) e o
+[relatório da referência histórica de
+Messaging](docs/domains/MESSAGING_FLOWLOG_REFERENCE_AUDIT.md), além do
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e
 decisões de escopo.
 

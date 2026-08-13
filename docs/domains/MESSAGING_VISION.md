@@ -2,11 +2,13 @@
 
 Status: checkpoint de planejamento pendente de aprovação humana.
 
-Messaging será um domínio greenfield da Vidalys Flow. Este planejamento usa
-somente contratos já aprovados do próprio repositório e documentação oficial
-atual. O Flowlog não foi consultado e não poderá fornecer código, contatos,
-templates, mensagens, conversas, banco, IDs, credenciais, runtime, providers
-ou infraestrutura.
+Messaging será um domínio greenfield da Vidalys Flow. Após autorização humana
+explícita, este planejamento consultou em modo somente leitura o domínio de
+Messaging do Flowlog no SHA congelado
+`31a3e7b8fe305b93cdcbcdfa7420b8e597412756`, além da documentação oficial
+atual. Foram aproveitadas apenas ideias e falhas documentadas; nenhum código,
+model, migration, dado, ID, contato, template, mensagem, conversa, credencial,
+endpoint, runtime, provider configurado ou infraestrutura será reutilizado.
 
 ## Objetivo da fase
 
@@ -18,9 +20,12 @@ pagamento.
 
 O núcleo será independente de canal. O rollout proposto é:
 
-1. WhatsApp Business Platform Cloud API com templates utilitários aprovados;
-2. e-mail transacional por Amazon SES;
-3. outros canais somente em fases posteriores.
+1. Evolution API estável v2.3.7 em modo `WHATSAPP-BAILEYS`, como conexão de
+   dispositivo vinculado e explicitamente não oficial;
+2. WhatsApp Business Platform Cloud API direta, como alternativa oficial com
+   templates utilitários aprovados;
+3. e-mail transacional por Amazon SES;
+4. outros providers e canais somente em fases posteriores.
 
 Implementação e CI continuarão sem rede. Nenhum envio real, credencial,
 assinatura pública de webhook, template no provider, domínio de e-mail,
@@ -52,8 +57,10 @@ worker relê o agregado original e bloqueia o envio quando a realidade mudou.
 - `MessageDeliveryAttempt`: tentativa serializada, lease, backoff, correlação
   externa sanitizada e resultado;
 - `MessageTemplate`: template fechado, versionado e imutável depois do uso;
-- `MessagingChannelAccount`: configuração não secreta de remetente e alias
-  opaco para secrets;
+- `MessagingProviderConnection`: instalação/conta, modo e capabilities, com
+  aliases opacos para secrets;
+- `MessagingChannel`: remetente ou instância por Organization, estado de
+  conexão, capabilities e alias secreto próprio;
 - `MessagingPreference`: permissão ou supressão por contato, canal e propósito,
   com proveniência e versão de política;
 - `MessageAutomationRule`: evento allowlisted → template/canal, desabilitada por
@@ -64,7 +71,10 @@ worker relê o agregado original e bloqueia o envio quando a realidade mudou.
   bruto.
 
 Estados propostos para `Message`: `pending`, `queued`, `sending`, `sent`,
-`delivered`, `failed`, `cancelled` e `requires_attention`.
+`delivered`, `failed`, `cancelled` e `uncertain`.
+
+Estados propostos para o canal: `inactive`, `connecting`, `pairing_required`,
+`active`, `degraded`, `disconnected` e `disabled`.
 
 `sent` significa somente que o provider aceitou a solicitação. `delivered`
 depende de evidência autenticada. Sinais de abertura, clique ou leitura não
@@ -91,7 +101,8 @@ estruturalmente proibidos.
 O link não será aceito do navegador nem copiado de um evento. Antes de enviar,
 o worker relerá a tentativa exata de Payments e comprovará que ela continua
 ativa, na mesma Organization e ligada ao intent esperado. Link expirado,
-cancelado, substituído ou em `requires_attention` bloqueia o envio.
+cancelado, substituído ou cujo PaymentIntent esteja em `requires_attention`
+bloqueia o envio.
 
 Messaging não altera estados, valores ou snapshots de Payments e Orders. O
 link completo não entra em audit, outbox, receipts, logs, métricas ou erros.
@@ -138,12 +149,45 @@ O Amazon SES documenta que, raramente, pode aceitar um e-mail apesar de o
 cliente receber erro; um retry pode então duplicá-lo. A mesma classe de
 ambiguidade deve ser tratada em qualquer canal: se o adapter não provar
 idempotência do envio, timeout após possível aceitação vai para
-`requires_attention`, sem retry cego e sem fallback automático.
+`uncertain`, sem retry cego e sem fallback automático.
 
 Callbacks repetidos ou fora de ordem não podem regredir `delivered`. Evidência
 conflitante é preservada de forma sanitizada para reconciliação gerencial.
 
 ## Canais propostos
+
+### Evolution API
+
+O adapter será planejado contra a release estável v2.3.7 e somente para
+`WHATSAPP-BAILEYS`. A Evolution oferece criação de instância, QR code, estado
+de conexão, envio de texto e webhooks. Esse modo usa dispositivo vinculado e
+não será confundido com a API oficial da Meta.
+
+Cada Organization poderá possuir conexões e canais próprios. O nome da
+instância será determinístico para permitir reconciliação de timeout sem criar
+outra instância. A chave global servirá somente ao bootstrap; operações do
+canal usarão um secret alias próprio. Chaves nunca serão persistidas no banco.
+QR e pairing code serão respostas efêmeras e não entrarão em banco, logs,
+audit, outbox ou screenshots de evidência.
+
+O cliente exigirá HTTPS, hostname em allowlist exata, validação DNS/IP contra
+SSRF, proibição de credencial embutida e redirect, timeout explícito e nenhum
+retry HTTP. A Evolution permite headers personalizados no webhook, portanto
+será configurado um segredo distinto por conexão e comparação em tempo
+constante. Isso autentica posse do segredo, mas não será chamado de assinatura
+criptográfica vinculada ao body, pois a documentação adotada não oferece esse
+contrato.
+
+Somente status de entrega será consumido. Eventos de entrada, contatos, chats,
+presença, histórico, QR e conteúdo serão descartados. Como a Evolution não
+documenta chave idempotente de envio, timeout sem message ID vira `uncertain`;
+nunca haverá reenvio automático. Consulta de status exige a instância e
+message ID exatos e a persistência de mensagens habilitada na instalação.
+
+A página oficial de releases identifica v2.3.7 como estável e apresenta 2.4.0
+como pré-release com mudança de licenciamento. Nenhuma versão 2.4 será adotada
+automaticamente; licença e upgrade deverão ser reavaliados antes de
+homologação.
 
 ### WhatsApp Cloud API
 
@@ -201,11 +245,23 @@ sandbox exigirá nova autorização humana, contas de teste exclusivas, números
 e-mails de teste designados e evidência sanitizada. Produção continua para as
 Fases 9 e 10.
 
-Nada será executado na máquina, banco, Redis, WhatsApp, e-mail ou infraestrutura
-do Flowlog. A futura máquina da Vidalys Flow será exclusiva, mas seu
+Nada será executado na máquina, banco, Redis, WhatsApp, Evolution, e-mail ou
+infraestrutura do Flowlog. A futura instalação Evolution e a máquina da
+Vidalys Flow serão exclusivas, mas seu
 provisionamento ainda não está comprovado e pertence à Fase 9.
 
 ## Referências oficiais verificadas
+
+- Evolution Foundation, visão da API e modos WhatsApp:
+  <https://docs.evolutionfoundation.com.br/evolution-api>;
+- Evolution Foundation, criação de instância:
+  <https://docs.evolutionfoundation.com.br/en/evolution-api/create-instance>;
+- Evolution Foundation, envio de texto:
+  <https://docs.evolutionfoundation.com.br/evolution-api/send-text-message>;
+- Evolution Foundation, configuração de webhook:
+  <https://docs.evolutionfoundation.com.br/en/evolution-api/set-webhook>;
+- Evolution Foundation, releases oficiais:
+  <https://github.com/evolution-foundation/evolution-api/releases>;
 
 - Meta, coleção oficial WhatsApp Business Platform:
   <https://www.postman.com/meta/whatsapp-business-platform/overview>;
@@ -231,15 +287,19 @@ revalidados antes da implementação e novamente antes de sandbox/produção.
 
 1. aprovar Messaging somente transacional, sem marketing, campanhas, inbound,
    chatbot, IA, SMS ou anexos;
-2. aprovar WhatsApp Cloud API como canal A e Amazon SES como canal B;
-3. aprovar o allowlist de eventos e regras automáticas desabilitadas por padrão;
-4. aprovar que contato não basta: permissão por finalidade é obrigatória e
+2. aprovar Evolution API v2.3.7 linked-device como provider A, WhatsApp Cloud
+   API direta como provider oficial B e Amazon SES como provider C;
+3. aceitar que Evolution linked-device é não oficial e exigir instâncias
+   exclusivas por Organization, pairing efêmero, sem inbound/mídia e sem
+   produção antes de Security e infraestrutura;
+4. aprovar o allowlist de eventos e regras automáticas desabilitadas por padrão;
+5. aprovar que contato não basta: permissão por finalidade é obrigatória e
    supressão sempre falha fechado;
-5. aprovar envio manual por OPERATOR somente com fonte/template habilitados,
+6. aprovar envio manual por OPERATOR somente com fonte/template habilitados,
    mantendo configuração e evidência completa no manager tier;
-6. aprovar estados canônicos e exclusão de open/click/read;
-7. aprovar ausência de retry cego e fallback automático após resultado ambíguo;
-8. aprovar fakes/fixtures sem rede e novo checkpoint para qualquer sandbox ou
+7. aprovar estados canônicos de mensagem/canal e exclusão de open/click/read;
+8. aprovar ausência de retry cego e fallback automático após resultado ambíguo;
+9. aprovar fakes/fixtures sem rede e novo checkpoint para qualquer sandbox ou
    efeito externo.
 
 A aprovação deste plano liberará somente a implementação candidata. Não

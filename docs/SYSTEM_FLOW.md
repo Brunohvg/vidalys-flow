@@ -105,9 +105,9 @@ evento aprovado ou comando manual allowlisted
   → template transacional versionado
   → Customer + ContactPoint + permissão revalidados
   → Message + tentativa idempotente
-  → WhatsApp Cloud API ou Amazon SES (efeito externo desligado)
+  → Evolution API | WhatsApp Cloud API | Amazon SES (efeito externo desligado)
   → callback autenticado
-  → sent / delivered / failed / requires_attention
+  → sent / delivered / failed / uncertain
 ```
 
 O plano de Messaging não aceita texto livre, marketing ou contato sem

@@ -132,7 +132,9 @@
         "A checkout link can expire, be cancelled, or be replaced between message creation and dispatch and therefore requires exact source revalidation immediately before send.",
         "Contact existence is not permission to message; missing, stale, or suppressed per-purpose evidence must fail closed and the Organization remains responsible for its LGPD legal basis.",
         "Delivery callbacks can contain recipient data, arrive duplicated or out of order, and must be authenticated, minimized, and mapped monotonically.",
-        "Automatic event-driven communication can amplify configuration errors, so every Organization rule starts disabled and remains limited to an explicit event/template allowlist."
+        "Automatic event-driven communication can amplify configuration errors, so every Organization rule starts disabled and remains limited to an explicit event/template allowlist.",
+        "Evolution API linked-device is a non-official WhatsApp connection, has no documented send idempotency key or payload-bound webhook signature in the adopted stable contract, and requires explicit operational risk acceptance, version pinning, isolated infrastructure, and no blind retry.",
+        "Evolution API 2.4 is currently presented as a pre-release with a licensing activation change; no upgrade or production adoption may occur without a new license, security, and compatibility review."
       ]
     },
     {

@@ -23,7 +23,8 @@ callback público ou deploy.
 4. **Messaging (Fase 06, planejamento).** Enviar comunicações exclusivamente
    transacionais a partir de fontes aprovadas, com templates versionados,
    permissão por finalidade, supressão e rastreabilidade. O plano propõe
-   WhatsApp Cloud API primeiro e Amazon SES depois, ambos desligados.
+   Evolution API linked-device primeiro, WhatsApp Cloud API direta como opção
+   oficial e Amazon SES depois, todos desligados.
 5. **Integrations (Fase 07).** Adicionar conectores externos com isolamento,
    retries, idempotência e circuitos de falha.
 6. **Experiência completa (Fase 08).** Consolidar dashboards e jornadas de

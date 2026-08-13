@@ -57,7 +57,8 @@ separados.
 - efeitos externos, sandbox, PR, merge e deploy: não autorizados.
 
 O plano propõe mensagens exclusivamente transacionais, com núcleo canônico
-independente de provider, WhatsApp Cloud API primeiro e Amazon SES depois.
+independente de provider, Evolution API v2.3.7 linked-device primeiro,
+WhatsApp Cloud API direta como alternativa oficial e Amazon SES depois.
 Templates são fechados e versionados, regras automáticas começam desabilitadas
 por Organization, permissão por finalidade falha fechado e links de pagamento
 são revalidados imediatamente antes do envio. Marketing, inbound, chatbot, IA,
@@ -70,10 +71,13 @@ branch enquanto o plano não for aprovado.
 
 ## Independência do Flowlog
 
-O planejamento de Messaging não consultou o Flowlog. A Vidalys Flow não
-consulta, importa, migra ou compartilha código, banco, Redis, arquivos,
-contatos, templates, mensagens, usuários, IDs, autenticação, secrets, workers,
-webhooks, runtime, servidor ou infraestrutura com o sistema antigo.
+Após autorização humana explícita, o planejamento de Messaging consultou
+somente os caminhos registrados de Messaging no SHA congelado do Flowlog, em
+modo leitura, para entender o adapter Evolution e as falhas do legado. Nada foi
+copiado ou conectado. A Vidalys Flow não consulta em runtime, importa, migra
+ou compartilha código, banco, Redis, arquivos, contatos, templates, mensagens,
+usuários, IDs, autenticação, secrets, workers, webhooks, servidor ou
+infraestrutura com o sistema antigo.
 
 ## Infraestrutura
 
