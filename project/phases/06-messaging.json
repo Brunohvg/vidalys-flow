@@ -7,11 +7,15 @@
   "base_ref": "main",
   "branch": "phase/06-messaging",
   "status": "planned",
-  "plan_status": "pending",
-  "implementation_status": "blocked",
+  "plan_status": "approved",
+  "implementation_status": "pending",
   "review_status": "blocked",
   "qa_status": "blocked",
   "human_approval_status": "pending",
+  "plan_approval": {
+    "status": "approved",
+    "evidence": "Explicit human approval in the project conversation on 2026-08-12; approval applies only to the Phase 06 technical plan and implementation checkpoint. It releases implementation with fakes and blocked network only, and does not authorize any provider, sandbox, public callback, credential, PR, merge, release, or deploy."
+  },
   "allowed_status_values": {
     "status": [
       "planned",
