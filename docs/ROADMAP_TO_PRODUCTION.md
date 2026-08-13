@@ -5,16 +5,11 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 
 ## Checkpoint atual
 
-As Fases 03 — Orders e 04 — Fulfillment foram aprovadas e integradas.
-Fulfillment recebeu remediação, CI verde no candidato material, Review 02,
-QA/Segurança e ratificação humana final. O desvio de governança do merge foi
-registrado sem reescrever o histórico. O plano da Fase 05 — Payments foi
-aprovado e o Review 04 aprovou o candidato de domínio. O primeiro QA/Security
-emitiu NO-GO operacional: o Celery não descobria as tasks de Payments e o
-Compose não consumia a fila `integrations`. A remediação desses dois pontos
-está autorizada e mantém rede e efeitos externos desligados. Ainda serão
-necessários novo Review e novo QA/Security. Não há autorização de sandbox,
-provider ou deploy.
+As Fases 03 — Orders, 04 — Fulfillment e 05 — Payments foram aprovadas e
+integradas. Payments concluiu Review 05, QA/Security final, aprovação humana,
+PR e merge; seus providers continuam desligados. A Fase 06 — Messaging está
+somente em planejamento, sem código. Não há autorização de sandbox, provider,
+callback público ou deploy.
 
 ## Sequência de produto
 
@@ -22,12 +17,13 @@ provider ou deploy.
    estados canônicos aprovados; sem cobrança ou logística.
 2. **Fulfillment (Fase 04, concluída).** Lotes parciais, separação, entrega e
    retirada aprovados sem estoque, providers ou mudança em `Order.status`.
-3. **Payments (Fase 05, remediação operacional após NO-GO).** O candidato
-   implementa núcleo canônico provider-neutral, Mercado Pago Checkout Pro como
-   primeiro rollout, Pagar.me v5 Payment Links como segundo e Appmax posterior;
-   a topologia Celery está sendo corrigida antes de novo Review e QA/Security.
-4. **Messaging (Fase 06).** Enviar comunicações transacionais somente a partir
-   de eventos aprovados, com consentimento e rastreabilidade.
+3. **Payments (Fase 05, concluída).** Núcleo canônico provider-neutral,
+   Mercado Pago Checkout Pro como primeiro rollout, Pagar.me v5 Payment Links
+   como segundo e Appmax posterior, todos ainda sem efeito externo.
+4. **Messaging (Fase 06, planejamento).** Enviar comunicações exclusivamente
+   transacionais a partir de fontes aprovadas, com templates versionados,
+   permissão por finalidade, supressão e rastreabilidade. O plano propõe
+   WhatsApp Cloud API primeiro e Amazon SES depois, ambos desligados.
 5. **Integrations (Fase 07).** Adicionar conectores externos com isolamento,
    retries, idempotência e circuitos de falha.
 6. **Experiência completa (Fase 08).** Consolidar dashboards e jornadas de
@@ -48,16 +44,18 @@ exclusivo, migrations desde banco vazio, backup/restore, observabilidade e
 testes de aceitação. A Fase 10 executa o go-live apenas com rollback testado e
 aprovação humana específica.
 
-Payments não pode ser antecipado dentro de Fulfillment. Cada conector terá
+Cada conector terá
 credencial exclusiva da Vidalys Flow, checkout hospedado, webhook autenticado,
 deduplicação, reconciliação, sandbox e rollout separado. Nada será reaproveitado
 do Flowlog antigo.
 
-O plano aprovado de Payments define contratos canônicos, estados, idempotência,
+O contrato aprovado de Payments define contratos canônicos, estados, idempotência,
 webhooks, reconciliação, permissões, privacidade, ordem de rollout e critérios
 de sandbox em `project/phases/05-payments.json`. Essas decisões estão
-aprovadas. Sandbox, PR, merge, release e deploy continuam dependendo de gates
-e decisões humanas posteriores.
+aprovadas. O plano proposto de Messaging está em
+`project/phases/06-messaging.json` e depende de aprovação humana antes de
+qualquer implementação. Sandbox, providers, release e deploy continuam
+dependendo de gates e decisões humanas posteriores.
 
 ## Gate repetido em cada fase
 

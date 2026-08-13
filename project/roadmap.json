@@ -127,7 +127,13 @@
         "messaging"
       ],
       "human_approval_status": "pending",
-      "known_risks": []
+      "known_risks": [
+        "A provider may accept a message while the client observes a timeout; blind retry can duplicate a customer communication.",
+        "A checkout link can expire, be cancelled, or be replaced between message creation and dispatch and therefore requires exact source revalidation immediately before send.",
+        "Contact existence is not permission to message; missing, stale, or suppressed per-purpose evidence must fail closed and the Organization remains responsible for its LGPD legal basis.",
+        "Delivery callbacks can contain recipient data, arrive duplicated or out of order, and must be authenticated, minimized, and mapped monotonically.",
+        "Automatic event-driven communication can amplify configuration errors, so every Organization rule starts disabled and remains limited to an explicit event/template allowlist."
+      ]
     },
     {
       "id": 7,

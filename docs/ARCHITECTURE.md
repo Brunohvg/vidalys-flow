@@ -40,7 +40,7 @@ Payments depende de Orders em uma única direção. Orders e Fulfillment não
 importam Payments; Payments não importa Fulfillment, Messaging ou
 Integrations. O scanner de independência executa essas fronteiras.
 
-## Candidato da Fase 5
+## Módulo aprovado da Fase 5
 
 Payments implementa `PaymentIntent`, `PaymentAttempt`, configuração não
 secreta de provider, histórico imutável, receipts de comandos e callbacks. O
@@ -52,6 +52,22 @@ contratos locais, mas herdam o bloqueio de efeitos externos. Testes usam fakes
 com `external = False`; produção, sandbox, credenciais e registro público de
 callback não estão habilitados. O callback Pagar.me é bloqueado inclusive por
 constraint de banco até confirmação de autenticidade em fase posterior.
+
+## Plano proposto da Fase 6
+
+Messaging deverá depender em uma única direção dos contratos aprovados de
+Customers, Orders, Fulfillment e Payments, além de core, users, organizations,
+audit e platform. Nenhum desses domínios importará Messaging.
+
+```text
+messaging → core, users, organizations, customers, orders,
+            fulfillment, payments, audit, platform
+```
+
+O plano limita o módulo a mensagens transacionais, templates fechados,
+permissão/supressão, dispatch assíncrono e callbacks de status. WhatsApp e
+e-mail ficam atrás de adapters com efeitos externos desligados. Esse grafo só
+se torna contrato de implementação após aprovação humana do plano.
 
 ## Módulo aprovado da Fase 4
 

@@ -14,11 +14,11 @@ git switch main
 git pull --ff-only
 ```
 
-A branch `main` contém as fases aprovadas até Fulfillment. O plano aprovado e
-o candidato de Payments validado pelo Review 05 e pelo QA/Security final estão
-em `phase/05-payments`; confira
-`project/state.json` e `project/phases/05-payments.json`. Efeitos externos,
-sandbox, PR, merge e deploy continuam sem autorização.
+A branch `main` contém as fases aprovadas até Payments. O planejamento da
+Fase 06 está em `phase/06-messaging`, criada exatamente do SHA
+`3e4fcfb064fbee350d3df131b2946974c8557098`; confira `project/state.json` e
+`project/phases/06-messaging.json`. O plano ainda depende de aprovação humana.
+Não há código de Messaging, efeito externo, sandbox ou deploy autorizado.
 
 ## Ambiente local reproduzível
 
@@ -74,8 +74,8 @@ Interfaces atuais:
 - `/customers/`;
 - `/products/`;
 - `/orders/`;
-- `/fulfillment/`.
-- `/payments/` (somente na branch candidata da Fase 5).
+- `/fulfillment/`;
+- `/payments/` (aprovado, com providers externos desabilitados).
 
 ## Gate antes de entregar mudanças
 
@@ -99,9 +99,10 @@ já foi atingido.
 ## Onde encontrar cada decisão
 
 - estado oficial: `project/state.json`;
-- última fase aprovada: `project/phases/04-fulfillment.json`;
-- fase em implementação candidata: `project/phases/05-payments.json`;
-- contrato do domínio: `docs/domains/FULFILLMENT.md`;
+- última fase aprovada: `project/phases/05-payments.json`;
+- fase em planejamento: `project/phases/06-messaging.json`;
+- contratos aprovados: `docs/domains/FULFILLMENT.md` e
+  `docs/domains/PAYMENTS.md`;
 - ciclo de vida: `docs/decisions/ADR-012-FULFILLMENT-LIFECYCLE.md`;
 - concorrência: `docs/decisions/ADR-013-FULFILLMENT-CONSISTENCY.md`;
 - fluxo completo: `docs/SYSTEM_FLOW.md`;
@@ -109,21 +110,22 @@ já foi atingido.
 - processo de agentes: `AGENTS.md` e `docs/agents/`;
 - plano de Payments: `docs/domains/PAYMENTS_VISION.md`;
 - contrato implementado de Payments: `docs/domains/PAYMENTS.md`;
+- plano de Messaging: `docs/domains/MESSAGING_VISION.md`;
 - código e testes: `apps/payments/`;
-- evidência da Fase 4: `project/handoffs/phase-04.json`;
+- evidência da Fase 5: `project/handoffs/phase-05.json`;
 - incidente de recuperação:
   `project/incidents/phase-04-governance-recovery.md`.
 
 ## Continuação segura
 
-Não pule checkpoints. O Review 04 aprovou o candidato de domínio, mas o
-QA/Security emitiu NO-GO porque as tasks de Payments não eram descobertas e a
-fila `integrations` não possuía consumer no Compose. A remediação operacional
-foi autorizada na branch exclusiva. O próximo fluxo é: commit material e CI
-no SHA exato, carrier contendo somente o handoff, novo Review independente,
-novo QA/Security, aprovação humana da fase e só então PR/merge se autorizados.
+Não pule checkpoints. O próximo checkpoint é a aprovação humana do plano da
+Fase 06. Somente depois dessa aprovação o manifesto poderá liberar a
+implementação. Em seguida continuam obrigatórios CI no SHA exato, Review
+independente, QA/Security, handoff, aprovação humana final e autorização
+separada de PR/merge. Sandbox e efeitos externos possuem checkpoints próprios.
 
-Mercado Pago e Pagar.me permanecem planejados para a Fase 5; Appmax vem
-depois. Nenhum provider, webhook, credencial ou máquina do Flowlog pode ser
-reutilizado. Homologação e máquina exclusiva de produção pertencem à Fase 9;
-go-live pertence à Fase 10.
+Mercado Pago e Pagar.me pertencem ao contrato aprovado de Payments; Appmax vem
+depois. Messaging propõe WhatsApp Cloud API e Amazon SES, ambos desligados.
+Nenhum provider, contato, template, mensagem, webhook, credencial ou máquina
+do Flowlog pode ser reutilizado. Homologação e máquina exclusiva de produção
+pertencem à Fase 9; go-live pertence à Fase 10.

@@ -48,10 +48,10 @@ Orders não cobra, separa, entrega, envia mensagens, emite documento fiscal ou
 chama providers. Fulfillment executa separação, entrega e retirada em módulo
 próprio, sem alterar o estado comercial do pedido.
 
-O candidato da Fase 5 adiciona Payments como módulo separado. Apenas manager
-tier cria intents e solicita links. OPERATOR consulta estado e copia um link
-já ativo, com evidências externas e dados pessoais ocultos. Nenhuma mensagem é
-enviada automaticamente.
+Payments é um módulo aprovado e separado. Apenas manager tier cria intents e
+solicita links. OPERATOR consulta estado e copia um link já ativo, com
+evidências externas e dados pessoais ocultos. Nenhuma mensagem é enviada
+automaticamente no produto aprovado atual.
 
 ```text
 Order confirmed + total BRL positivo
@@ -98,6 +98,24 @@ estoque, pagamentos, transportadoras, mensagens e integrações não participam.
 - OPERATOR recebe documento, contato e endereço mascarados;
 - a permissão é sempre organizacional e nunca global no User.
 
+## Plano da Fase 6 — ainda não aprovado
+
+```text
+evento aprovado ou comando manual allowlisted
+  → template transacional versionado
+  → Customer + ContactPoint + permissão revalidados
+  → Message + tentativa idempotente
+  → WhatsApp Cloud API ou Amazon SES (efeito externo desligado)
+  → callback autenticado
+  → sent / delivered / failed / requires_attention
+```
+
+O plano de Messaging não aceita texto livre, marketing ou contato sem
+permissão vigente. Regras automáticas começam desabilitadas por Organization.
+Antes de enviar checkout, o worker relê a tentativa exata de Payments; links
+expirados, cancelados, substituídos ou em atenção não são enviados. Essa seção
+descreve uma proposta e não autoriza código nem provider.
+
 ## Fluxo-alvo do produto completo
 
 ```text
@@ -116,10 +134,10 @@ Payment link ──→ provider externo ──→ webhook verificado
  homologação isolada → aprovação humana → produção isolada
 ```
 
-O núcleo de Payments existe apenas como candidato da Fase 5, ainda sem
-aprovação final, provider ativado ou deploy. Messaging, Integrations,
-Dashboard e ambientes externos continuam futuros. Cada seta externa só é
-liberada por contrato, testes, Review, QA/Segurança e aprovação humana.
+O núcleo de Payments está aprovado, mas nenhum provider ou deploy está ativo.
+Messaging está em planejamento; Integrations, Dashboard e ambientes externos
+continuam futuros. Cada seta externa só é liberada por contrato, testes,
+Review, QA/Segurança e aprovação humana.
 
 ## Regras transversais
 
