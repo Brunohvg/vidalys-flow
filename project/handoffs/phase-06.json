@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "phase_id": 6,
+  "phase_name": "Messaging",
+  "status": "candidate",
+  "branch": "phase/06-messaging",
+  "base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
+  "head_sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
+  "commits": [
+    {
+      "sha": "8c1ace99a0c59b3f65d18d84e03f4e895555964b",
+      "subject": "docs(messaging): plan phase 06"
+    },
+    {
+      "sha": "bc4f80dd30579115d95b1dd7b5a9762e0917d058",
+      "subject": "docs(messaging): add Evolution API provider plan"
+    },
+    {
+      "sha": "e13e90b4fbd9677ac96185d63d982ab3736f7de7",
+      "subject": "docs(governance): record Phase 06 plan human approval"
+    },
+    {
+      "sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
+      "subject": "feat(messaging): implement transactional messaging core"
+    }
+  ],
+  "delivered_scope": [
+    "Organization-scoped transactional Messaging aggregate with immutable source, customer, destination, template, permission, parameter, and provider snapshots",
+    "canonical pending, queued, sending, sent, delivered, failed, cancelled, and uncertain lifecycle with separate history, idempotent command receipts, leases, optimistic version checks, and pessimistic locks",
+    "manual sends for active members and manager-tier connection, channel, template, automation-rule, preference, cancellation, and reconciliation commands",
+    "closed and versioned WhatsApp and e-mail templates with server-side parameter rendering and explicit purpose/source compatibility",
+    "automatic consumption of approved Order, Fulfillment, and Payment outbox events with exact source-version validation and persistent consumption receipts",
+    "Evolution API v2.3.7 linked-device, WhatsApp Cloud official-template, and Amazon SES offline request contracts behind adapters with all external effects disabled",
+    "fail-closed permission evidence, Customer/contact/source revalidation immediately before dispatch, no silent merge repointing, and active checkout-link revalidation",
+    "ambiguous transport handling without blind retry, provider acceptance, delivery evidence, late-failure inconsistency preservation, and explicit reconciliation",
+    "callback size, identifier, replay, rate-limit, and secret-channel controls; Evolution callback remains unavailable until its secret resolver is provisioned and Meta/SES callbacks remain blocked pending approved authenticity implementations",
+    "masked OPERATOR presentation, manager-tier complete evidence, read-only tenant-scoped admin, Celery default/integrations topology, and clone-continuity documentation"
+  ],
+  "models": [
+    "messaging.MessagingProviderConnection",
+    "messaging.MessagingChannel",
+    "messaging.MessageTemplate",
+    "messaging.MessagingPreference",
+    "messaging.MessageAutomationRule",
+    "messaging.Message",
+    "messaging.MessageDeliveryAttempt",
+    "messaging.MessageStatusHistory",
+    "messaging.MessageCommandReceipt",
+    "messaging.MessageWebhookReceipt",
+    "messaging.MessageSourceEventReceipt"
+  ],
+  "migrations": [
+    "apps/messaging/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "count": 386,
+    "skipped": 5,
+    "ci_passed": 391,
+    "skip_reason": "The five governance-baseline tests require .git metadata, which is intentionally absent from the test image; they run in GitHub Actions with the repository checkout.",
+    "coverage_percent": 85.238841033673,
+    "database": "PostgreSQL 17.10",
+    "result": "passed",
+    "empty_database_migration": "passed",
+    "technical_rollback": "passed",
+    "concurrency": "passed",
+    "cross_organization": "passed",
+    "messaging_direct_tests": 114,
+    "provider_network_blocking": "passed",
+    "callback_replay_and_rate_limit": "passed",
+    "dispatch_lease_and_ambiguity": "passed",
+    "source_version_revalidation": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed",
+    "celery_runtime_topology": "passed"
+  },
+  "ci": {
+    "workflow_id": 31756127273,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31756127273",
+    "head_sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services, selectors, workers, callbacks, admin, commands, source resolution, provider connections, channels, templates, rules, preferences, messages, attempts, and receipts; active Membership policies and direct cross-tenant tests fail closed."
+  },
+  "provider_contracts": {
+    "evolution_api": "Versioned offline Send Text fixture and deterministic per-Organization/channel instance naming; linked-device effects, pairing, secrets, callbacks, and network remain disabled.",
+    "whatsapp_cloud": "Versioned offline official-template payload fixture with locale and ordered parameters; credentials, network, and callback authenticity remain disabled.",
+    "amazon_ses": "Versioned offline SendEmail payload fixture; credentials, network, SNS authenticity, and callbacks remain disabled.",
+    "network_in_ci": false,
+    "sandbox_used": false,
+    "production_effects": false
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_reference": "Read-only product-idea audit only at the frozen SHA and allowlisted Messaging paths; no technical linkage or artifact reuse."
+  },
+  "deferred": [
+    "provider credentials, real pairing, sandbox calls, public callback registration, external status queries, production activation, and deploy",
+    "approved authenticity implementations for WhatsApp Cloud and Amazon SNS callbacks plus a provisioned secret resolver for Evolution callbacks",
+    "marketing campaigns, inbound conversations, chatbot, AI, media, SMS, voice, bulk sends, fallback routing, open/click analytics, and multi-provider failover",
+    "Appmax, public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
+  ],
+  "risks": [
+    "Evolution linked-device is non-official and operationally less stable than WhatsApp Cloud; the adapter remains isolated and disabled until homologation evidence and a separate activation approval exist.",
+    "Callback authenticity is intentionally unavailable rather than approximated where a complete approved provider contract is absent.",
+    "Coverage is above the 85% gate but Review must still prioritize dispatch races, immutable snapshots, permission evidence, callback replay, tenant isolation, and external-effect blocking."
+  ],
+  "blockers": [],
+  "human_approval": {
+    "status": "pending",
+    "evidence": "Implementation candidate only; independent Review, QA/Security, and final human approval have not occurred."
+  }
+}
