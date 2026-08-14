@@ -1,123 +1,130 @@
 {
   "schema_version": 1,
   "review_checkpoint": "independent_review_revalidation",
-  "checkpoint": "Independent Review revalidation after QA/Security blocker P08-QA-SEC-001",
+  "checkpoint": "Independent Review revalidation after QA/Security blocker P08-QA-SEC-002",
   "phase_id": 8,
   "phase_name": "Dashboard and complete experience",
   "repository": "Brunohvg/vidalys-flow",
   "branch": "phase/08-dashboard-experience",
-  "candidate_head": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-  "previous_candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+  "candidate_head": "f6b003971342eb43eac3a9653290dafdd45c3275",
+  "previous_candidate_head": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
   "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
   "base_ref": "main",
   "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
-  "reviewed_at": "2026-08-14T16:53:00Z",
+  "reviewed_at": "2026-08-14T17:45:00Z",
   "reviewer_role": "Independent Review Agent",
   "status": "READY_FOR_QA_AND_SECURITY",
-  "material_sha_confirmation": "Independent Review revalidation was performed against material candidate b8eac30feafa8a41249e3f0af5e68e3c9159b4c1. Governance/report commits created after that SHA do not redefine the material candidate.",
+  "material_sha_confirmation": "Independent Review revalidation was performed against material candidate f6b003971342eb43eac3a9653290dafdd45c3275. Governance, handoff and review carrier commits after that SHA do not redefine the material candidate.",
   "blocking_findings": [],
   "non_blocking_findings": [
     {
-      "id": "P08-IR-REVAL-INFO-001",
-      "category": "governance_history",
-      "severity": "informational",
-      "title": "Prior review-governance artifacts were corrected non-destructively",
-      "description": "The branch history contains the earlier Independent Review artifact sequence, a revert that removed accidental Phase 08 review artifacts from main, and a governance-only merge restoring the corrected main baseline. The new material candidate subsequently passed the approved-phase ancestry and governance-baseline CI gate. This history is noteworthy but does not block the revalidated candidate."
-    },
-    {
-      "id": "P08-IR-REVAL-INFO-002",
+      "id": "P08-IR-REVAL2-INFO-001",
       "category": "ci_maintenance",
       "severity": "low",
       "title": "GitHub Actions Node.js deprecation warning",
-      "description": "Foundation CI completed successfully but emitted a warning that actions/checkout@v4 and astral-sh/setup-uv@v5 target deprecated Node.js 20 and are currently forced to run on Node.js 24. This is a maintenance item outside the Phase 08 functional blocker and does not affect the green result."
+      "description": "Foundation CI #179 completed successfully while warning that actions/checkout@v4 and astral-sh/setup-uv@v5 target deprecated Node.js 20 and are being forced to run on Node.js 24. This is a maintenance item, not a Phase 08 functional blocker."
     }
   ],
   "qa_blocker_revalidation": {
-    "finding_id": "P08-QA-SEC-001",
+    "finding_id": "P08-QA-SEC-002",
     "previous_status": "blocking_no_go",
     "revalidation_status": "RESOLVED_FOR_REVIEW_READINESS",
-    "finding": "The previous candidate loaded PaymentIntent through order.payment_intent and Fulfillment through order.fulfillments without independently applying the active Organization filter at those relationship boundaries.",
-    "fix": "Commit 68fc86e950460ffae271965927ddd840b210173a removes implicit related-object loading from the workspace and queries PaymentIntent.objects.filter(organization=organization, order=order) and Fulfillment.objects.filter(organization=organization, order=order). Order remains independently scoped by organization and id, and Messages remain scoped by organization plus ORDER source identity.",
-    "adversarial_test": "Commit b533ba4efde2e87467ea4975c14b4705805b2eb3 adds test_order_workspace_rejects_cross_organization_related_records. The test creates an Order in Organization A while creating PaymentIntent and Fulfillment records in Organization B that still reference that Order, then verifies the Organization A workspace returns neither cross-tenant child.",
-    "conclusion": "The rework directly addresses the root cause of P08-QA-SEC-001 rather than relying on relational consistency assumptions. A fresh QA/Security checkpoint remains mandatory and was not executed in this session."
+    "finding": "The previous replacement candidate protected the Order Workspace PaymentIntent and Fulfillment roots but still trusted Organization consistency on other relations traversed and rendered by Dashboard selectors, allowing malformed cross-Organization related records to cross a read boundary.",
+    "fix": "Commit a42f7dc8ccdc518caf7f577b3fac995aade1de9b adds active-Organization predicates to every relation traversed by Dashboard composition/rendering: Order.customer, PaymentIntent.order, Fulfillment.order, Message.customer, Message.channel, IntegrationDelivery.connection and IntegrationDelivery.endpoint. The filters are applied to summary counts, attention queues, recent Orders, search and Order Workspace composition as applicable.",
+    "adversarial_tests": [
+      "test_attention_queues_reject_cross_organization_order_relations creates active-Organization PaymentIntent/Fulfillment records pointing at an Order from another Organization and requires both queues to exclude them.",
+      "test_order_reads_reject_cross_organization_customer_relation creates an active-Organization Order pointing at a Customer from another Organization and requires recent Orders, search and workspace to fail closed.",
+      "test_message_attention_rejects_cross_organization_customer_and_channel creates an active-Organization Message tied to a Customer and Channel from another Organization and requires queue and KPI count exclusion.",
+      "test_integration_attention_rejects_cross_organization_related_records creates an active-Organization IntegrationDelivery tied to another Organization's Connection and Endpoint and requires queue and KPI count exclusion."
+    ],
+    "test_commit": "254c3dea4b3c46ac39df8d4737eda0f4faa6cabe",
+    "conclusion": "The rework addresses P08-QA-SEC-002 at the relation boundaries themselves and validates fail-closed behavior with intentionally inconsistent cross-tenant data. A fresh QA/Security checkpoint remains mandatory and was not executed in this session."
+  },
+  "prior_blocker_status": {
+    "finding_id": "P08-QA-SEC-001",
+    "status": "REMAINS_RESOLVED",
+    "evidence": "PaymentIntent and Fulfillment in Order Workspace continue to be selected with active Organization plus the already scoped Order; the original adversarial workspace test remains present and passes in the full candidate suite."
   },
   "candidate_comparison": {
-    "base": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-    "head": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "base": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "head": "f6b003971342eb43eac3a9653290dafdd45c3275",
     "relationship": "ahead",
-    "commits_ahead": 14,
+    "commits_ahead": 6,
     "material_rework_commits": [
-      {"sha": "68fc86e950460ffae271965927ddd840b210173a", "subject": "fix(dashboard): enforce tenant boundary in order workspace"},
-      {"sha": "b533ba4efde2e87467ea4975c14b4705805b2eb3", "subject": "test(dashboard): cover cross-tenant workspace relations"}
+      {"sha": "a42f7dc8ccdc518caf7f577b3fac995aade1de9b", "subject": "fix(dashboard): harden organization scope across rendered relations"},
+      {"sha": "254c3dea4b3c46ac39df8d4737eda0f4faa6cabe", "subject": "test(dashboard): cover adversarial tenant isolation across queues"},
+      {"sha": "f6b003971342eb43eac3a9653290dafdd45c3275", "subject": "style(dashboard): sort adversarial test imports"}
     ],
-    "other_delta": "The remaining commits are review/governance/baseline/candidate-marker artifacts. Net executable delta from the previous material candidate is limited to apps/dashboard/selectors.py and the new dashboard adversarial test; there is no provider, infrastructure, callback, deployment or Phase 09 implementation delta."
+    "material_delta_after_prior_review_carrier": "From review carrier 2bbbd7526b10cf3fcb6fe4250610704b3a86651c to the material candidate, only apps/dashboard/selectors.py and apps/dashboard/tests/test_dashboard.py change. No provider, infrastructure, callback, credential, deployment or Phase 09 code is introduced."
   },
   "read_model_boundaries": {
     "status": "APPROVED",
-    "summary": "Dashboard remains a synchronous read-composition layer over canonical domains and creates no canonical business lifecycle or persistence model.",
+    "summary": "Dashboard remains a synchronous read-composition layer over canonical domains with no dashboard-owned lifecycle or persistence.",
     "organization_filters": {
-      "order": "Order.objects.filter(organization=organization, id=order_id)",
-      "payment_intent": "PaymentIntent.objects.filter(organization=organization, order=order)",
-      "fulfillment": "Fulfillment.objects.filter(organization=organization, order=order)",
-      "messages": "Message.objects.filter(organization=organization, source_type=ORDER, source_id=order.id)",
-      "summary_and_attention_queues": "All Orders, PaymentIntents, Fulfillments, Messages, IntegrationConnections and IntegrationDeliveries are selected with organization=organization before classification or rendering."
+      "orders": "organization=organization and customer__organization=organization",
+      "payment_intents": "organization=organization and order__organization=organization; workspace additionally requires order=the scoped Order",
+      "fulfillments": "organization=organization and order__organization=organization; workspace additionally requires order=the scoped Order",
+      "messages": "organization=organization, customer__organization=organization and channel__organization=organization; workspace additionally restricts source_type=ORDER and source_id=scoped Order id",
+      "integration_connections": "organization=organization",
+      "integration_deliveries": "organization=organization, connection__organization=organization and endpoint__organization=organization"
     }
   },
   "attention_queues": {
     "status": "APPROVED",
-    "summary": "Bounded operational queues continue to mirror canonical domain states and remain scoped by Organization. The P08-QA-SEC-001 rework did not alter queue classification or introduce dashboard-owned business rules."
+    "summary": "Payment, Fulfillment, Messaging and Integration attention queues remain bounded and derived from canonical states. The new predicates strengthen tenant isolation without adding Dashboard-specific workflow rules.",
+    "cross_tenant_adversarial_coverage": "CONFIRMED for PaymentIntent-Order, Fulfillment-Order, Message-Customer/Channel and IntegrationDelivery-Connection/Endpoint."
   },
   "workspace_composition": {
     "status": "APPROVED",
-    "organization_and_order_filtering": "CONFIRMED for both PaymentIntent and Fulfillment simultaneously.",
-    "cross_tenant_adversarial_coverage": "CONFIRMED by test_order_workspace_rejects_cross_organization_related_records.",
-    "cross_tenant_order_behavior": "Existing view test continues to require 404 when a user requests an Order belonging to another Organization.",
-    "parallel_state": "None. Workspace returns canonical Order, PaymentIntent, Fulfillment and Message records only."
+    "order_scope": "Order requires active Organization, Customer in active Organization and requested id.",
+    "payment_scope": "PaymentIntent requires active Organization, Order in active Organization and exact scoped Order.",
+    "fulfillment_scope": "Fulfillment requires active Organization, Order in active Organization and exact scoped Order.",
+    "message_scope": "Messages require active Organization, Customer and Channel in active Organization, ORDER source type and exact scoped Order id.",
+    "cross_tenant_order_behavior": "Workspace continues to fail closed with 404 when the Order itself is outside the active Organization.",
+    "parallel_state": "None."
   },
   "authorization_and_isolation": {
     "status": "APPROVED_FOR_REVIEW",
-    "authentication": "dashboard_home and order_workspace remain decorated with @login_required.",
-    "active_organization": "Organization is resolved through active_organization_for_user(user=request.user, session=request.session); no arbitrary request Organization identifier is accepted by dashboard views.",
-    "http_authorization_behavior": "Cross-Organization Order workspace requests fail closed with HTTP 404.",
-    "relationship_isolation": "PaymentIntent and Fulfillment now independently require matching active Organization and the already Organization-scoped Order.",
-    "qa_note": "This is Independent Review evidence only. QA/Security must independently retest authorization and isolation before issuing GO/NO-GO."
+    "authentication": "dashboard_home and order_workspace remain decorated with @login_required and @require_GET.",
+    "active_organization": "Organization is resolved from active_organization_for_user(user=request.user, session=request.session); Dashboard accepts no arbitrary Organization request identifier.",
+    "relation_isolation": "All relations whose objects are traversed or rendered by the current Dashboard selectors now carry an explicit Organization predicate.",
+    "qa_note": "This is Independent Review evidence only. QA/Security must independently retest authorization and tenant isolation before GO/NO-GO."
   },
   "privacy": {
     "status": "APPROVED_FOR_REVIEW",
-    "summary": "Order Workspace continues to render only operational identifiers, customer display/snapshot name, statuses, amounts, fulfillment display numbers, message purpose/status and channel display name. No raw provider payload, secret, credential, arbitrary integration metadata or public callback material was introduced by the rework."
+    "summary": "The rework only narrows selector results. Templates remain limited to operational identifiers, display/snapshot names, statuses, amounts and channel display names. No credential, secret, raw callback payload, complete private contact snapshot or arbitrary provider metadata was introduced."
   },
   "read_only_and_side_effects": {
     "status": "APPROVED",
-    "http_contract": "Both dashboard views remain @require_GET; POST behavior remains HTTP 405 in direct tests.",
-    "persistence": "apps.dashboard still exposes zero persistence models and Phase 08 introduces no dashboard migrations.",
-    "external_effects": "No provider call, sandbox call, credential handling, public callback registration, deployment action or release behavior exists in the executable delta from the previous candidate."
+    "http_contract": "Dashboard endpoints remain authenticated GET-only views; POST remains covered as HTTP 405.",
+    "persistence": "apps.dashboard continues to have zero persistence models and no Dashboard migrations.",
+    "external_effects": "The material rework contains selector predicates and tests only. It introduces no provider call, sandbox access, credential handling, public callback, deploy, release, Coolify change or Phase 09 implementation."
   },
   "performance_and_n_plus_one": {
     "status": "APPROVED_WITH_LOW_RESIDUAL_RISK",
-    "recent_orders": "Existing test_recent_orders_keeps_customer_reads_in_one_query remains present and verifies five recent Orders plus customer display reads execute in one query through select_related(customer).",
-    "workspace": "The security fix replaces implicit related-object loading with explicit PaymentIntent and Fulfillment queries. This adds a fixed bounded number of queries for one workspace request but does not create a per-row N+1 pattern. Message channel remains select_related and all dashboard lists remain bounded by DASHBOARD_LIMIT=8 where applicable.",
-    "conclusion": "No performance regression rising to a review blocker was identified."
+    "analysis": "The added Organization checks compile into joins/predicates inside the existing bounded queries rather than per-row fetches. recent_orders retains select_related(customer) and its one-query N+1 regression test. Payment/Fulfillment/Message/Integration queues remain bounded by DASHBOARD_LIMIT where applicable and use select_related for rendered foreign keys.",
+    "workspace": "Workspace retains a fixed number of queries; stronger predicates do not create a data-size-dependent N+1 pattern.",
+    "conclusion": "No performance regression rising to a blocking Review finding was identified."
   },
   "tests_and_gates": {
     "status": "APPROVED",
     "test_summary": {
-      "previous_candidate_tests": 449,
-      "new_adversarial_tests_added": 1,
-      "material_candidate_tests": 450,
+      "material_candidate_tests": 454,
+      "passed": 454,
       "skipped": 0,
       "coverage_percent": 86,
       "minimum_required_percent": 85,
-      "database": "PostgreSQL 17",
-      "dashboard_direct_tests": 6,
+      "database": "PostgreSQL 17.11",
+      "dashboard_direct_tests": 10,
       "organization_isolation": "passed",
       "read_only_contract": "passed",
       "bounded_query_n_plus_one_regression": "passed"
     },
     "ci_evidence": {
       "workflow": "Foundation CI",
-      "run_number": 173,
-      "run_id": 31820928561,
-      "head_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+      "run_number": 179,
+      "run_id": 31824394665,
+      "head_sha": "f6b003971342eb43eac3a9653290dafdd45c3275",
       "run_attempt": 1,
       "status": "completed",
       "conclusion": "success"
@@ -155,32 +162,32 @@
     "deploy": false,
     "release": false,
     "phase_09": false,
-    "evidence": "Comparison from 52ee5050a8538c4e44392cadaa6d496f0adc2db4 to b8eac30feafa8a41249e3f0af5e68e3c9159b4c1 shows the executable rework is restricted to the Dashboard selector boundary and its tests; CI secret/independence/governance gates also pass on the new material candidate."
+    "evidence": "The executable delta from the prior review carrier to f6b003971342eb43eac3a9653290dafdd45c3275 is restricted to Dashboard selectors and Dashboard tests, and Foundation CI secret/independence/governance gates pass on the exact material candidate."
   },
   "risks": [
     {
-      "id": "P08-IR-REVAL-RISK-001",
+      "id": "P08-IR-REVAL2-RISK-001",
       "severity": "low",
-      "title": "Synchronous dashboard read model",
-      "description": "Future data growth may require projection or caching work. Phase 08 intentionally keeps the dashboard derived and synchronous."
+      "title": "Synchronous derived read model",
+      "description": "Future data volume may require projection or caching. This remains intentionally outside Phase 08."
     },
     {
-      "id": "P08-IR-REVAL-RISK-002",
+      "id": "P08-IR-REVAL2-RISK-002",
       "severity": "low",
-      "title": "Fixed query overhead introduced for stronger tenant isolation",
-      "description": "PaymentIntent and Fulfillment are now loaded through independent explicit queries. The cost is bounded per workspace request and is preferable to trusting cross-domain relation integrity for tenant isolation."
+      "title": "Future relations must preserve explicit tenant predicates",
+      "description": "The hardened design is fail-closed only while future Dashboard relations continue to validate both root Organization and every traversed relation's Organization. The new adversarial tests should remain regression gates."
     },
     {
-      "id": "P08-IR-REVAL-RISK-003",
+      "id": "P08-IR-REVAL2-RISK-003",
       "severity": "informational",
-      "title": "Attention classification remains coupled to canonical domain states",
-      "description": "Future dashboard changes must continue to mirror canonical states rather than accumulating a separate dashboard workflow."
+      "title": "GitHub Actions dependency maintenance",
+      "description": "Node.js 20 deprecation warnings should be addressed before they become runner failures."
     }
   ],
   "residual_risks": [
-    "The Independent Review does not replace fresh adversarial QA/Security execution on b8eac30feafa8a41249e3f0af5e68e3c9159b4c1.",
-    "Workspace isolation relies on every future related boundary preserving explicit Organization scoping; regression tests should remain mandatory.",
-    "GitHub Actions dependencies should be refreshed before the Node.js deprecation warning becomes an execution failure."
+    "Independent Review does not replace fresh QA/Security execution on f6b003971342eb43eac3a9653290dafdd45c3275.",
+    "Future Dashboard additions must preserve explicit tenant scoping for both roots and rendered/traversed relations.",
+    "The synchronous read model may need projection/cache work at larger production scale."
   ],
   "deferred": [
     "inbound WhatsApp sales conversation domain or omnichannel inbox",
@@ -195,30 +202,31 @@
   ],
   "checkpoint_recommendation": {
     "status": "READY_FOR_QA_AND_SECURITY",
-    "rationale": "P08-QA-SEC-001 is materially corrected by explicit Organization+Order filtering on PaymentIntent and Fulfillment, backed by an adversarial inconsistent cross-tenant relation test. Existing authentication, GET-only behavior, privacy, bounded read patterns and no-persistence behavior remain intact. Foundation CI #173 is fully green on the exact new material SHA. No new blocking finding was identified.",
-    "next_checkpoint": "Fresh QA/Security on the same material candidate. Do not infer QA/Security GO from this Independent Review revalidation."
+    "rationale": "P08-QA-SEC-002 is materially corrected by explicit Organization predicates across every currently traversed/rendered Dashboard relation, backed by direct adversarial malformed cross-tenant tests. P08-QA-SEC-001 remains fixed. Authentication, GET-only behavior, privacy, no-persistence and bounded query patterns remain intact. Foundation CI #179 is fully green on the exact material SHA. No blocking Review finding remains.",
+    "next_checkpoint": "Fresh independent QA/Security on material candidate f6b003971342eb43eac3a9653290dafdd45c3275. Do not infer QA/Security GO from this Independent Review revalidation."
   },
   "evidence_sources": [
-    "AGENTS.md and docs/agents/* at material candidate b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "project/state.json, project/roadmap.json and project/constraints.json at the material candidate",
-    "project/phases/08-dashboard-experience.json and project/handoffs/phase-08.json",
+    "AGENTS.md and docs/agents/* at material candidate f6b003971342eb43eac3a9653290dafdd45c3275",
+    "project/state.json, project/roadmap.json, project/constraints.json and project/phases/08-dashboard-experience.json",
+    "project/handoffs/phase-08.json",
     "docs/domains/DASHBOARD.md",
-    "apps/dashboard/selectors.py at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "apps/dashboard/views.py at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "apps/dashboard/tests/test_dashboard.py at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "templates/dashboard/order_workspace.html at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "Commit 68fc86e950460ffae271965927ddd840b210173a",
-    "Commit b533ba4efde2e87467ea4975c14b4705805b2eb3",
-    "Comparison 52ee5050a8538c4e44392cadaa6d496f0adc2db4...b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "Foundation CI #173 / run 31820928561, exact head_sha b8eac30feafa8a41249e3f0af5e68e3c9159b4c1, conclusion success"
+    "apps/dashboard/selectors.py at f6b003971342eb43eac3a9653290dafdd45c3275",
+    "apps/dashboard/views.py at f6b003971342eb43eac3a9653290dafdd45c3275",
+    "apps/dashboard/tests/test_dashboard.py at f6b003971342eb43eac3a9653290dafdd45c3275",
+    "templates/dashboard/home.html and templates/dashboard/order_workspace.html at the material candidate",
+    "Commit a42f7dc8ccdc518caf7f577b3fac995aade1de9b",
+    "Commit 254c3dea4b3c46ac39df8d4737eda0f4faa6cabe",
+    "Commit f6b003971342eb43eac3a9653290dafdd45c3275",
+    "Comparison 2bbbd7526b10cf3fcb6fe4250610704b3a86651c...f6b003971342eb43eac3a9653290dafdd45c3275",
+    "Foundation CI #179 / run 31824394665 on exact head_sha f6b003971342eb43eac3a9653290dafdd45c3275, conclusion success"
   ],
   "review_metadata": {
     "review_date": "2026-08-14",
     "branch_reviewed": "phase/08-dashboard-experience",
-    "candidate_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
-    "previous_candidate_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "candidate_sha": "f6b003971342eb43eac3a9653290dafdd45c3275",
+    "previous_candidate_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
     "qa_security_executed_in_this_session": false,
     "approval_status": "NOT_FINAL_PRODUCT_APPROVAL",
-    "notes": "This checkpoint only restores readiness for an independent QA/Security rerun. It does not issue QA/Security GO, final human approval, PR authorization, merge authorization, release authorization, deploy authorization or Phase 09 authorization."
+    "notes": "This checkpoint restores readiness for an independent QA/Security rerun. It does not issue QA/Security GO, final human approval, PR authorization, merge authorization, release authorization, deploy authorization or Phase 09 authorization."
   }
 }
