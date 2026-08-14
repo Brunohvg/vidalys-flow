@@ -119,7 +119,31 @@
     "Callback authenticity is intentionally unavailable rather than approximated where a complete approved provider contract is absent.",
     "Coverage is above the 85% gate but Review must still prioritize dispatch races, immutable snapshots, permission evidence, callback replay, tenant isolation, and external-effect blocking."
   ],
-  "blockers": [],
+  "blockers": [
+    "P06-R01",
+    "P06-R02",
+    "P06-R03",
+    "P06-R04",
+    "P06-R05"
+  ],
+  "review": {
+    "status": "changes_requested",
+    "candidate_head": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
+    "carrier_observed": "eb9bded670dcbff8709dec21e7903c96e461ce9a",
+    "report": "project/reviews/phase-06-review-01.md",
+    "material_ci_run": 31756127273,
+    "carrier_ci_run": 31756306732,
+    "local_tests": 386,
+    "local_skipped": 5,
+    "local_coverage_percent": 85.238841033673,
+    "blocking_findings": [
+      "P06-R01",
+      "P06-R02",
+      "P06-R03",
+      "P06-R04",
+      "P06-R05"
+    ]
+  },
   "human_approval": {
     "status": "pending",
     "evidence": "Implementation candidate only; independent Review, QA/Security, and final human approval have not occurred."
