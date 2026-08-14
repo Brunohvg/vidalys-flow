@@ -35,17 +35,11 @@ def test_valid_state_and_all_artifacts(repository):
 
     repository.validate_all()
 
-    assert state["approved_phase"] == 5
-    assert state["approved_phase_head"] == "3558ca30a5652be320feb3f28ab46a350ae9cad7"
+    assert state["approved_phase"] == 6
+    assert state["approved_phase_head"] == "e2140eb25cc10f1a79dad05a0507ba9141003ac9"
     assert state["baseline_branch"] == "main"
-    assert state["next_phase"] == 6
-    assert state["active_candidate"] == {
-        "phase": 6,
-        "branch": "phase/06-messaging",
-        "base_ref": "main",
-        "actual_base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
-        "dependency_head": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
-    }
+    assert state["next_phase"] == 7
+    assert state["active_candidate"] is None
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):
@@ -101,24 +95,24 @@ def test_active_candidate_dependency_must_match_its_manifest(governance_root):
     state_path = governance_root / "project/state.json"
     state = load_json(state_path)
     state["active_candidate"] = {
-        "phase": 6,
-        "branch": "phase/06-messaging",
+        "phase": 7,
+        "branch": "phase/07-integrations",
         "base_ref": "main",
         "actual_base_sha": "1" * 40,
         "dependency_head": "0" * 40,
     }
     write_json(state_path, state)
 
-    source = governance_root / "project/phases/05-payments.json"
-    phase_path = governance_root / "project/phases/06-messaging.json"
+    source = governance_root / "project/phases/06-messaging.json"
+    phase_path = governance_root / "project/phases/07-integrations.json"
     phase = load_json(source)
     phase.update(
         {
-            "id": 6,
-            "name": "Messaging",
-            "branch": "phase/06-messaging",
-            "dependency_phase": 5,
-            "dependency_head": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
+            "id": 7,
+            "name": "Integrations",
+            "branch": "phase/07-integrations",
+            "dependency_phase": 6,
+            "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
             "status": "planned",
             "plan_status": "pending",
             "implementation_status": "blocked",
@@ -130,7 +124,7 @@ def test_active_candidate_dependency_must_match_its_manifest(governance_root):
     write_json(phase_path, phase)
 
     with pytest.raises(GovernanceError, match="active_candidate dependency_head differs"):
-        GovernanceRepository(governance_root).validate_phase(6)
+        GovernanceRepository(governance_root).validate_phase(7)
 
 
 def test_wrong_baseline_reference_is_rejected(governance_root):
@@ -175,16 +169,16 @@ def test_implementation_requires_approved_plan(governance_root):
 
 
 def test_agent_cannot_self_approve_phase(governance_root):
-    source = governance_root / "project/phases/05-payments.json"
-    path = governance_root / "project/phases/06-messaging.json"
+    source = governance_root / "project/phases/06-messaging.json"
+    path = governance_root / "project/phases/07-integrations.json"
     phase = load_json(source)
     phase.update(
         {
-            "id": 6,
-            "name": "Messaging",
-            "branch": "phase/06-messaging",
-            "dependency_phase": 5,
-            "dependency_head": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
+            "id": 7,
+            "name": "Integrations",
+            "branch": "phase/07-integrations",
+            "dependency_phase": 6,
+            "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
             "status": "planned",
             "plan_status": "pending",
             "implementation_status": "pending",
@@ -196,7 +190,7 @@ def test_agent_cannot_self_approve_phase(governance_root):
     write_json(path, phase)
 
     with pytest.raises(GovernanceError, match="cannot approve"):
-        GovernanceRepository(governance_root).validate_phase(6)
+        GovernanceRepository(governance_root).validate_phase(7)
 
 
 def test_rendering_is_deterministic(repository):

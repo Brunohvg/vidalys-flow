@@ -2,17 +2,19 @@
   "schema_version": 1,
   "phase_id": 6,
   "phase_name": "Messaging",
-  "status": "candidate",
+  "status": "approved",
   "branch": "phase/06-messaging",
   "base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
-  "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
+  "head_sha": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
   "commits": [
     {"sha": "8c1ace99a0c59b3f65d18d84e03f4e895555964b", "subject": "docs(messaging): plan phase 06"},
     {"sha": "bc4f80dd30579115d95b1dd7b5a9762e0917d058", "subject": "docs(messaging): add Evolution API provider plan"},
     {"sha": "e13e90b4fbd9677ac96185d63d982ab3736f7de7", "subject": "docs(governance): record Phase 06 plan human approval"},
     {"sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee", "subject": "feat(messaging): implement transactional messaging core"},
     {"sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b", "subject": "fix(messaging): remediate independent review findings"},
-    {"sha": "cf871a561e529aa331479b13c792e6b2fcac6743", "subject": "fix(messaging): close event and template contracts"}
+    {"sha": "cf871a561e529aa331479b13c792e6b2fcac6743", "subject": "fix(messaging): close event and template contracts"},
+    {"sha": "6e6ca3dbb45c33ff88b84e0cbeae631718e9982c", "subject": "docs(messaging): correct P06-R09 and record human approval"},
+    {"sha": "e2140eb25cc10f1a79dad05a0507ba9141003ac9", "subject": "Merge pull request #12 from Brunohvg/phase/06-messaging"}
   ],
   "delivered_scope": [
     "Organization-scoped transactional Messaging with immutable snapshots, idempotency, leases, optimistic version checks and pessimistic locks",
@@ -59,8 +61,8 @@
     "celery_runtime_topology": "passed"
   },
   "ci": {
-    "workflow_id": 31761251578,
-    "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
+    "workflow_id": 31764773574,
+    "head_sha": "6e6ca3dbb45c33ff88b84e0cbeae631718e9982c",
     "run_attempt": 1,
     "conclusion": "success"
   },
@@ -107,5 +109,20 @@
   "p06_r09": {
     "status": "resolved",
     "resolution": "Removed the nonexistent messaging.MessageSourceEventReceipt from the delivered model list. Source-event consumption evidence is persisted by messaging.MessageCommandReceipt.source_event_id; no unnecessary model was created."
+  },
+  "approval_record": {
+    "material_candidate": "cf871a561e529aa331479b13c792e6b2fcac6743",
+    "approval_carrier": "6e6ca3dbb45c33ff88b84e0cbeae631718e9982c",
+    "merge_commit": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
+    "pull_request": 12,
+    "review": "Review 03: APPROVED",
+    "qa_security": "GO",
+    "pr_head_ci": {
+      "id": 31764773574,
+      "status": "success"
+    },
+    "provider_activation": false,
+    "deploy": false,
+    "phase_07_started": false
   }
 }

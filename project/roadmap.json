@@ -116,17 +116,17 @@
     {
       "id": 6,
       "name": "Messaging",
-      "status": "planned",
+      "status": "approved",
       "dependencies": [
         5
       ],
-      "approved_sha": null,
+      "approved_sha": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
       "branch": "phase/06-messaging",
-      "handoff": null,
+      "handoff": "project/handoffs/phase-06.json",
       "domains": [
         "messaging"
       ],
-      "human_approval_status": "pending",
+      "human_approval_status": "approved",
       "known_risks": [
         "A provider may accept a message while the client observes a timeout; blind retry can duplicate a customer communication.",
         "A checkout link can expire, be cancelled, or be replaced between message creation and dispatch and therefore requires exact source revalidation immediately before send.",
