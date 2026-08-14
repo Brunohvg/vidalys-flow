@@ -48,6 +48,7 @@
     "AGENTS.md",
     "project/",
     "docs/agents/",
+    "docs/PROJECT_STATUS.md",
     "prompts/",
     "scripts/agent_orchestrator.py",
     "scripts/check_governance_baseline.py",
