@@ -7,43 +7,22 @@
   "base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
   "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
   "commits": [
-    {
-      "sha": "db368a21aa1f64e68b17e7799fb492a86b517ede",
-      "subject": "feat(dashboard): register dashboard application"
-    },
-    {
-      "sha": "a8913b5afe30becf224b26177302bf45c6c426ec",
-      "subject": "fix(dashboard): enforce read-only HTTP contract"
-    },
-    {
-      "sha": "465a8516f8643a859664c7ce860f566b4ac64b84",
-      "subject": "fix(dashboard): use canonical customer display name"
-    },
-    {
-      "sha": "4a95e6862a44395d2e628a9fca96ae45f3b00857",
-      "subject": "fix(dashboard): use canonical customer display name in workspace"
-    },
-    {
-      "sha": "7d1fe46e368881fd22744ad974651bb448bc8cf1",
-      "subject": "test(dashboard): cover isolation composition and read-only behavior"
-    },
-    {
-      "sha": "72a378c60334fc16679034497fb9a88f96c4c72c",
-      "subject": "docs(dashboard): document read-model boundaries"
-    },
-    {
-      "sha": "156ae0dc54e3ede26f81cf8f567639bc843209de",
-      "subject": "chore(dashboard): mark phase 08 implementation candidate"
-    },
-    {
-      "sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-      "subject": "test(dashboard): guard bounded order list against N plus one"
-    }
+    {"sha": "db368a21aa1f64e68b17e7799fb492a86b517ede", "subject": "feat(dashboard): register dashboard application"},
+    {"sha": "a8913b5afe30becf224b26177302bf45c6c426ec", "subject": "fix(dashboard): enforce read-only HTTP contract"},
+    {"sha": "465a8516f8643a859664c7ce860f566b4ac64b84", "subject": "fix(dashboard): use canonical customer display name"},
+    {"sha": "4a95e6862a44395d2e628a9fca96ae45f3b00857", "subject": "fix(dashboard): use canonical customer display name in workspace"},
+    {"sha": "7d1fe46e368881fd22744ad974651bb448bc8cf1", "subject": "test(dashboard): cover isolation composition and read-only behavior"},
+    {"sha": "72a378c60334fc16679034497fb9a88f96c4c72c", "subject": "docs(dashboard): document read-model boundaries"},
+    {"sha": "156ae0dc54e3ede26f81cf8f567639bc843209de", "subject": "chore(dashboard): mark phase 08 implementation candidate"},
+    {"sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4", "subject": "test(dashboard): guard bounded order list against N plus one"},
+    {"sha": "68fc86e950460ffae271965927ddd840b210173a", "subject": "fix(dashboard): enforce tenant boundary in order workspace"},
+    {"sha": "b533ba4efde2e87467ea4975c14b4705805b2eb3", "subject": "test(dashboard): cover cross-tenant workspace relations"}
   ],
   "delivered_scope": [
     "Organization-scoped read-only operational dashboard composed from canonical Customers, Orders, Fulfillment, Payments, Messaging and Integrations data.",
     "Operational KPI summary and bounded attention queues for orders, payments, fulfillment, messaging and degraded integrations.",
     "Consolidated order workspace composing existing customer, payment, fulfillment and messaging context without a parallel lifecycle.",
+    "Explicit Organization plus Order filtering for PaymentIntent and Fulfillment workspace boundaries, including adversarial cross-tenant relation tests.",
     "Unified authenticated navigation and responsive dashboard templates with empty states and search.",
     "Narrow governance correction making explicit roadmap/manifest branch identifiers authoritative instead of deriving branch names from human-readable phase titles."
   ],
@@ -55,34 +34,34 @@
     "ci_passed": 449,
     "coverage_percent": 86,
     "database": "PostgreSQL 17.11",
-    "result": "passed",
-    "dashboard_direct_tests": 5,
-    "organization_isolation": "passed",
-    "read_only_http_contract": "passed",
-    "bounded_query_n_plus_one_regression": "passed"
+    "result": "previous_candidate_passed; rework_candidate_pending_ci",
+    "dashboard_direct_tests": 6,
+    "organization_isolation": "rework_added; pending full CI",
+    "read_only_http_contract": "passed on previous candidate",
+    "bounded_query_n_plus_one_regression": "passed on previous candidate"
   },
   "scans": {
-    "secret_scan": "passed",
-    "independence_scan": "passed",
-    "ruff": "passed",
-    "django_check": "passed",
-    "migration_consistency": "passed",
-    "governance_validation": "passed",
-    "approved_phase_ancestry_and_baseline": "passed",
-    "docker_build": "passed",
-    "compose_validation": "passed",
-    "celery_runtime_topology": "passed"
+    "secret_scan": "pending rework candidate CI",
+    "independence_scan": "pending rework candidate CI",
+    "ruff": "pending rework candidate CI",
+    "django_check": "pending rework candidate CI",
+    "migration_consistency": "pending rework candidate CI",
+    "governance_validation": "pending rework candidate CI",
+    "approved_phase_ancestry_and_baseline": "pending rework candidate CI",
+    "docker_build": "pending rework candidate CI",
+    "compose_validation": "pending rework candidate CI",
+    "celery_runtime_topology": "pending rework candidate CI"
   },
   "ci": {
     "workflow_id": 31816297653,
     "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
     "run_attempt": 1,
     "conclusion": "success",
-    "context": "Foundation CI #160 on material Phase 08 candidate"
+    "context": "Previous material candidate; replacement candidate pending CI after P08-QA-SEC-001 rework"
   },
   "organization_isolation": {
-    "status": "passed",
-    "evidence": "Dashboard Organization derives from active Membership/session; selectors receive an Organization and filter every canonical domain boundary; direct cross-Organization search/workspace tests pass fail-closed."
+    "status": "reworked_pending_revalidation",
+    "evidence": "P08-QA-SEC-001 identified that PaymentIntent and Fulfillment workspace relations were not independently Organization-filtered. Rework now queries each relation by both organization and order and adds a direct adversarial test with inconsistent cross-Organization children."
   },
   "legacy_reuse": {
     "code": false,
@@ -106,27 +85,20 @@
   ],
   "blockers": [],
   "review": {
-    "status": "complete",
-    "report": "project/reviews/phase-08-review-report.json",
-    "candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-    "blocking_findings": [],
-    "non_blocking_findings": [
-      {
-        "id": "info_001",
-        "title": "Post-candidate handoff creation in remote Phase 08 branch",
-        "severity": "informational",
-        "description": "Implementer created handoff after marking candidate material; this is standard practice."
-      }
-    ]
-  },
-  "qa_security": {
     "status": "pending",
     "report": null,
-    "evidence": "Independent Review complete with READY_FOR_QA_AND_SECURITY. Awaiting QA and Security technical GO/NO-GO."
+    "candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "blocking_findings": null,
+    "non_blocking_findings": null
+  },
+  "qa_security": {
+    "status": "blocked",
+    "report": null,
+    "evidence": "Previous QA/Security issued NO-GO on P08-QA-SEC-001. Material rework is implemented and requires a new candidate, Independent Review revalidation, then fresh QA/Security."
   },
   "human_approval": {
     "status": "pending",
     "date": null,
-    "evidence": "Implementation was explicitly authorized. Final Phase 08 approval, PR, merge, release, deploy and Phase 09 remain unauthorized."
+    "evidence": "Implementation and the narrow P08-QA-SEC-001 rework were explicitly authorized. Final Phase 08 approval, PR, merge, release, deploy and Phase 09 remain unauthorized."
   }
 }
