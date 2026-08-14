@@ -6,10 +6,10 @@
   "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
   "base_ref": "main",
   "branch": "phase/09-infrastructure-homologation",
-  "status": "in_progress",
+  "status": "candidate",
   "plan_status": "approved",
-  "implementation_status": "in_progress",
-  "review_status": "blocked",
+  "implementation_status": "complete",
+  "review_status": "pending",
   "qa_status": "blocked",
   "human_approval_status": "pending",
   "initiation_authorization": {
