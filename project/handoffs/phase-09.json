@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "phase_id": 9,
+  "phase_name": "Infrastructure and homologation",
+  "status": "in_progress",
+  "branch": "phase/09-infrastructure-homologation",
+  "base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
+  "head_sha": "5ba7ef294f92f11f4f54a8a200148062bb641ca4",
+  "commits": [
+    {"sha": "069ea4d6ff4e17f61249e97ee8a75dc5509bf00b", "subject": "chore(governance): define Phase 09 infrastructure and homologation"},
+    {"sha": "d1ef19fd4371e1b38ac8db0fc83e082eaba08165", "subject": "feat(infra): add Coolify homologation stack"},
+    {"sha": "5bae6064b8f29a00d9eaac3e9e092a08a3c62410", "subject": "docs(infra): add homologation environment contract"},
+    {"sha": "4f342582013d2217ba511b42eea0986ec7a8c565", "subject": "docs(infra): add Coolify homologation runbook"},
+    {"sha": "2fc217062f2053a2f07e754df9e0c9f272199a1b", "subject": "fix(infra): make HTTPS proxy readiness check internal-safe"},
+    {"sha": "9b30e6bc83f235afd9aac0ac7ef60db2501c9ad2", "subject": "ci(infra): validate homologation compose topology"},
+    {"sha": "2509900be2477c6f0b30a8cfc224308cffb35e5e", "subject": "chore(governance): activate Phase 09 candidate"},
+    {"sha": "5ba7ef294f92f11f4f54a8a200148062bb641ca4", "subject": "chore(governance): mark Phase 09 in progress"}
+  ],
+  "delivered_scope": [
+    "Phase 09 canonical manifest and active candidate based on main SHA 12b519c3e8237e1ebe43c1a0253b0747e0680e07.",
+    "Coolify-oriented homologation Compose with web, worker-default, worker-integrations, Beat, release and Redis in one stack.",
+    "PostgreSQL removed from the homologation application stack and represented only by the required external DATABASE_URL contract.",
+    "No public Redis or Celery ports; only web exposes container port 8000 for Coolify proxy ingress.",
+    "Explicit one-shot release migration service.",
+    "Production settings used in homologation with external effects fail-closed by default.",
+    "Environment-variable contract with placeholders only; no real credentials.",
+    "Operational runbook for Coolify topology, migrations, health, backup/restore, rollback, observability and provider subgates.",
+    "Foundation CI extended to render and validate docker-compose.homologation.yml."
+  ],
+  "models": [],
+  "migrations": [],
+  "tests": {
+    "status": "pending_ci",
+    "database": "PostgreSQL 17",
+    "coverage_gate_minimum_percent": 85,
+    "homologation_compose_validation": "configured in Foundation CI",
+    "external_network": "not authorized"
+  },
+  "scans": {
+    "secret_scan": "pending Foundation CI",
+    "independence_scan": "pending Foundation CI",
+    "ruff": "pending Foundation CI",
+    "django_check": "pending Foundation CI",
+    "migration_consistency": "pending Foundation CI",
+    "docker_build": "pending Foundation CI",
+    "compose_validation": "pending Foundation CI",
+    "celery_runtime_topology": "pending Foundation CI"
+  },
+  "ci": {
+    "status": "pending",
+    "context": "Foundation CI must validate the Phase 09 branch HEAD before implementation can be marked complete."
+  },
+  "organization_isolation": {
+    "status": "unchanged_from_approved_product",
+    "evidence": "Phase 09 introduces no new operational entity or authorization path. Existing cross-Organization tests remain mandatory in the full regression suite."
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_reference": "No Flowlog runtime, database, Redis, secrets or infrastructure may be reused."
+  },
+  "deferred": [
+    "real Coolify resource provisioning until separately executed/recorded in the authorized homologation environment",
+    "provider sandbox activation and credentials until provider-specific authorization",
+    "public callbacks until provider-specific authorization",
+    "production go-live and cutover",
+    "Flowlog operational shutdown",
+    "Phase 10"
+  ],
+  "risks": [
+    "The external PostgreSQL resource must be reachable privately from the Coolify application stack without exposing port 5432 publicly.",
+    "Backup must be proven by restore, not only configuration.",
+    "Production SECURE_SSL_REDIRECT requires internal healthchecks to represent the proxy HTTPS scheme.",
+    "Redis is intentionally ephemeral for the initial homologation stack; durable canonical state remains in PostgreSQL."
+  ],
+  "blockers": [],
+  "human_approval": {
+    "status": "pending",
+    "evidence": "Human approved the Phase 09 plan and explicitly authorized implementation. Final Phase 09 approval, production go-live, provider activation, release and Phase 10 remain pending."
+  }
+}
