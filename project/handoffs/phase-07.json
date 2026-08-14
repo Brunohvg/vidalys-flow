@@ -7,8 +7,8 @@
   "base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
   "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
   "commits": [
-    {"sha": "7859b70", "subject": "feat(integrations): implement provider-neutral core"},
-    {"sha": "75d7528", "subject": "feat(integrations): connect Django and integrations worker"},
+    {"sha": "7859b70de3fdb80c76720c6fab5948e0c9275bd0", "subject": "feat(integrations): implement provider-neutral phase 07 core"},
+    {"sha": "75d7528f3e3ae804bc1dde0bc6be2eac99517994", "subject": "feat(integrations): register django and celery integration core"},
     {"sha": "ac1f2955b21ceebd1118cbbe6b4e9dc446139689", "subject": "fix(integrations): harden replay retry and degraded behavior"},
     {"sha": "e1558a3ed8b258490a4511af82da19ec80d3e68e", "subject": "fix(integrations): keep config validation migration-neutral"},
     {"sha": "7978fcc78c3b29c9f06fff8e1cb8a6eb9e896377", "subject": "test(integrations): close sanitization isolation and concurrency gaps"},
