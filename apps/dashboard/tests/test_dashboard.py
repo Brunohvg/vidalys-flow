@@ -5,15 +5,21 @@ from django.apps import apps
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.customers.models import Customer
+from apps.customers.models import ContactPoint, Customer
 from apps.fulfillment.models import Fulfillment
+from apps.integrations.models import IntegrationConnection, IntegrationDelivery, IntegrationEndpoint
+from apps.messaging.models import Message, MessagingChannel, MessagingProviderConnection, MessageTemplate
 from apps.orders.models import Order
 from apps.payments.models import PaymentIntent
 
 from ..selectors import (
     dashboard_search_for_organization,
     dashboard_summary,
+    fulfillment_attention_for_organization,
+    integration_attention_for_organization,
+    message_attention_for_organization,
     order_workspace_for_organization,
+    payment_attention_for_organization,
     recent_orders_for_organization,
 )
 
@@ -38,6 +44,43 @@ def _confirmed_order(*, organization, customer, user, number, name):
         customer_name_snapshot=name,
         created_by=user,
         confirmed_at=timezone.now(),
+    )
+
+
+def _failed_message(*, organization, customer, channel, order, user, suffix):
+    template = MessageTemplate.objects.create(
+        organization=organization,
+        semantic_key=f"dashboard-{suffix}",
+        name=f"Dashboard {suffix}",
+        channel=MessageTemplate.Channel.WHATSAPP,
+        body_text="Teste",
+    )
+    contact = ContactPoint.objects.create(
+        customer=customer,
+        kind=ContactPoint.Kind.WHATSAPP,
+        value=f"+5500000000{suffix}",
+        normalized_value=f"5500000000{suffix}",
+        is_primary=True,
+    )
+    return Message.objects.create(
+        organization=organization,
+        source_type=Message.SourceType.ORDER,
+        source_id=order.id,
+        source_version=order.version,
+        purpose="dashboard_attention",
+        template=template,
+        template_semantic_key=template.semantic_key,
+        template_version=template.version,
+        channel=channel,
+        channel_kind=MessagingChannel.Kind.WHATSAPP,
+        locale="pt-BR",
+        customer=customer,
+        customer_display_name=customer.display_name,
+        contact_point=contact,
+        destination_snapshot=contact.value,
+        status=Message.Status.FAILED,
+        failed_at=timezone.now(),
+        created_by=user,
     )
 
 
@@ -218,6 +261,142 @@ def test_order_workspace_rejects_cross_organization_related_records(
     assert workspace["order"] == order
     assert workspace["payment"] is None
     assert list(workspace["fulfillments"]) == []
+
+
+@pytest.mark.django_db
+def test_attention_queues_reject_cross_organization_order_relations(
+    organization,
+    other_organization,
+    user,
+    operator_membership,
+):
+    other_customer = _customer(organization=other_organization, name="Cliente B")
+    other_order = _confirmed_order(
+        organization=other_organization,
+        customer=other_customer,
+        user=user,
+        number=901,
+        name="Cliente B",
+    )
+    PaymentIntent.objects.create(
+        organization=organization,
+        order=other_order,
+        status=PaymentIntent.Status.REQUIRES_ATTENTION,
+        amount=Decimal("10.00"),
+        order_number_snapshot=other_order.display_number,
+        customer_name_snapshot="Cliente B",
+        created_by=user,
+        attention_code="manual_review",
+    )
+    Fulfillment.objects.create(
+        organization=organization,
+        order=other_order,
+        sequence=1,
+        method=Fulfillment.Method.DELIVERY,
+        created_by=user,
+    )
+
+    assert list(payment_attention_for_organization(organization=organization)) == []
+    assert list(fulfillment_attention_for_organization(organization=organization)) == []
+
+
+@pytest.mark.django_db
+def test_order_reads_reject_cross_organization_customer_relation(
+    organization,
+    other_organization,
+    user,
+    operator_membership,
+):
+    other_customer = _customer(organization=other_organization, name="Cliente B")
+    malformed_order = _confirmed_order(
+        organization=organization,
+        customer=other_customer,
+        user=user,
+        number=902,
+        name="",
+    )
+
+    assert list(recent_orders_for_organization(organization=organization)) == []
+    assert list(dashboard_search_for_organization(organization=organization, query="902")) == []
+    assert order_workspace_for_organization(organization=organization, order_id=malformed_order.id) is None
+
+
+@pytest.mark.django_db
+def test_message_attention_rejects_cross_organization_customer_and_channel(
+    organization,
+    other_organization,
+    user,
+    operator_membership,
+):
+    customer = _customer(organization=organization, name="Cliente A")
+    other_customer = _customer(organization=other_organization, name="Cliente B")
+    order = _confirmed_order(
+        organization=organization,
+        customer=customer,
+        user=user,
+        number=903,
+        name="Cliente A",
+    )
+    connection = MessagingProviderConnection.objects.create(
+        organization=other_organization,
+        provider=MessagingProviderConnection.Provider.EVOLUTION,
+        mode=MessagingProviderConnection.Mode.LINKED_DEVICE,
+        display_name="Canal externo",
+    )
+    channel = MessagingChannel.objects.create(
+        organization=other_organization,
+        connection=connection,
+        kind=MessagingChannel.Kind.WHATSAPP,
+        display_name="WhatsApp B",
+    )
+    _failed_message(
+        organization=organization,
+        customer=other_customer,
+        channel=channel,
+        order=order,
+        user=user,
+        suffix="903",
+    )
+
+    assert list(message_attention_for_organization(organization=organization)) == []
+    assert dashboard_summary(organization=organization)["message_attention"] == 0
+
+
+@pytest.mark.django_db
+def test_integration_attention_rejects_cross_organization_related_records(
+    organization,
+    other_organization,
+    operator_membership,
+):
+    connection = IntegrationConnection.objects.create(
+        organization=other_organization,
+        key="external-b",
+        status=IntegrationConnection.Status.ACTIVE,
+    )
+    endpoint = IntegrationEndpoint.objects.create(
+        organization=other_organization,
+        connection=connection,
+        key="orders",
+        direction=IntegrationEndpoint.Direction.EGRESS,
+        is_active=True,
+    )
+    IntegrationDelivery.objects.create(
+        organization=organization,
+        connection=connection,
+        endpoint=endpoint,
+        source_type="order",
+        source_id="cross-tenant",
+        source_version=1,
+        contract_version=1,
+        operation_key="sync-order",
+        idempotency_key="cross-tenant-delivery",
+        payload_digest="0" * 64,
+        status=IntegrationDelivery.Status.FAILED,
+    )
+
+    attention = integration_attention_for_organization(organization=organization)
+    assert list(attention["deliveries"]) == []
+    assert dashboard_summary(organization=organization)["integration_attention"] == 0
 
 
 @pytest.mark.django_db
