@@ -30,9 +30,7 @@
     "integrations.IntegrationWebhookReceipt",
     "integrations.IntegrationReconciliationRun"
   ],
-  "migrations": [
-    "apps/integrations/migrations/0001_initial.py"
-  ],
+  "migrations": ["apps/integrations/migrations/0001_initial.py"],
   "tests": {
     "count": 440,
     "skipped": 0,
@@ -94,22 +92,21 @@
     "review_role": "Independent Review Agent",
     "blocking_findings": [],
     "non_blocking_findings": [
-      {
-        "finding_id": "NBF-001",
-        "category": "governance_metadata",
-        "title": "Commits after candidate marker (informational)"
-      },
-      {
-        "finding_id": "NBF-002",
-        "category": "test_coverage",
-        "title": "Low direct line coverage in tasks.py (acceptable per manifesto)"
-      }
+      {"finding_id": "NBF-001", "category": "governance_metadata", "title": "Commits after candidate marker (informational)"},
+      {"finding_id": "NBF-002", "category": "test_coverage", "title": "Low direct line coverage in tasks.py (acceptable per manifesto)"}
     ]
   },
   "qa_security": {
-    "status": "blocked",
-    "report": null,
-    "blocking_findings": []
+    "status": "go",
+    "report": "project/qa/phase-07-qa-security.md",
+    "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+    "carrier_head": "621f2b372fc8d0c59a7594fc24c5d796d9cd2ae9",
+    "ci_run": 31805550912,
+    "blocking_findings": [],
+    "residual_risks": [
+      "tasks.py direct line coverage is 35 percent but service behavior and Celery topology are covered",
+      "provider authentication remains an offline contract only until a separately approved concrete provider/callback checkpoint"
+    ]
   },
   "human_approval": {
     "status": "pending",
