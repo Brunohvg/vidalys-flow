@@ -5,11 +5,6 @@ from django.db.models import Q
 from apps.core.models import BaseModel
 
 
-def _validate_reference_config(value):
-    if value not in ({}, None):
-        raise ValidationError("Phase 07 reference configuration must remain empty and non-secret.")
-
-
 class IntegrationConnection(BaseModel):
     class Status(models.TextChoices):
         INACTIVE = "inactive", "Inactive"
@@ -26,7 +21,7 @@ class IntegrationConnection(BaseModel):
     adapter_key = models.SlugField(max_length=100, default="reference")
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.INACTIVE)
     secret_alias = models.CharField(max_length=160, blank=True)
-    config = models.JSONField(default=dict, blank=True, validators=[_validate_reference_config])
+    config = models.JSONField(default=dict, blank=True)
     failure_count = models.PositiveIntegerField(default=0)
     last_success_at = models.DateTimeField(null=True, blank=True)
     degraded_at = models.DateTimeField(null=True, blank=True)
@@ -43,6 +38,8 @@ class IntegrationConnection(BaseModel):
         super().clean()
         if self.adapter_key != "reference":
             raise ValidationError({"adapter_key": "Concrete adapters require separate approval."})
+        if self.config not in ({}, None):
+            raise ValidationError({"config": "Phase 07 reference configuration must remain empty and non-secret."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -68,7 +65,7 @@ class IntegrationEndpoint(BaseModel):
     direction = models.CharField(max_length=8, choices=Direction.choices)
     contract_version = models.PositiveIntegerField(default=1)
     is_active = models.BooleanField(default=False)
-    config = models.JSONField(default=dict, blank=True, validators=[_validate_reference_config])
+    config = models.JSONField(default=dict, blank=True)
 
     class Meta:
         constraints = [
@@ -82,6 +79,8 @@ class IntegrationEndpoint(BaseModel):
         super().clean()
         if self.connection_id and self.organization_id != self.connection.organization_id:
             raise ValidationError("Endpoint and connection must belong to the same Organization.")
+        if self.config not in ({}, None):
+            raise ValidationError({"config": "Phase 07 reference configuration must remain empty and non-secret."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
