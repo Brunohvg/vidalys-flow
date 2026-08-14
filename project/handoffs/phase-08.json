@@ -1,109 +1,36 @@
 {
-  "schema_version": 1,
-  "phase_id": 8,
-  "phase_name": "Dashboard and complete experience",
-  "status": "candidate",
-  "branch": "phase/08-dashboard-experience",
-  "base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
-  "head_sha": "f6b003971342eb43eac3a9653290dafdd45c3275",
-  "commits": [
-    {"sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4", "subject": "previous material candidate before QA rework"},
-    {"sha": "68fc86e950460ffae271965927ddd840b210173a", "subject": "fix(dashboard): enforce tenant boundary in order workspace"},
-    {"sha": "b533ba4efde2e87467ea4975c14b4705805b2eb3", "subject": "test(dashboard): cover cross-tenant workspace relations"},
-    {"sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1", "subject": "previous replacement candidate after P08-QA-SEC-001"},
-    {"sha": "b43c06a64c61916e17b89641f9868c9e4d309bf7", "subject": "review(phase-08): complete independent revalidation"},
-    {"sha": "f13aa3e0253541178d07f9d6be73919edd31b14b", "subject": "review(phase-08): refresh handoff for revalidated candidate"},
-    {"sha": "2bbbd7526b10cf3fcb6fe4250610704b3a86651c", "subject": "review carrier before second QA checkpoint"},
-    {"sha": "a42f7dc8ccdc518caf7f577b3fac995aade1de9b", "subject": "fix(dashboard): harden organization scope across rendered relations"},
-    {"sha": "254c3dea4b3c46ac39df8d4737eda0f4faa6cabe", "subject": "test(dashboard): cover adversarial tenant isolation across queues"},
-    {"sha": "f6b003971342eb43eac3a9653290dafdd45c3275", "subject": "style(dashboard): sort adversarial test imports"}
+  "schema_version":1,
+  "phase_id":8,
+  "phase_name":"Dashboard and complete experience",
+  "status":"approved",
+  "branch":"phase/08-dashboard-experience",
+  "base_sha":"005e11c1c7c14440562806fe0301f3a0ad4763b5",
+  "head_sha":"8ec559ab69b88fbd781144b1ad9dc00d465193c2",
+  "commits":[
+    {"sha":"52ee5050a8538c4e44392cadaa6d496f0adc2db4","subject":"previous material candidate before QA rework"},
+    {"sha":"68fc86e950460ffae271965927ddd840b210173a","subject":"fix(dashboard): enforce tenant boundary in order workspace"},
+    {"sha":"b533ba4efde2e87467ea4975c14b4705805b2eb3","subject":"test(dashboard): cover cross-tenant workspace relations"},
+    {"sha":"b8eac30feafa8a41249e3f0af5e68e3c9159b4c1","subject":"previous replacement candidate after P08-QA-SEC-001"},
+    {"sha":"b43c06a64c61916e17b89641f9868c9e4d309bf7","subject":"review(phase-08): complete independent revalidation"},
+    {"sha":"f13aa3e0253541178d07f9d6be73919edd31b14b","subject":"review(phase-08): refresh handoff for revalidated candidate"},
+    {"sha":"2bbbd7526b10cf3fcb6fe4250610704b3a86651c","subject":"review carrier before second QA checkpoint"},
+    {"sha":"a42f7dc8ccdc518caf7f577b3fac995aade1de9b","subject":"fix(dashboard): harden organization scope across rendered relations"},
+    {"sha":"254c3dea4b3c46ac39df8d4737eda0f4faa6cabe","subject":"test(dashboard): cover adversarial tenant isolation across queues"},
+    {"sha":"f6b003971342eb43eac3a9653290dafdd45c3275","subject":"style(dashboard): sort adversarial test imports"}
   ],
-  "delivered_scope": [
-    "Organization-scoped read-only operational dashboard composed from canonical Customers, Orders, Fulfillment, Payments, Messaging and Integrations data.",
-    "Operational KPI summary and bounded attention queues for orders, payments, fulfillment, messaging and degraded integrations.",
-    "Consolidated order workspace composed without a parallel lifecycle.",
-    "P08-QA-SEC-001 remediation: PaymentIntent and Fulfillment workspace boundaries explicitly scope by Organization plus Order.",
-    "P08-QA-SEC-002 remediation: every rendered/read relation is explicitly tenant-scoped, including Order-Customer, PaymentIntent-Order, Fulfillment-Order, Message-Customer/Channel and IntegrationDelivery-Connection/Endpoint.",
-    "Direct adversarial tests verify malformed cross-Organization relationships are excluded from workspace, queues, counts, search and recent-order reads."
-  ],
-  "models": [],
-  "migrations": [],
-  "tests": {
-    "count": 454,
-    "skipped": 0,
-    "ci_passed": 454,
-    "coverage_percent": 86,
-    "coverage_gate_minimum_percent": 85,
-    "database": "PostgreSQL 17.11",
-    "result": "passed_on_material_candidate",
-    "dashboard_direct_tests": 10,
-    "organization_isolation": "passed on material CI with adversarial cross-tenant workspace, queue, customer, messaging and integration relation tests",
-    "read_only_http_contract": "passed",
-    "bounded_query_n_plus_one_regression": "passed"
-  },
-  "scans": {
-    "secret_scan": "passed on Foundation CI #179 / run 31824394665",
-    "independence_scan": "passed on Foundation CI #179 / run 31824394665",
-    "ruff": "passed on Foundation CI #179 / run 31824394665",
-    "django_check": "passed on Foundation CI #179 / run 31824394665",
-    "migration_consistency": "passed on Foundation CI #179 / run 31824394665",
-    "governance_validation": "passed on Foundation CI #179 / run 31824394665",
-    "approved_phase_ancestry_and_baseline": "passed on Foundation CI #179 / run 31824394665",
-    "docker_build": "passed on Foundation CI #179 / run 31824394665",
-    "compose_validation": "passed on Foundation CI #179 / run 31824394665",
-    "celery_runtime_topology": "passed on Foundation CI #179 / run 31824394665"
-  },
-  "ci": {
-    "workflow_id": 31824394665,
-    "run_number": 179,
-    "head_sha": "f6b003971342eb43eac3a9653290dafdd45c3275",
-    "run_attempt": 1,
-    "conclusion": "success",
-    "context": "Foundation CI completed green on the replacement material candidate after P08-QA-SEC-002 rework"
-  },
-  "organization_isolation": {
-    "status": "qa_passed",
-    "evidence": "Independent QA/Security revalidated P08-QA-SEC-001 and P08-QA-SEC-002 on material SHA f6b003971342eb43eac3a9653290dafdd45c3275. Order Workspace requires active Organization on Order plus PaymentIntent/Fulfillment and the exact scoped Order. All currently traversed/rendered relations are tenant-scoped on both root and related object. Adversarial malformed cross-tenant relations fail closed in workspace, queues, counts, recent orders and search."
-  },
-  "legacy_reuse": {
-    "code": false,
-    "data": false,
-    "migrations": false,
-    "runtime": false,
-    "infrastructure": false,
-    "flowlog_reference": "No Flowlog runtime/data/code/infrastructure reuse or linkage."
-  },
-  "deferred": [
-    "inbound WhatsApp sales conversation domain or omnichannel inbox",
-    "new CRM, inventory, ERP, fiscal, tax, accounting or marketing lifecycle",
-    "real providers, credentials, sandbox calls and public callbacks",
-    "infrastructure/homologation, deploy and cutover in Phases 09-10",
-    "PR, merge, release and Phase 09 until separately authorized"
-  ],
-  "risks": [
-    "Dashboard remains a synchronous derived read model and may require projection/cache work at higher volume.",
-    "Future dashboard relations must preserve explicit tenant scoping on both root objects and every traversed relation.",
-    "Attention queues must remain derived from canonical domain states and must not become an independent lifecycle.",
-    "Node.js 20 deprecation warning for GitHub Actions dependencies remains non-blocking; runner forced Node.js 24 and CI passed."
-  ],
-  "blockers": [],
-  "review": {
-    "status": "complete",
-    "report": "project/reviews/phase-08-review-report.json",
-    "candidate_head": "f6b003971342eb43eac3a9653290dafdd45c3275",
-    "blocking_findings": [],
-    "non_blocking_findings": [
-      "GitHub Actions Node.js 20 deprecation warning remains a maintenance item; CI #179 completed successfully under forced Node.js 24."
-    ]
-  },
-  "qa_security": {
-    "status": "go",
-    "report": "project/qa/phase-08-qa-security.md",
-    "evidence": "Independent QA/Security issued technical GO on material SHA f6b003971342eb43eac3a9653290dafdd45c3275. P08-QA-SEC-001 and P08-QA-SEC-002 are RESOLVED/PASS. Foundation CI #179 / run 31824394665 passed on the exact material SHA with 454 tests, 0 skipped, 86% coverage and PostgreSQL 17.11. The pre-QA documentary carrier d50702bb942aa4c482dc95e336a9e4ecbad0e09c also passed Foundation CI #184 / run 31825973554."
-  },
-  "human_approval": {
-    "status": "approved",
-    "date": "2026-08-14",
-    "evidence": "Human explicitly approved Phase 08 after Independent Review and QA/Security GO. This final product approval is recorded while the handoff remains candidate until a separately authorized PR/merge and official state/roadmap closeout, per governance. PR, merge, release, deploy, real providers, sandbox, credentials, public callbacks and Phase 09 remain unauthorized."
-  }
+  "delivered_scope":["Organization-scoped read-only operational dashboard composed from canonical Customers, Orders, Fulfillment, Payments, Messaging and Integrations data.","Operational KPI summary and bounded attention queues for orders, payments, fulfillment, messaging and degraded integrations.","Consolidated order workspace composed without a parallel lifecycle.","P08-QA-SEC-001 remediation: PaymentIntent and Fulfillment workspace boundaries explicitly scope by Organization plus Order.","P08-QA-SEC-002 remediation: every rendered/read relation is explicitly tenant-scoped, including Order-Customer, PaymentIntent-Order, Fulfillment-Order, Message-Customer/Channel and IntegrationDelivery-Connection/Endpoint.","Direct adversarial tests verify malformed cross-Organization relationships are excluded from workspace, queues, counts, search and recent-order reads."],
+  "models":[],
+  "migrations":[],
+  "tests":{"count":454,"skipped":0,"ci_passed":454,"coverage_percent":86,"coverage_gate_minimum_percent":85,"database":"PostgreSQL 17.11","result":"passed_on_material_candidate","dashboard_direct_tests":10,"organization_isolation":"passed on material CI with adversarial cross-tenant workspace, queue, customer, messaging and integration relation tests","read_only_http_contract":"passed","bounded_query_n_plus_one_regression":"passed"},
+  "scans":{"secret_scan":"passed on Foundation CI #179 / run 31824394665","independence_scan":"passed on Foundation CI #179 / run 31824394665","ruff":"passed on Foundation CI #179 / run 31824394665","django_check":"passed on Foundation CI #179 / run 31824394665","migration_consistency":"passed on Foundation CI #179 / run 31824394665","governance_validation":"passed on Foundation CI #179 / run 31824394665","approved_phase_ancestry_and_baseline":"passed on Foundation CI #179 / run 31824394665","docker_build":"passed on Foundation CI #179 / run 31824394665","compose_validation":"passed on Foundation CI #179 / run 31824394665","celery_runtime_topology":"passed on Foundation CI #179 / run 31824394665"},
+  "ci":{"workflow_id":31824394665,"run_number":179,"head_sha":"f6b003971342eb43eac3a9653290dafdd45c3275","run_attempt":1,"conclusion":"success","context":"Foundation CI completed green on the replacement material candidate after P08-QA-SEC-002 rework"},
+  "pr_ci":{"workflow_id":31834128691,"run_number":190,"head_sha":"64afeaa5bff62ba45feaf12a38267590ccaef069","conclusion":"success","pr_number":19,"merge_sha":"8ec559ab69b88fbd781144b1ad9dc00d465193c2"},
+  "organization_isolation":{"status":"qa_passed","evidence":"Independent QA/Security revalidated P08-QA-SEC-001 and P08-QA-SEC-002 on material SHA f6b003971342eb43eac3a9653290dafdd45c3275. Order Workspace requires active Organization on Order plus PaymentIntent/Fulfillment and the exact scoped Order. All currently traversed/rendered relations are tenant-scoped on both root and related object. Adversarial malformed cross-tenant relations fail closed in workspace, queues, counts, recent orders and search."},
+  "legacy_reuse":{"code":false,"data":false,"migrations":false,"runtime":false,"infrastructure":false,"flowlog_reference":"No Flowlog runtime/data/code/infrastructure reuse or linkage."},
+  "deferred":["inbound WhatsApp sales conversation domain or omnichannel inbox","new CRM, inventory, ERP, fiscal, tax, accounting or marketing lifecycle","real providers, credentials, sandbox calls and public callbacks","infrastructure/homologation, deploy and cutover in Phases 09-10","release, deploy and Phase 09 until separately authorized"],
+  "risks":["Dashboard remains a synchronous derived read model and may require projection/cache work at higher volume.","Future dashboard relations must preserve explicit tenant scoping on both root objects and every traversed relation.","Attention queues must remain derived from canonical domain states and must not become an independent lifecycle.","Node.js 20 deprecation warning for GitHub Actions dependencies remains non-blocking; runner forced Node.js 24 and CI passed."],
+  "blockers":[],
+  "review":{"status":"complete","report":"project/reviews/phase-08-review-report.json","candidate_head":"f6b003971342eb43eac3a9653290dafdd45c3275","blocking_findings":[],"non_blocking_findings":["GitHub Actions Node.js 20 deprecation warning remains a maintenance item; CI #179 completed successfully under forced Node.js 24."]},
+  "qa_security":{"status":"go","report":"project/qa/phase-08-qa-security.md","evidence":"Independent QA/Security issued technical GO on material SHA f6b003971342eb43eac3a9653290dafdd45c3275. P08-QA-SEC-001 and P08-QA-SEC-002 are RESOLVED/PASS. Foundation CI #179 / run 31824394665 passed on the exact material SHA with 454 tests, 0 skipped, 86% coverage and PostgreSQL 17.11. Product PR #19 subsequently passed Foundation CI #190 / run 31834128691 before merge."},
+  "human_approval":{"status":"approved","date":"2026-08-14","evidence":"Human explicitly approved Phase 08 after Independent Review and QA/Security GO, then separately authorized PR and merge. Product PR #19 merged to main at 8ec559ab69b88fbd781144b1ad9dc00d465193c2 after green Foundation CI #190. Release, deploy, real providers, sandbox, credentials, public callbacks and Phase 09 remain separately unauthorized."}
 }
