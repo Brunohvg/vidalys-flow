@@ -43,35 +43,34 @@
     "coverage_percent": 86,
     "coverage_gate_minimum_percent": 85,
     "database": "PostgreSQL 17.11",
-    "result": "previous_material_candidate_green; replacement_ci_pending_for_P09_IR_001_rework",
-    "homologation_compose_validation": "previously_passed; replacement_ci_pending",
+    "result": "passed_on_P09_IR_001_rework_candidate",
+    "homologation_compose_validation": "passed",
     "external_network": "not authorized",
-    "previous_ci": "Foundation CI #206 / run 31840509618 passed on e41cacfeab38d9da35e6f344c2009ef53d960165. P09-IR-001 rework changes only docs/HOMOLOGATION.md plus governance carriers; a replacement CI is required on the new material candidate fac5e9c0d86b2137c8542d7ef4101e1746a38fab."
+    "previous_ci": "Foundation CI #206 / run 31840509618 passed on the original material candidate e41cacfeab38d9da35e6f344c2009ef53d960165."
   },
   "scans": {
-    "secret_scan": "replacement CI pending",
-    "independence_scan": "replacement CI pending",
-    "ruff": "replacement CI pending",
-    "django_check": "replacement CI pending",
-    "migration_consistency": "replacement CI pending",
-    "governance_validation": "replacement CI pending",
-    "approved_phase_ancestry_and_baseline": "replacement CI pending",
-    "docker_build": "replacement CI pending",
-    "compose_validation": "replacement CI pending",
-    "celery_runtime_topology": "replacement CI pending"
+    "secret_scan": "passed on Foundation CI #209 / run 31849693025",
+    "independence_scan": "passed on Foundation CI #209 / run 31849693025",
+    "ruff": "passed on Foundation CI #209 / run 31849693025",
+    "django_check": "passed on Foundation CI #209 / run 31849693025",
+    "migration_consistency": "passed on Foundation CI #209 / run 31849693025",
+    "governance_validation": "passed on Foundation CI #209 / run 31849693025",
+    "approved_phase_ancestry_and_baseline": "passed on Foundation CI #209 / run 31849693025",
+    "docker_build": "passed on Foundation CI #209 / run 31849693025",
+    "compose_validation": "local, test and homologation Compose passed on Foundation CI #209 / run 31849693025",
+    "celery_runtime_topology": "passed for queues default and integrations on Foundation CI #209 / run 31849693025"
   },
   "ci": {
-    "status": "replacement_run_pending",
-    "previous_workflow_id": 31840509618,
-    "previous_run_number": 206,
-    "previous_head_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
-    "previous_conclusion": "success",
-    "candidate_head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
-    "context": "Independent Review returned CHANGES_REQUESTED only for P09-IR-001. The material rework adds the required incident response procedure; replacement CI must be green before re-review."
+    "workflow_id": 31849693025,
+    "run_number": 209,
+    "head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "run_attempt": 1,
+    "conclusion": "success",
+    "context": "Foundation CI completed green on the exact P09-IR-001 rework material candidate."
   },
   "organization_isolation": {
-    "status": "unchanged_from_green_candidate",
-    "evidence": "P09-IR-001 rework is documentation-only and introduces no operational entity or authorization path; cross-Organization regression remains mandatory in replacement CI."
+    "status": "regression_passed",
+    "evidence": "P09-IR-001 rework is documentation-only. The full 454-test regression suite including approved cross-Organization coverage passed on PostgreSQL 17.11 in Foundation CI #209."
   },
   "legacy_reuse": {
     "code": false,
@@ -82,13 +81,16 @@
     "flowlog_reference": "No Flowlog runtime, database, Redis, secrets or infrastructure may be reused."
   },
   "independent_review": {
-    "status": "changes_requested",
+    "status": "pending_revalidation_after_changes_requested",
     "reviewed_material_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
     "reviewed_documentary_head": "86f74800f2c799214770226d09731748c7821b01",
     "blocking_finding": "P09-IR-001",
     "finding": "docs/HOMOLOGATION.md lacked an operational incident response procedure covering classification, containment, evidence preservation, rollback/recovery decision, post-incident validation and escalation.",
-    "rework_status": "implemented_pending_ci_and_independent_revalidation",
-    "rework_material_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab"
+    "rework_status": "implemented_and_ci_green_pending_independent_revalidation",
+    "rework_material_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "rework_ci_run": 31849693025,
+    "rework_ci_run_number": 209,
+    "rework_ci_conclusion": "success"
   },
   "deferred": [
     "real Coolify resource provisioning and runtime acceptance evidence until an external homologation environment is explicitly executed/recorded",
