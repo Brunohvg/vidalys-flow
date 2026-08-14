@@ -1,0 +1,164 @@
+{
+  "schema_version": 2,
+  "id": 9,
+  "name": "Infrastructure and homologation",
+  "dependency_phase": 8,
+  "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
+  "base_ref": "main",
+  "branch": "phase/09-infrastructure-homologation",
+  "status": "in_progress",
+  "plan_status": "approved",
+  "implementation_status": "in_progress",
+  "review_status": "blocked",
+  "qa_status": "blocked",
+  "human_approval_status": "pending",
+  "initiation_authorization": {
+    "status": "authorized",
+    "evidence": "Human explicitly authorized implementation of Phase 09 on 2026-08-14 after approving the Coolify topology with PostgreSQL separate and the remaining runtime in one application stack."
+  },
+  "allowed_status_values": {
+    "status": ["planned", "in_progress", "candidate", "approved", "rejected"],
+    "plan_status": ["pending", "approved", "rejected"],
+    "implementation_status": ["blocked", "pending", "in_progress", "complete"],
+    "review_status": ["blocked", "pending", "in_progress", "complete", "changes_requested"],
+    "qa_status": ["blocked", "pending", "in_progress", "go", "no_go"],
+    "human_approval_status": ["pending", "approved", "rejected"]
+  },
+  "allowed_apps": ["core", "users", "organizations", "audit", "platform", "customers", "products", "orders", "fulfillment", "payments", "messaging", "integrations", "dashboard"],
+  "forbidden_apps": ["inventory", "tax", "accounting", "marketing", "e-commerce"],
+  "expected_models": [],
+  "expected_features": [
+    "Coolify-ready homologation stack with web, worker-default, worker-integrations, Beat and Redis sharing the approved application image.",
+    "PostgreSQL 17 remains a separate exclusive Coolify database resource addressed only through DATABASE_URL.",
+    "Explicit release/migration job that runs independently from the long-lived web and Celery processes.",
+    "Production-grade homologation settings, healthchecks, fail-closed external effects and secret-only runtime configuration.",
+    "Operational runbook for empty-database bootstrap, migrations, health validation, backup/restore evidence, rollback and observability readiness.",
+    "CI validation of the homologation Compose topology without requiring real credentials or external provider access."
+  ],
+  "deferred_features": [
+    "production go-live and cutover",
+    "Flowlog operational shutdown",
+    "legacy data migration or import",
+    "real provider activation unless separately authorized by an explicit homologation subgate",
+    "public provider callbacks unless separately authorized",
+    "Phase 10 implementation"
+  ],
+  "states": {
+    "infrastructure_states": [],
+    "rule": "Phase 09 adds no canonical business lifecycle; it prepares and validates infrastructure and homologation only."
+  },
+  "snapshots": [
+    "No persistent domain snapshot is introduced by infrastructure work.",
+    "Logs, metrics and backup evidence must not contain secrets or unrestricted personal data."
+  ],
+  "idempotency": [
+    "Release migrations must be safe to run repeatedly at the same approved application version.",
+    "Bootstrap and operational scripts must fail safely when prerequisites are missing and must not duplicate privileged seed state.",
+    "Provider-specific idempotency remains governed by the owning domain and is not relaxed by homologation."
+  ],
+  "money_rules": [
+    "Infrastructure never computes or mutates canonical money.",
+    "Payment provider activation remains blocked unless an explicit provider homologation subgate is authorized."
+  ],
+  "authorization": [
+    "All application authorization and Organization isolation rules from approved phases remain unchanged.",
+    "Runtime configuration must not introduce hostname tenancy, shared Flowlog identity, shared database access or arbitrary Organization selection.",
+    "Background workers continue to revalidate Organization and entity boundaries through approved services/selectors."
+  ],
+  "migrations": {
+    "new_only": true,
+    "legacy_reuse": false,
+    "empty_postgresql_required": true,
+    "technical_rollback_required": true,
+    "data_migrations_allowed": false
+  },
+  "tests": {
+    "database": "PostgreSQL 17",
+    "network_access": false,
+    "required": [
+      "existing full regression suite",
+      "homologation Compose config renders with PostgreSQL external to the application stack",
+      "web, worker-default, worker-integrations, Beat and Redis topology",
+      "release migration command is explicit and non-long-lived",
+      "production/homologation settings fail closed without provider enablement",
+      "healthcheck and readiness contracts",
+      "cross-Organization regression remains green",
+      "backup/restore and rollback procedures are documented and independently verifiable before final approval"
+    ],
+    "sandbox_contract_validation": "Deferred until a provider-specific homologation subgate receives separate explicit authorization."
+  },
+  "coverage": {
+    "minimum_total_percent": 85,
+    "domain_expectation": "No reduction in approved domain coverage; any new executable infrastructure helper requires direct tests where applicable."
+  },
+  "ci": [
+    "locked dependencies",
+    "governance validation",
+    "baseline/ancestry",
+    "secret and independence scans",
+    "Ruff and Django check",
+    "migration consistency and historical rollback gates",
+    "PostgreSQL tests and coverage",
+    "Docker build",
+    "local/test Compose validation",
+    "homologation Compose validation",
+    "Celery topology regression"
+  ],
+  "documentation": [
+    "Coolify topology and resource boundaries",
+    "PostgreSQL external-resource contract",
+    "runtime environment variables and secret handling",
+    "release/migration procedure",
+    "healthchecks and observability requirements",
+    "backup/restore validation procedure",
+    "rollback and incident procedure",
+    "provider homologation subgate boundaries"
+  ],
+  "acceptance_criteria": [
+    "Phase 09 is based on actual_base_sha 12b519c3e8237e1ebe43c1a0253b0747e0680e07 and approved Phase 08 product head 8ec559ab69b88fbd781144b1ad9dc00d465193c2.",
+    "Homologation application stack contains web, worker-default, worker-integrations, Beat and Redis, while PostgreSQL 17 is external to that stack and exclusive to Vidalys Flow.",
+    "No database, Redis, runtime, secrets, infrastructure or identity is reused from Flowlog.",
+    "Migrations run through an explicit release job against an empty PostgreSQL 17 database contract.",
+    "Only the web service is intended for ingress; Redis and Celery services have no public ports.",
+    "External effects remain fail-closed by default and no provider/sandbox/callback is activated without a separate explicit authorization.",
+    "Backup/restore, rollback, observability and health validation procedures are documented before the phase can become a review candidate.",
+    "Total coverage remains at least 85% and Foundation CI is green on the material candidate.",
+    "Independent Review and QA/Security GO are required before final human approval.",
+    "Production go-live, cutover, release and Phase 10 require separate explicit human authorization."
+  ],
+  "checks": [
+    "python scripts/agent_orchestrator.py validate-all",
+    "python scripts/check_governance_baseline.py --head HEAD --ref-name phase/09-infrastructure-homologation --baseline-ref origin/main",
+    "python scripts/check_secrets.py",
+    "python scripts/check_independence.py",
+    "ruff check",
+    "Django check and migration consistency",
+    "PostgreSQL test suite with coverage",
+    "docker build",
+    "docker compose config for local, test and homologation definitions",
+    "python scripts/check_celery_runtime.py"
+  ],
+  "report_format": {
+    "required_sections": ["checkpoint", "branch", "dependency_head", "base_ref", "actual_base_sha", "coolify_topology", "database_boundary", "release_migrations", "runtime_configuration", "health_and_observability", "backup_restore", "rollback", "security", "tests_and_gates", "risks", "deferred", "human_decisions_required"]
+  },
+  "handoff_format": {
+    "path": "project/handoffs/phase-09.json",
+    "base_sha_semantics": "Exact origin/main SHA resolved before branch creation.",
+    "required_fields": ["schema_version", "phase_id", "phase_name", "status", "branch", "base_sha", "head_sha", "commits", "delivered_scope", "models", "migrations", "tests", "scans", "ci", "organization_isolation", "legacy_reuse", "deferred", "risks", "blockers", "human_approval"]
+  },
+  "allowed_scope": [
+    "Coolify-oriented homologation application stack and runtime configuration for approved Vidalys Flow code.",
+    "External PostgreSQL resource contract with internal/private connectivity only.",
+    "Redis within the application stack for Celery broker and cache.",
+    "Explicit release job, healthchecks, observability hooks, backup/restore and rollback runbooks.",
+    "Offline/CI homologation validation with no real secrets or external provider effects."
+  ],
+  "forbidden_scope": [
+    "Production go-live, cutover or Flowlog shutdown.",
+    "Any Flowlog runtime/data/code/database/Redis/infrastructure reuse or linkage.",
+    "Real provider, sandbox, credential, public callback or DNS change without a separately authorized homologation subgate.",
+    "Legacy data migration/import.",
+    "New business lifecycle or domain semantics.",
+    "Phase 10 implementation or release without separate explicit human authorization."
+  ]
+}
