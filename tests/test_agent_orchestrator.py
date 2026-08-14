@@ -32,15 +32,19 @@ def repository(governance_root):
 
 def test_valid_state_and_all_artifacts(repository):
     state = repository.validate_state()
-
     repository.validate_all()
-
     assert state["approved_phase"] == 7
     assert state["approved_phase_head"] == "cba7d6cbebbcf672bb313472d5e1d7e431e48df5"
     assert state["baseline_branch"] == "main"
     assert state["next_phase"] == 8
     assert state["next_phase_name"] == "Dashboard and complete experience"
-    assert state["active_candidate"] is None
+    assert state["active_candidate"] == {
+        "phase": 8,
+        "branch": "phase/08-dashboard-experience",
+        "base_ref": "main",
+        "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
+        "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+    }
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):
@@ -48,7 +52,6 @@ def test_invalid_approved_sha_is_rejected(governance_root):
     state = load_json(path)
     state["approved_phase_head"] = "invalid"
     write_json(path, state)
-
     with pytest.raises(GovernanceError, match="approved_phase_head"):
         GovernanceRepository(governance_root).validate_state()
 
@@ -64,7 +67,6 @@ def test_unapproved_dependency_is_rejected(governance_root):
     roadmap["phases"][2]["status"] = "planned"
     roadmap["phases"][2]["human_approval_status"] = "pending"
     write_json(path, roadmap)
-
     with pytest.raises(GovernanceError, match="confirmed approval"):
         GovernanceRepository(governance_root).validate_phase(3)
 
@@ -74,57 +76,45 @@ def test_dependency_head_must_match_approved_dependency(governance_root):
     phase = load_json(path)
     phase["dependency_head"] = "0" * 40
     write_json(path, phase)
-
     with pytest.raises(GovernanceError, match="dependency_head differs"):
         GovernanceRepository(governance_root).validate_phase(3)
 
 
 def test_phase_uses_main_as_unresolved_baseline(repository):
     phase = repository.validate_phase(3)
-
     assert phase["base_ref"] == "main"
     assert "base_sha" not in phase
 
 
 def test_active_candidate_does_not_invalidate_historical_phase(repository):
     phase = repository.validate_phase(3)
-
     assert phase["status"] == "approved"
+
+
+def test_phase_branch_must_match_explicit_roadmap_identifier(governance_root):
+    path = governance_root / "project/phases/08-dashboard-experience.json"
+    phase = load_json(path)
+    phase["branch"] = "phase/08-dashboard-and-complete-experience"
+    write_json(path, phase)
+    with pytest.raises(GovernanceError, match="branch differs from roadmap"):
+        GovernanceRepository(governance_root).validate_phase(8)
 
 
 def test_active_candidate_dependency_must_match_its_manifest(governance_root):
     state_path = governance_root / "project/state.json"
     state = load_json(state_path)
-    state["active_candidate"] = {
-        "phase": 8,
-        "branch": "phase/08-dashboard-and-complete-experience",
-        "base_ref": "main",
-        "actual_base_sha": "1" * 40,
-        "dependency_head": "0" * 40,
-    }
+    state["active_candidate"]["dependency_head"] = "0" * 40
     write_json(state_path, state)
-
-    source = governance_root / "project/phases/07-integrations.json"
-    phase_path = governance_root / "project/phases/08-dashboard-experience.json"
-    phase = load_json(source)
-    phase.update(
-        {
-            "id": 8,
-            "name": "Dashboard and complete experience",
-            "branch": "phase/08-dashboard-and-complete-experience",
-            "dependency_phase": 7,
-            "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
-            "status": "planned",
-            "plan_status": "pending",
-            "implementation_status": "blocked",
-            "review_status": "blocked",
-            "qa_status": "blocked",
-            "human_approval_status": "pending",
-        }
-    )
-    write_json(phase_path, phase)
-
     with pytest.raises(GovernanceError, match="active_candidate dependency_head differs"):
+        GovernanceRepository(governance_root).validate_phase(8)
+
+
+def test_active_candidate_branch_must_match_manifest(governance_root):
+    state_path = governance_root / "project/state.json"
+    state = load_json(state_path)
+    state["active_candidate"]["branch"] = "phase/08-other"
+    write_json(state_path, state)
+    with pytest.raises(GovernanceError, match="active_candidate branch differs"):
         GovernanceRepository(governance_root).validate_phase(8)
 
 
@@ -133,7 +123,6 @@ def test_wrong_baseline_reference_is_rejected(governance_root):
     phase = load_json(path)
     phase["base_ref"] = "chore/candidate"
     write_json(path, phase)
-
     with pytest.raises(GovernanceError, match="base_ref differs"):
         GovernanceRepository(governance_root).validate_phase(3)
 
@@ -143,7 +132,6 @@ def test_invalid_manifest_is_rejected(governance_root):
     phase = load_json(path)
     del phase["expected_models"]
     write_json(path, phase)
-
     with pytest.raises(GovernanceError, match="missing fields"):
         GovernanceRepository(governance_root).validate_phase(3)
 
@@ -153,7 +141,6 @@ def test_incomplete_handoff_is_rejected(governance_root):
     handoff = load_json(path)
     del handoff["tests"]
     write_json(path, handoff)
-
     with pytest.raises(GovernanceError, match="missing fields"):
         GovernanceRepository(governance_root).validate_handoff("project/handoffs/phase-02.json")
 
@@ -164,32 +151,19 @@ def test_implementation_requires_approved_plan(governance_root):
     phase["plan_status"] = "pending"
     phase["implementation_status"] = "blocked"
     write_json(path, phase)
-
     with pytest.raises(GovernanceError, match="before human plan approval"):
         GovernanceRepository(governance_root).render("implementation", 3)
 
 
 def test_agent_cannot_self_approve_phase(governance_root):
-    source = governance_root / "project/phases/07-integrations.json"
     path = governance_root / "project/phases/08-dashboard-experience.json"
-    phase = load_json(source)
-    phase.update(
-        {
-            "id": 8,
-            "name": "Dashboard and complete experience",
-            "branch": "phase/08-dashboard-and-complete-experience",
-            "dependency_phase": 7,
-            "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
-            "status": "planned",
-            "plan_status": "pending",
-            "implementation_status": "pending",
-            "review_status": "blocked",
-            "qa_status": "blocked",
-            "human_approval_status": "approved",
-        }
-    )
+    phase = load_json(path)
+    phase["status"] = "planned"
+    phase["implementation_status"] = "pending"
+    phase["review_status"] = "blocked"
+    phase["qa_status"] = "blocked"
+    phase["human_approval_status"] = "approved"
     write_json(path, phase)
-
     with pytest.raises(GovernanceError, match="cannot approve"):
         GovernanceRepository(governance_root).validate_phase(8)
 
@@ -197,7 +171,6 @@ def test_agent_cannot_self_approve_phase(governance_root):
 def test_rendering_is_deterministic(repository):
     first = repository.render("planning", 3)
     second = repository.render("planning", 3)
-
     assert first == second
     assert "Planning Agent" in first
     assert "b28a019871274e9da1ca1cb65043c5e208b0e727" in first
@@ -208,9 +181,7 @@ def test_rendering_is_deterministic(repository):
 def test_environment_secrets_are_never_rendered(repository, monkeypatch):
     sensitive_value = "gh" + "p_" + ("a" * 24)
     monkeypatch.setenv("UNRELATED_CREDENTIAL", sensitive_value)
-
     output = repository.render("planning", 3)
-
     assert sensitive_value not in output
 
 
@@ -221,20 +192,16 @@ def test_checkpoint_templates_render_only_after_prerequisites(governance_root):
     phase["implementation_status"] = "pending"
     write_json(path, phase)
     repository = GovernanceRepository(governance_root)
-
     implementation = repository.render("implementation", 3)
-
     phase["status"] = "in_progress"
     phase["implementation_status"] = "complete"
     phase["review_status"] = "pending"
     write_json(path, phase)
     review = repository.render("review", 3)
-
     phase["review_status"] = "complete"
     phase["qa_status"] = "pending"
     write_json(path, phase)
     qa = repository.render("qa-security", 3)
-
     assert "Implementation Agent" in implementation
     assert "Review Agent" in review
     assert "QA and Security Agent" in qa
@@ -248,7 +215,6 @@ def test_approval_template_cannot_be_rendered_by_agent(repository):
 def test_cli_errors_return_nonzero(capsys):
     assert main(["render", "implementation", "99"]) == 1
     assert "does not exist" in capsys.readouterr().err
-
     assert main(["render", "approval", "03"]) == 1
     assert "Human Approver" in capsys.readouterr().err
 
@@ -283,15 +249,12 @@ def test_future_handoff_records_actual_base_sha(governance_root):
         "human_approval": {"status": "pending", "evidence": "not_recorded"},
     }
     write_json(path, handoff)
-
     validated = GovernanceRepository(governance_root).validate_handoff("project/handoffs/phase-03.json")
-
     assert validated["base_sha"] == "f2fdc8e2283c905be1547528d83fd0ba6de06612"
 
 
 def test_phase_two_historical_head_is_preserved(repository):
     roadmap = repository.validate_roadmap()
     handoff = repository.validate_handoff("project/handoffs/phase-02.json")
-
     assert roadmap["phases"][2]["approved_sha"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
     assert handoff["head_sha"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
