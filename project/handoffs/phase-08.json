@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "phase_id": 8,
+  "phase_name": "Dashboard and complete experience",
+  "status": "candidate",
+  "branch": "phase/08-dashboard-experience",
+  "base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
+  "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+  "commits": [
+    {
+      "sha": "db368a21aa1f64e68b17e7799fb492a86b517ede",
+      "subject": "feat(dashboard): register dashboard application"
+    },
+    {
+      "sha": "a8913b5afe30becf224b26177302bf45c6c426ec",
+      "subject": "fix(dashboard): enforce read-only HTTP contract"
+    },
+    {
+      "sha": "465a8516f8643a859664c7ce860f566b4ac64b84",
+      "subject": "fix(dashboard): use canonical customer display name"
+    },
+    {
+      "sha": "4a95e6862a44395d2e628a9fca96ae45f3b00857",
+      "subject": "fix(dashboard): use canonical customer display name in workspace"
+    },
+    {
+      "sha": "7d1fe46e368881fd22744ad974651bb448bc8cf1",
+      "subject": "test(dashboard): cover isolation composition and read-only behavior"
+    },
+    {
+      "sha": "72a378c60334fc16679034497fb9a88f96c4c72c",
+      "subject": "docs(dashboard): document read-model boundaries"
+    },
+    {
+      "sha": "156ae0dc54e3ede26f81cf8f567639bc843209de",
+      "subject": "chore(dashboard): mark phase 08 implementation candidate"
+    },
+    {
+      "sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+      "subject": "test(dashboard): guard bounded order list against N plus one"
+    }
+  ],
+  "delivered_scope": [
+    "Organization-scoped read-only operational dashboard composed from canonical Customers, Orders, Fulfillment, Payments, Messaging and Integrations data.",
+    "Operational KPI summary and bounded attention queues for orders, payments, fulfillment, messaging and degraded integrations.",
+    "Consolidated order workspace composing existing customer, payment, fulfillment and messaging context without a parallel lifecycle.",
+    "Unified authenticated navigation and responsive dashboard templates with empty states and search.",
+    "Narrow governance correction making explicit roadmap/manifest branch identifiers authoritative instead of deriving branch names from human-readable phase titles."
+  ],
+  "models": [],
+  "migrations": [],
+  "tests": {
+    "count": 449,
+    "skipped": 0,
+    "ci_passed": 449,
+    "coverage_percent": 86,
+    "database": "PostgreSQL 17.11",
+    "result": "passed",
+    "dashboard_direct_tests": 5,
+    "organization_isolation": "passed",
+    "read_only_http_contract": "passed",
+    "bounded_query_n_plus_one_regression": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "approved_phase_ancestry_and_baseline": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed",
+    "celery_runtime_topology": "passed"
+  },
+  "ci": {
+    "workflow_id": 31816297653,
+    "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "run_attempt": 1,
+    "conclusion": "success",
+    "context": "Foundation CI #160 on material Phase 08 candidate"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Dashboard Organization derives from active Membership/session; selectors receive an Organization and filter every canonical domain boundary; direct cross-Organization search/workspace tests pass fail-closed."
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_reference": "No Flowlog runtime/data/code/infrastructure reuse or linkage."
+  },
+  "deferred": [
+    "inbound WhatsApp sales conversation domain or omnichannel inbox",
+    "new CRM, inventory, ERP, fiscal, tax, accounting or marketing lifecycle",
+    "real providers, credentials, sandbox calls and public callbacks",
+    "infrastructure/homologation, deploy and cutover in Phases 09-10",
+    "PR, merge, release and Phase 09 until separately authorized"
+  ],
+  "risks": [
+    "Dashboard is a synchronous derived read model; future data volume may require dedicated projection/cache work, which is intentionally outside Phase 08.",
+    "Attention queues intentionally mirror canonical domain states and must not accumulate independent business rules in future changes.",
+    "Phase 08 does not add an inbound WhatsApp sales conversation lifecycle; Messaging remains the canonical boundary for existing message records."
+  ],
+  "blockers": [],
+  "review": {
+    "status": "pending",
+    "report": null,
+    "candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "blocking_findings": null,
+    "non_blocking_findings": null
+  },
+  "qa_security": {
+    "status": "blocked",
+    "report": null,
+    "evidence": "Blocked until independent Review is complete."
+  },
+  "human_approval": {
+    "status": "pending",
+    "date": null,
+    "evidence": "Implementation was explicitly authorized. Final Phase 08 approval, PR, merge, release, deploy and Phase 09 remain unauthorized."
+  }
+}
