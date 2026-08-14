@@ -5,6 +5,7 @@ from apps.integrations.exceptions import IntegrationAmbiguousError, IntegrationC
 from apps.integrations.models import IntegrationConnection, IntegrationDelivery, IntegrationEndpoint
 from apps.integrations.services import create_delivery, dispatch_delivery, ingest_webhook, reconcile_delivery
 from apps.organizations.models import Organization
+from apps.platform.models import OutboxEvent
 
 pytestmark = pytest.mark.django_db
 
@@ -28,14 +29,23 @@ def test_reference_adapter_is_offline_and_deterministic():
         adapter.send(payload={"scenario": "timeout"}, idempotency_key="a")
 
 
-def test_delivery_success_and_payload_minimization():
+def test_delivery_success_minimization_and_transactional_outbox():
     org, _, endpoint, _ = setup_integration()
-    delivery = create_delivery(organization=org, endpoint=endpoint, source_type="order", source_id="1", source_version=1, operation_key="export", idempotency_key="idem-1", payload={"safe": "value", "nested": {"secret": "drop"}})
-    assert delivery.payload == {"safe": "value"}
+    delivery = create_delivery(organization=org, endpoint=endpoint, source_type="order", source_id="1", source_version=1, operation_key="export", idempotency_key="idem-1", payload={"state": "confirmed"})
+    event = OutboxEvent.objects.get(organization=org, idempotency_key=f"integration-delivery:{delivery.id}:queued")
+    assert event.payload["delivery_id"] == str(delivery.id)
     dispatch_delivery(delivery.id)
     delivery.refresh_from_db()
     assert delivery.status == IntegrationDelivery.Status.SUCCEEDED
     assert delivery.attempts.get().external_id.startswith("ref-")
+
+
+def test_payload_key_allowlist_rejects_arbitrary_or_nested_data():
+    org, _, endpoint, _ = setup_integration()
+    with pytest.raises(IntegrationContractError):
+        create_delivery(organization=org, endpoint=endpoint, source_type="order", source_id="x", source_version=1, operation_key="export", idempotency_key="bad-1", payload={"customer_email": "x@example.com"})
+    with pytest.raises(IntegrationContractError):
+        create_delivery(organization=org, endpoint=endpoint, source_type="order", source_id="x", source_version=1, operation_key="export", idempotency_key="bad-2", payload={"state": {"nested": "no"}})
 
 
 def test_ambiguous_acceptance_never_blind_retries():
@@ -51,12 +61,12 @@ def test_ambiguous_acceptance_never_blind_retries():
 
 def test_webhook_deduplicates_and_rejects_changed_replay():
     _, connection, _, endpoint = setup_integration()
-    receipt, created = ingest_webhook(connection=connection, endpoint=endpoint, external_event_id="evt-1", contract_version=1, payload={"status": "ok"}, authenticated=True)
+    receipt, created = ingest_webhook(connection=connection, endpoint=endpoint, external_event_id="evt-1", contract_version=1, payload={"state": "ok"}, authenticated=True)
     assert created
-    second, created = ingest_webhook(connection=connection, endpoint=endpoint, external_event_id="evt-1", contract_version=1, payload={"status": "ok"}, authenticated=True)
+    second, created = ingest_webhook(connection=connection, endpoint=endpoint, external_event_id="evt-1", contract_version=1, payload={"state": "ok"}, authenticated=True)
     assert not created and second.id == receipt.id
     with pytest.raises(IntegrationContractError):
-        ingest_webhook(connection=connection, endpoint=endpoint, external_event_id="evt-1", contract_version=1, payload={"status": "changed"}, authenticated=True)
+        ingest_webhook(connection=connection, endpoint=endpoint, external_event_id="evt-1", contract_version=1, payload={"state": "changed"}, authenticated=True)
 
 
 def test_reconciliation_resolves_uncertain_delivery():

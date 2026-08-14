@@ -3,8 +3,10 @@ import json
 import secrets
 from datetime import timedelta
 
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.utils import timezone
+
+from apps.platform.services import enqueue_event
 
 from .adapters import get_adapter
 from .exceptions import IntegrationAmbiguousError, IntegrationContractError, IntegrationPermanentError, IntegrationTransientError
@@ -13,24 +15,31 @@ from .models import IntegrationConnection, IntegrationDelivery, IntegrationDeliv
 MAX_FAILURES_BEFORE_DEGRADED = 3
 MAX_ATTEMPTS = 3
 LEASE_SECONDS = 90
+ALLOWED_PAYLOAD_KEYS = {"scenario", "reconcile_scenario", "subject", "state", "version", "reason_code", "external_ref"}
 ALLOWED_PAYLOAD_SCALARS = (str, int, float, bool, type(None))
 
 
 def _canonical_payload(payload: dict) -> tuple[dict, str]:
     if not isinstance(payload, dict):
         raise IntegrationContractError("payload must be an object")
+    unknown = set(payload) - ALLOWED_PAYLOAD_KEYS
+    if unknown:
+        raise IntegrationContractError("payload contains non-allowlisted fields")
     minimized = {str(k): v for k, v in payload.items() if isinstance(v, ALLOWED_PAYLOAD_SCALARS)}
+    if len(minimized) != len(payload):
+        raise IntegrationContractError("payload values must be scalar")
     encoded = json.dumps(minimized, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
     return minimized, hashlib.sha256(encoded).hexdigest()
 
 
+@transaction.atomic
 def create_delivery(*, organization, endpoint, source_type, source_id, source_version, operation_key, idempotency_key, payload):
     if endpoint.organization_id != organization.id or endpoint.connection.organization_id != organization.id:
         raise IntegrationContractError("cross-organization endpoint")
     if not endpoint.is_active or endpoint.direction != IntegrationEndpoint.Direction.EGRESS:
         raise IntegrationContractError("egress endpoint is inactive")
     minimized, digest = _canonical_payload(payload)
-    delivery, _ = IntegrationDelivery.objects.get_or_create(
+    delivery, created = IntegrationDelivery.objects.get_or_create(
         organization=organization,
         idempotency_key=idempotency_key,
         defaults={
@@ -48,6 +57,16 @@ def create_delivery(*, organization, endpoint, source_type, source_id, source_ve
     )
     if delivery.payload_digest != digest:
         raise IntegrationContractError("idempotency key reused with different payload")
+    if created:
+        enqueue_event(
+            organization=organization,
+            event_type="integration.delivery.queued",
+            aggregate_type="IntegrationDelivery",
+            aggregate_id=delivery.id,
+            payload={"delivery_id": str(delivery.id), "operation_key": operation_key},
+            idempotency_key=f"integration-delivery:{delivery.id}:queued",
+            event_contract_version=1,
+        )
     return delivery
 
 
@@ -55,6 +74,8 @@ def create_delivery(*, organization, endpoint, source_type, source_id, source_ve
 def claim_delivery(delivery_id):
     delivery = IntegrationDelivery.objects.select_for_update().select_related("connection", "endpoint").get(id=delivery_id)
     if delivery.status not in {IntegrationDelivery.Status.QUEUED, IntegrationDelivery.Status.FAILED}:
+        return None
+    if delivery.next_attempt_at and delivery.next_attempt_at > timezone.now():
         return None
     if delivery.connection.status not in {IntegrationConnection.Status.ACTIVE, IntegrationConnection.Status.DEGRADED}:
         return None
@@ -70,7 +91,8 @@ def claim_delivery(delivery_id):
         lease_expires_at=timezone.now() + timedelta(seconds=LEASE_SECONDS),
     )
     delivery.status = IntegrationDelivery.Status.SENDING
-    delivery.save(update_fields=("status", "updated_at"))
+    delivery.next_attempt_at = None
+    delivery.save(update_fields=("status", "next_attempt_at", "updated_at"))
     return attempt.id
 
 
@@ -138,20 +160,17 @@ def ingest_webhook(*, connection, endpoint, external_event_id, contract_version,
     if contract_version != endpoint.contract_version:
         raise IntegrationContractError("contract version mismatch")
     _, digest = _canonical_payload(payload)
-    try:
-        receipt, created = IntegrationWebhookReceipt.objects.get_or_create(
-            connection=connection,
-            endpoint=endpoint,
-            external_event_id=external_event_id,
-            defaults={
-                "organization": connection.organization,
-                "contract_version": contract_version,
-                "payload_digest": digest,
-                "disposition": "accepted",
-            },
-        )
-    except IntegrityError as exc:
-        raise IntegrationContractError("duplicate webhook") from exc
+    receipt, created = IntegrationWebhookReceipt.objects.get_or_create(
+        connection=connection,
+        endpoint=endpoint,
+        external_event_id=external_event_id,
+        defaults={
+            "organization": connection.organization,
+            "contract_version": contract_version,
+            "payload_digest": digest,
+            "disposition": "accepted",
+        },
+    )
     if not created and receipt.payload_digest != digest:
         raise IntegrationContractError("event id reused with different payload")
     return receipt, created
