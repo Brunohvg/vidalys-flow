@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "phase_id": 7,
+  "phase_name": "Integrations",
+  "status": "candidate",
+  "branch": "phase/07-integrations",
+  "base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
+  "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+  "commits": [
+    {"sha": "7859b70", "subject": "feat(integrations): implement provider-neutral core"},
+    {"sha": "75d7528", "subject": "feat(integrations): connect Django and integrations worker"},
+    {"sha": "ac1f2955b21ceebd1118cbbe6b4e9dc446139689", "subject": "fix(integrations): harden replay retry and degraded behavior"},
+    {"sha": "e1558a3ed8b258490a4511af82da19ec80d3e68e", "subject": "fix(integrations): keep config validation migration-neutral"},
+    {"sha": "7978fcc78c3b29c9f06fff8e1cb8a6eb9e896377", "subject": "test(integrations): close sanitization isolation and concurrency gaps"},
+    {"sha": "b44d3f7525ad77279b7c10ac00a7cdc8c0ae5c9f", "subject": "fix(integrations): register Celery tasks"},
+    {"sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e", "subject": "chore(integrations): mark implementation candidate"}
+  ],
+  "delivered_scope": [
+    "Provider-neutral Organization-scoped Integrations domain with connections and versioned endpoints.",
+    "Reliable outbound delivery through transactional outbox, Celery integrations queue, leases, bounded retry/backoff and explicit uncertain state.",
+    "Authenticated inbound webhook receipt contract with replay protection, deduplication, minimized payload and exact contract version.",
+    "Reconciliation and per-connection degraded state without blind retry after ambiguous acceptance.",
+    "Offline reference adapter and deterministic fakes only; no concrete commercial provider or external network effect."
+  ],
+  "models": [
+    "integrations.IntegrationConnection",
+    "integrations.IntegrationEndpoint",
+    "integrations.IntegrationDelivery",
+    "integrations.IntegrationDeliveryAttempt",
+    "integrations.IntegrationWebhookReceipt",
+    "integrations.IntegrationReconciliationRun"
+  ],
+  "migrations": [
+    "apps/integrations/migrations/0001_initial.py"
+  ],
+  "tests": {
+    "count": 440,
+    "skipped": 0,
+    "ci_passed": 440,
+    "coverage_percent": 86,
+    "database": "PostgreSQL 17.11",
+    "result": "passed",
+    "integrations_direct_tests": 19,
+    "critical_concurrency_security_and_contract_regressions": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed",
+    "celery_runtime_topology": "passed"
+  },
+  "ci": {
+    "workflow_id": 31802605600,
+    "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Operational records are Organization-scoped; human access derives from active Membership; ingress tenant derives from authenticated connection/endpoint rather than payload tenant fields; direct cross-Organization visibility and concurrency tests pass fail-closed."
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_reference": "No Flowlog runtime/data/code/infrastructure reuse or linkage."
+  },
+  "deferred": [
+    "concrete commercial connectors and provider-specific adapters until separately approved",
+    "real provider calls, credentials, sandbox calls, public webhook registration and production activation",
+    "generic arbitrary HTTP callbacks or user code execution",
+    "ERP, fiscal, accounting, tax, inventory and marketing connectors",
+    "Phase 08 dashboard and Phases 09-10 infrastructure/deploy"
+  ],
+  "risks": [
+    "Reference adapter validates architecture offline but does not constitute homologation of any concrete external provider.",
+    "Integrations task module has low direct line coverage because behavior is exercised primarily through services and runtime topology; critical service paths and registration are covered by direct tests/CI.",
+    "Inbound WhatsApp sales conversations remain outside this generic Integrations tranche and require explicit future domain scope."
+  ],
+  "blockers": [],
+  "review": {
+    "status": "pending",
+    "report": null,
+    "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+    "blocking_findings": [],
+    "non_blocking_findings_resolved": []
+  },
+  "qa_security": {
+    "status": "blocked",
+    "report": null,
+    "blocking_findings": []
+  },
+  "human_approval": {
+    "status": "pending",
+    "evidence": "Human approved only the Phase 07 implementation plan using provider-neutral reference adapter and offline fakes. Real providers, sandbox, public callbacks, credentials, deploy, PR and merge remain unauthorized."
+  }
+}
