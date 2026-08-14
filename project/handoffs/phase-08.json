@@ -106,16 +106,23 @@
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
-    "report": null,
+    "status": "complete",
+    "report": "project/reviews/phase-08-review-report.json",
     "candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-    "blocking_findings": null,
-    "non_blocking_findings": null
+    "blocking_findings": [],
+    "non_blocking_findings": [
+      {
+        "id": "info_001",
+        "title": "Post-candidate handoff creation in remote Phase 08 branch",
+        "severity": "informational",
+        "description": "Implementer created handoff after marking candidate material; this is standard practice."
+      }
+    ]
   },
   "qa_security": {
-    "status": "blocked",
+    "status": "pending",
     "report": null,
-    "evidence": "Blocked until independent Review is complete."
+    "evidence": "Independent Review complete with READY_FOR_QA_AND_SECURITY. Awaiting QA and Security technical GO/NO-GO."
   },
   "human_approval": {
     "status": "pending",
