@@ -11,7 +11,11 @@ class IntegrationConnection(BaseModel):
         DEGRADED = "degraded", "Degraded"
         DISABLED = "disabled", "Disabled"
 
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="integration_connections")
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="integration_connections",
+    )
     key = models.SlugField(max_length=100)
     adapter_key = models.SlugField(max_length=100, default="reference")
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.INACTIVE)
@@ -22,7 +26,12 @@ class IntegrationConnection(BaseModel):
     degraded_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=("organization", "key"), name="integrations_connection_key_org_uniq")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("organization", "key"),
+                name="integrations_connection_key_org_uniq",
+            )
+        ]
 
 
 class IntegrationEndpoint(BaseModel):
@@ -30,8 +39,16 @@ class IntegrationEndpoint(BaseModel):
         INGRESS = "ingress", "Ingress"
         EGRESS = "egress", "Egress"
 
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="integration_endpoints")
-    connection = models.ForeignKey(IntegrationConnection, on_delete=models.PROTECT, related_name="endpoints")
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="integration_endpoints",
+    )
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.PROTECT,
+        related_name="endpoints",
+    )
     key = models.SlugField(max_length=100)
     direction = models.CharField(max_length=8, choices=Direction.choices)
     contract_version = models.PositiveIntegerField(default=1)
@@ -40,7 +57,10 @@ class IntegrationEndpoint(BaseModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("connection", "key", "contract_version"), name="integrations_endpoint_version_uniq"),
+            models.UniqueConstraint(
+                fields=("connection", "key", "contract_version"),
+                name="integrations_endpoint_version_uniq",
+            ),
         ]
 
 
@@ -55,9 +75,21 @@ class IntegrationDelivery(BaseModel):
         UNCERTAIN = "uncertain", "Uncertain"
         CANCELLED = "cancelled", "Cancelled"
 
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="integration_deliveries")
-    connection = models.ForeignKey(IntegrationConnection, on_delete=models.PROTECT, related_name="deliveries")
-    endpoint = models.ForeignKey(IntegrationEndpoint, on_delete=models.PROTECT, related_name="deliveries")
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="integration_deliveries",
+    )
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.PROTECT,
+        related_name="deliveries",
+    )
+    endpoint = models.ForeignKey(
+        IntegrationEndpoint,
+        on_delete=models.PROTECT,
+        related_name="deliveries",
+    )
     source_type = models.CharField(max_length=120)
     source_id = models.CharField(max_length=120)
     source_version = models.PositiveIntegerField()
@@ -71,8 +103,21 @@ class IntegrationDelivery(BaseModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("organization", "idempotency_key"), name="integrations_delivery_idem_org_uniq"),
-            models.UniqueConstraint(fields=("endpoint", "source_type", "source_id", "source_version", "operation_key", "contract_version"), name="integrations_delivery_source_uniq"),
+            models.UniqueConstraint(
+                fields=("organization", "idempotency_key"),
+                name="integrations_delivery_idem_org_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=(
+                    "endpoint",
+                    "source_type",
+                    "source_id",
+                    "source_version",
+                    "operation_key",
+                    "contract_version",
+                ),
+                name="integrations_delivery_source_uniq",
+            ),
         ]
 
 
@@ -86,8 +131,16 @@ class IntegrationDeliveryAttempt(BaseModel):
         UNCERTAIN = "uncertain", "Uncertain"
         CANCELLED = "cancelled", "Cancelled"
 
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="integration_delivery_attempts")
-    delivery = models.ForeignKey(IntegrationDelivery, on_delete=models.PROTECT, related_name="attempts")
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="integration_delivery_attempts",
+    )
+    delivery = models.ForeignKey(
+        IntegrationDelivery,
+        on_delete=models.PROTECT,
+        related_name="attempts",
+    )
     sequence = models.PositiveIntegerField()
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.REQUESTED)
     lease_token = models.CharField(max_length=64, blank=True)
@@ -98,15 +151,34 @@ class IntegrationDeliveryAttempt(BaseModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("delivery", "sequence"), name="integrations_attempt_sequence_uniq"),
-            models.UniqueConstraint(fields=("delivery",), condition=Q(status__in=("requested", "sending", "accepted", "uncertain")), name="integrations_attempt_one_active"),
+            models.UniqueConstraint(
+                fields=("delivery", "sequence"),
+                name="integrations_attempt_sequence_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=("delivery",),
+                condition=Q(status__in=("requested", "sending", "accepted", "uncertain")),
+                name="integrations_attempt_one_active",
+            ),
         ]
 
 
 class IntegrationWebhookReceipt(BaseModel):
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="integration_webhook_receipts")
-    connection = models.ForeignKey(IntegrationConnection, on_delete=models.PROTECT, related_name="webhook_receipts")
-    endpoint = models.ForeignKey(IntegrationEndpoint, on_delete=models.PROTECT, related_name="webhook_receipts")
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="integration_webhook_receipts",
+    )
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.PROTECT,
+        related_name="webhook_receipts",
+    )
+    endpoint = models.ForeignKey(
+        IntegrationEndpoint,
+        on_delete=models.PROTECT,
+        related_name="webhook_receipts",
+    )
     external_event_id = models.CharField(max_length=160)
     contract_version = models.PositiveIntegerField()
     payload_digest = models.CharField(max_length=64)
@@ -114,7 +186,12 @@ class IntegrationWebhookReceipt(BaseModel):
     occurred_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=("connection", "endpoint", "external_event_id"), name="integrations_webhook_event_uniq")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("connection", "endpoint", "external_event_id"),
+                name="integrations_webhook_event_uniq",
+            )
+        ]
 
 
 class IntegrationReconciliationRun(BaseModel):
@@ -125,13 +202,32 @@ class IntegrationReconciliationRun(BaseModel):
         FAILED = "failed", "Failed"
         UNCERTAIN = "uncertain", "Uncertain"
 
-    organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="integration_reconciliations")
-    connection = models.ForeignKey(IntegrationConnection, on_delete=models.PROTECT, related_name="reconciliations")
-    delivery = models.ForeignKey(IntegrationDelivery, on_delete=models.PROTECT, related_name="reconciliations", null=True, blank=True)
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="integration_reconciliations",
+    )
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.PROTECT,
+        related_name="reconciliations",
+    )
+    delivery = models.ForeignKey(
+        IntegrationDelivery,
+        on_delete=models.PROTECT,
+        related_name="reconciliations",
+        null=True,
+        blank=True,
+    )
     subject_key = models.CharField(max_length=160)
     cursor = models.CharField(max_length=160, blank=True)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
     result_code = models.CharField(max_length=80, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=("organization", "connection", "subject_key", "cursor"), name="integrations_reconcile_idem_uniq")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("organization", "connection", "subject_key", "cursor"),
+                name="integrations_reconcile_idem_uniq",
+            )
+        ]

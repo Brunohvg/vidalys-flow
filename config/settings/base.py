@@ -145,14 +145,35 @@ CELERY_TASK_ROUTES = {
 CELERY_BEAT_SCHEDULE = {
     "platform-outbox-publisher": {"task": "apps.platform.tasks.publish_pending_outbox", "schedule": 10.0},
     "platform-heartbeat": {"task": "apps.platform.tasks.record_beat_heartbeat", "schedule": 30.0},
-    "fulfillment-order-cancellations": {"task": "apps.fulfillment.tasks.consume_order_cancellations", "schedule": 10.0},
-    "payments-order-cancellations": {"task": "apps.payments.tasks.consume_order_cancellations", "schedule": 10.0},
-    "payments-checkout-dispatch": {"task": "apps.payments.tasks.dispatch_checkout_requests", "schedule": 10.0},
-    "payments-checkout-cancellations": {"task": "apps.payments.tasks.dispatch_checkout_cancellations", "schedule": 10.0},
-    "messaging-source-events": {"task": "apps.messaging.tasks.consume_source_events", "schedule": 10.0},
+    "fulfillment-order-cancellations": {
+        "task": "apps.fulfillment.tasks.consume_order_cancellations",
+        "schedule": 10.0,
+    },
+    "payments-order-cancellations": {
+        "task": "apps.payments.tasks.consume_order_cancellations",
+        "schedule": 10.0,
+    },
+    "payments-checkout-dispatch": {
+        "task": "apps.payments.tasks.dispatch_checkout_requests",
+        "schedule": 10.0,
+    },
+    "payments-checkout-cancellations": {
+        "task": "apps.payments.tasks.dispatch_checkout_cancellations",
+        "schedule": 10.0,
+    },
+    "messaging-source-events": {
+        "task": "apps.messaging.tasks.consume_source_events",
+        "schedule": 10.0,
+    },
     "messaging-dispatch": {"task": "apps.messaging.tasks.dispatch_messages", "schedule": 10.0},
-    "integrations-dispatch": {"task": "apps.integrations.tasks.dispatch_pending_deliveries", "schedule": 10.0},
-    "integrations-reconcile": {"task": "apps.integrations.tasks.reconcile_uncertain_deliveries", "schedule": 30.0},
+    "integrations-dispatch": {
+        "task": "apps.integrations.tasks.dispatch_pending_deliveries",
+        "schedule": 10.0,
+    },
+    "integrations-reconcile": {
+        "task": "apps.integrations.tasks.reconcile_uncertain_deliveries",
+        "schedule": 30.0,
+    },
 }
 
 VIDALYS_DEMO_MODE = config("VIDALYS_DEMO_MODE", default=True, cast=bool)

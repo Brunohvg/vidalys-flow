@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import IntegrationConnection, IntegrationDelivery, IntegrationDeliveryAttempt, IntegrationEndpoint, IntegrationReconciliationRun, IntegrationWebhookReceipt
+from .models import (
+    IntegrationConnection,
+    IntegrationDelivery,
+    IntegrationDeliveryAttempt,
+    IntegrationEndpoint,
+    IntegrationReconciliationRun,
+    IntegrationWebhookReceipt,
+)
 
 
 @admin.register(IntegrationConnection)

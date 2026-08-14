@@ -9,13 +9,33 @@ from django.utils import timezone
 from apps.platform.services import enqueue_event
 
 from .adapters import get_adapter
-from .exceptions import IntegrationAmbiguousError, IntegrationContractError, IntegrationPermanentError, IntegrationTransientError
-from .models import IntegrationConnection, IntegrationDelivery, IntegrationDeliveryAttempt, IntegrationEndpoint, IntegrationReconciliationRun, IntegrationWebhookReceipt
+from .exceptions import (
+    IntegrationAmbiguousError,
+    IntegrationContractError,
+    IntegrationPermanentError,
+    IntegrationTransientError,
+)
+from .models import (
+    IntegrationConnection,
+    IntegrationDelivery,
+    IntegrationDeliveryAttempt,
+    IntegrationEndpoint,
+    IntegrationReconciliationRun,
+    IntegrationWebhookReceipt,
+)
 
 MAX_FAILURES_BEFORE_DEGRADED = 3
 MAX_ATTEMPTS = 3
 LEASE_SECONDS = 90
-ALLOWED_PAYLOAD_KEYS = {"scenario", "reconcile_scenario", "subject", "state", "version", "reason_code", "external_ref"}
+ALLOWED_PAYLOAD_KEYS = {
+    "scenario",
+    "reconcile_scenario",
+    "subject",
+    "state",
+    "version",
+    "reason_code",
+    "external_ref",
+}
 ALLOWED_PAYLOAD_SCALARS = (str, int, float, bool, type(None))
 
 
@@ -33,7 +53,17 @@ def _canonical_payload(payload: dict) -> tuple[dict, str]:
 
 
 @transaction.atomic
-def create_delivery(*, organization, endpoint, source_type, source_id, source_version, operation_key, idempotency_key, payload):
+def create_delivery(
+    *,
+    organization,
+    endpoint,
+    source_type,
+    source_id,
+    source_version,
+    operation_key,
+    idempotency_key,
+    payload,
+):
     if endpoint.organization_id != organization.id or endpoint.connection.organization_id != organization.id:
         raise IntegrationContractError("cross-organization endpoint")
     if not endpoint.is_active or endpoint.direction != IntegrationEndpoint.Direction.EGRESS:
@@ -72,7 +102,11 @@ def create_delivery(*, organization, endpoint, source_type, source_id, source_ve
 
 @transaction.atomic
 def claim_delivery(delivery_id):
-    delivery = IntegrationDelivery.objects.select_for_update().select_related("connection", "endpoint").get(id=delivery_id)
+    delivery = (
+        IntegrationDelivery.objects.select_for_update()
+        .select_related("connection", "endpoint")
+        .get(id=delivery_id)
+    )
     if delivery.status not in {IntegrationDelivery.Status.QUEUED, IntegrationDelivery.Status.FAILED}:
         return None
     if delivery.next_attempt_at and delivery.next_attempt_at > timezone.now():
@@ -115,8 +149,20 @@ def dispatch_delivery(delivery_id):
 
 
 @transaction.atomic
-def _finish_attempt(attempt_id, *, external_id="", result_code="", failed=False, retryable=False, uncertain=False):
-    attempt = IntegrationDeliveryAttempt.objects.select_for_update().select_related("delivery__connection").get(id=attempt_id)
+def _finish_attempt(
+    attempt_id,
+    *,
+    external_id="",
+    result_code="",
+    failed=False,
+    retryable=False,
+    uncertain=False,
+):
+    attempt = (
+        IntegrationDeliveryAttempt.objects.select_for_update()
+        .select_related("delivery__connection")
+        .get(id=attempt_id)
+    )
     delivery = IntegrationDelivery.objects.select_for_update().get(id=attempt.delivery_id)
     connection = IntegrationConnection.objects.select_for_update().get(id=delivery.connection_id)
     attempt.external_id = external_id
@@ -135,7 +181,7 @@ def _finish_attempt(attempt_id, *, external_id="", result_code="", failed=False,
             connection.status = IntegrationConnection.Status.DEGRADED
             connection.degraded_at = timezone.now()
         if retryable and attempt.sequence < MAX_ATTEMPTS:
-            delivery.next_attempt_at = timezone.now() + timedelta(seconds=2 ** attempt.sequence)
+            delivery.next_attempt_at = timezone.now() + timedelta(seconds=2**attempt.sequence)
     else:
         attempt.status = IntegrationDeliveryAttempt.Status.SUCCEEDED
         delivery.status = IntegrationDelivery.Status.SUCCEEDED
@@ -189,7 +235,10 @@ def reconcile_delivery(delivery):
     attempt = delivery.attempts.order_by("-sequence").first()
     adapter = get_adapter(delivery.connection.adapter_key)
     try:
-        result = adapter.reconcile(external_id=attempt.external_id if attempt else "", payload=delivery.payload)
+        result = adapter.reconcile(
+            external_id=attempt.external_id if attempt else "",
+            payload=delivery.payload,
+        )
     except IntegrationAmbiguousError:
         run.status = IntegrationReconciliationRun.Status.UNCERTAIN
     except IntegrationPermanentError:

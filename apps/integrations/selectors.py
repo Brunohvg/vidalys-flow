@@ -6,4 +6,8 @@ def connections_for_organization(organization):
 
 
 def deliveries_for_organization(organization):
-    return IntegrationDelivery.objects.filter(organization=organization).select_related("connection", "endpoint").order_by("-created_at")
+    return (
+        IntegrationDelivery.objects.filter(organization=organization)
+        .select_related("connection", "endpoint")
+        .order_by("-created_at")
+    )
