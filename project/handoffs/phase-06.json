@@ -7,42 +7,19 @@
   "base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
   "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
   "commits": [
-    {
-      "sha": "8c1ace99a0c59b3f65d18d84e03f4e895555964b",
-      "subject": "docs(messaging): plan phase 06"
-    },
-    {
-      "sha": "bc4f80dd30579115d95b1dd7b5a9762e0917d058",
-      "subject": "docs(messaging): add Evolution API provider plan"
-    },
-    {
-      "sha": "e13e90b4fbd9677ac96185d63d982ab3736f7de7",
-      "subject": "docs(governance): record Phase 06 plan human approval"
-    },
-    {
-      "sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
-      "subject": "feat(messaging): implement transactional messaging core"
-    },
-    {
-      "sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
-      "subject": "fix(messaging): remediate independent review findings"
-    },
-    {
-      "sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
-      "subject": "fix(messaging): close event and template contracts"
-    }
+    {"sha": "8c1ace99a0c59b3f65d18d84e03f4e895555964b", "subject": "docs(messaging): plan phase 06"},
+    {"sha": "bc4f80dd30579115d95b1dd7b5a9762e0917d058", "subject": "docs(messaging): add Evolution API provider plan"},
+    {"sha": "e13e90b4fbd9677ac96185d63d982ab3736f7de7", "subject": "docs(governance): record Phase 06 plan human approval"},
+    {"sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee", "subject": "feat(messaging): implement transactional messaging core"},
+    {"sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b", "subject": "fix(messaging): remediate independent review findings"},
+    {"sha": "cf871a561e529aa331479b13c792e6b2fcac6743", "subject": "fix(messaging): close event and template contracts"}
   ],
   "delivered_scope": [
-    "Organization-scoped transactional Messaging aggregate with immutable source, customer, destination, template, permission, parameter, and provider snapshots",
-    "canonical pending, queued, sending, sent, delivered, failed, cancelled, and uncertain lifecycle with separate history, idempotent command receipts, leases, optimistic version checks, and pessimistic locks",
-    "manual sends for active members and manager-tier connection, channel, template, automation-rule, preference, cancellation, and reconciliation commands",
-    "closed and versioned WhatsApp and e-mail templates with server-side parameter rendering and explicit purpose/source compatibility",
-    "automatic consumption of approved Order, Fulfillment, and Payment outbox events with exact source-version validation and persistent consumption receipts",
-    "Evolution API v2.3.7 linked-device, WhatsApp Cloud official-template, and Amazon SES offline request contracts behind adapters with all external effects disabled",
-    "fail-closed permission evidence, Customer/contact/source revalidation immediately before dispatch, no silent merge repointing, and active checkout-link revalidation",
-    "ambiguous transport handling without blind retry, provider acceptance, delivery evidence, late-failure inconsistency preservation, and explicit reconciliation",
-    "callback size, identifier, replay, rate-limit, and secret-channel controls; Evolution callback remains unavailable until its secret resolver is provisioned and Meta/SES callbacks remain blocked pending approved authenticity implementations",
-    "masked OPERATOR presentation, manager-tier complete evidence, read-only tenant-scoped admin, Celery default/integrations topology, and clone-continuity documentation"
+    "Organization-scoped transactional Messaging with immutable snapshots, idempotency, leases, optimistic version checks and pessimistic locks",
+    "manual and approved automatic transactional messaging for Order, Fulfillment and Payment sources",
+    "closed server-side transactional template catalog and exact event-contract version validation",
+    "offline provider-neutral contracts for Evolution API, WhatsApp Cloud and Amazon SES with external effects disabled",
+    "fail-closed permission, source, checkout, callback, tenant-isolation and provider safety controls"
   ],
   "models": [
     "messaging.MessagingProviderConnection",
@@ -54,8 +31,7 @@
     "messaging.MessageDeliveryAttempt",
     "messaging.MessageStatusHistory",
     "messaging.MessageCommandReceipt",
-    "messaging.MessageWebhookReceipt",
-    "messaging.MessageSourceEventReceipt"
+    "messaging.MessageWebhookReceipt"
   ],
   "migrations": [
     "apps/messaging/migrations/0001_initial.py",
@@ -65,27 +41,11 @@
     "count": 413,
     "skipped": 5,
     "ci_passed": 418,
-    "skip_reason": "The five governance-baseline tests require .git metadata, which is intentionally absent from the test image; they run in GitHub Actions with the repository checkout.",
     "coverage_percent": 85.3952772073922,
     "database": "PostgreSQL 17.10",
     "result": "passed",
-    "empty_database_migration": "passed",
-    "technical_rollback": "passed",
-    "concurrency": "passed",
-    "cross_organization": "passed",
     "messaging_direct_tests": 138,
-    "provider_network_blocking": "passed",
-    "callback_replay_and_rate_limit": "passed",
-    "dispatch_lease_and_ambiguity": "passed",
-    "source_version_revalidation": "passed",
-    "dispatch_authorization_races": "passed",
-    "database_snapshot_immutability": "passed",
-    "configuration_version_concurrency": "passed",
-    "transient_source_event_retry": "passed",
-    "source_event_contract_versions": "passed",
-    "closed_transactional_template_catalog": "passed",
-    "all_six_automatic_sources": "passed",
-    "event_specific_source_states": "passed"
+    "critical_concurrency_security_and_contract_regressions": "passed"
   },
   "scans": {
     "secret_scan": "passed",
@@ -100,22 +60,13 @@
   },
   "ci": {
     "workflow_id": 31761251578,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31761251578",
     "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
     "run_attempt": 1,
     "conclusion": "success"
   },
   "organization_isolation": {
     "status": "passed",
-    "evidence": "Organization-explicit services, selectors, workers, callbacks, admin, commands, source resolution, provider connections, channels, templates, rules, preferences, messages, attempts, and receipts; active Membership policies and direct cross-tenant tests fail closed."
-  },
-  "provider_contracts": {
-    "evolution_api": "Versioned offline Send Text fixture and deterministic per-Organization/channel instance naming; linked-device effects, pairing, secrets, callbacks, and network remain disabled.",
-    "whatsapp_cloud": "Versioned offline official-template payload fixture with locale and ordered parameters; credentials, network, and callback authenticity remain disabled.",
-    "amazon_ses": "Versioned offline SendEmail payload fixture; credentials, network, SNS authenticity, and callbacks remain disabled.",
-    "network_in_ci": false,
-    "sandbox_used": false,
-    "production_effects": false
+    "evidence": "Organization-explicit services, selectors, workers, callbacks, commands and persistent records; active Membership policies and direct cross-organization tests fail closed."
   },
   "legacy_reuse": {
     "code": false,
@@ -123,83 +74,38 @@
     "migrations": false,
     "runtime": false,
     "infrastructure": false,
-    "flowlog_reference": "Read-only product-idea audit only at the frozen SHA and allowlisted Messaging paths; no technical linkage or artifact reuse."
+    "flowlog_reference": "Read-only product-idea audit only; no technical linkage or artifact reuse."
   },
   "deferred": [
-    "provider credentials, real pairing, sandbox calls, public callback registration, external status queries, production activation, and deploy",
-    "approved authenticity implementations for WhatsApp Cloud and Amazon SNS callbacks plus a provisioned secret resolver for Evolution callbacks",
-    "marketing campaigns, inbound conversations, chatbot, AI, media, SMS, voice, bulk sends, fallback routing, open/click analytics, and multi-provider failover",
-    "Appmax, public API, importers, inventory, fiscal, Dashboard, Coolify, homologation, cutover, and later phases"
+    "provider credentials, real pairing, sandbox calls, public callbacks, external status queries, production activation and deploy",
+    "WhatsApp Cloud and Amazon SNS callback authenticity activation and Evolution secret resolver",
+    "marketing, inbound conversations, chatbot, AI, media, SMS, voice, bulk sends and multi-provider failover",
+    "Phase 07 Integrations and all later phases"
   ],
   "risks": [
-    "Evolution linked-device is non-official and operationally less stable than WhatsApp Cloud; the adapter remains isolated and disabled until homologation evidence and a separate activation approval exist.",
-    "Callback authenticity is intentionally unavailable rather than approximated where a complete approved provider contract is absent.",
-    "Coverage is above the 85% gate; the second remediated candidate still requires a new independent Review of event-contract versioning, the closed transactional template catalog, the six-source matrix, dispatch linearization, permission evidence, callback replay, tenant isolation, and external-effect blocking."
+    "Evolution linked-device remains non-official and disabled pending separate homologation and activation approval.",
+    "Provider callbacks and external effects remain fail-closed where complete authenticity or secret-channel contracts are not approved.",
+    "Global coverage is above the 85 percent gate by a limited margin and should remain protected by direct behavioral tests."
   ],
   "blockers": [],
-  "remediation": {
-    "status": "candidate_pending_independent_review",
-    "material_head": "cf871a561e529aa331479b13c792e6b2fcac6743",
-    "material_ci_run": 31761251578,
-    "findings_addressed": [
-      "P06-R01",
-      "P06-R02",
-      "P06-R03",
-      "P06-R04",
-      "P06-R05",
-      "P06-R06",
-      "P06-R07",
-      "P06-R08"
-    ],
-    "evidence": "Review 02 confirmed P06-R01 through P06-R05 resolved. The second remediation adds an explicit positive event_contract_version to the outbox envelope, requires canonical event/rule version and event-specific current source state, closes template key/purpose/channel/locale/body/schema against a server-side transactional catalog at creation, manual send, automation, and dispatch, and directly covers all six automatic sources plus missing/unknown versions, divergent rules, incompatible source states, and promotional content. Independent Review has not yet accepted P06-R06 through P06-R08 as resolved."
-  },
   "review": {
-    "status": "changes_requested",
-    "candidate_head": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
-    "carrier_observed": "6bb3f533327fc47c6ba83536b3644b8b5129c28d",
-    "report": "project/reviews/phase-06-review-02.md",
-    "material_ci_run": 31758178500,
-    "carrier_ci_run": 31758401999,
-    "local_tests": 396,
-    "local_skipped": 5,
-    "local_coverage_percent": 85.29830464604633,
-    "findings_revalidated": [
-      "P06-R01",
-      "P06-R02",
-      "P06-R03",
-      "P06-R04",
-      "P06-R05"
-    ],
-    "blocking_findings": [
-      "P06-R06",
-      "P06-R07",
-      "P06-R08"
-    ],
-    "previous_review": {
-      "status": "changes_requested",
-      "candidate_head": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
-      "carrier_observed": "eb9bded670dcbff8709dec21e7903c96e461ce9a",
-      "report": "project/reviews/phase-06-review-01.md",
-      "material_ci_run": 31756127273,
-      "carrier_ci_run": 31756306732,
-      "blocking_findings": [
-        "P06-R01",
-        "P06-R02",
-        "P06-R03",
-        "P06-R04",
-        "P06-R05"
-      ],
-      "findings_addressed": [
-        "P06-R01",
-        "P06-R02",
-        "P06-R03",
-        "P06-R04",
-        "P06-R05"
-      ]
-    }
+    "status": "approved",
+    "report": "project/reviews/phase-06-review-03.md",
+    "candidate_head": "cf871a561e529aa331479b13c792e6b2fcac6743",
+    "blocking_findings": [],
+    "non_blocking_findings_resolved": ["P06-R09"]
+  },
+  "qa_security": {
+    "status": "go",
+    "report": "project/qa/phase-06-qa-security.md",
+    "blocking_findings": []
   },
   "human_approval": {
-    "status": "pending",
-    "evidence": "Second remediated implementation candidate only; a new independent Review, QA/Security, and final human approval have not occurred."
+    "status": "approved",
+    "evidence": "Human approval recorded on 2026-08-13 America/Sao_Paulo after Review 03 APPROVED and QA/Security GO. Authorization is limited to Phase 06 closure, PR and merge after P06-R09 correction and green CI. Provider real effects, deploy and Phase 07 initiation remain explicitly unauthorized."
+  },
+  "p06_r09": {
+    "status": "resolved",
+    "resolution": "Removed the nonexistent messaging.MessageSourceEventReceipt from the delivered model list. Source-event consumption evidence is persisted by messaging.MessageCommandReceipt.source_event_id; no unnecessary model was created."
   }
 }
