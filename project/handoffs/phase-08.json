@@ -102,8 +102,8 @@
     "evidence": "Independent QA/Security issued technical GO on material SHA f6b003971342eb43eac3a9653290dafdd45c3275. P08-QA-SEC-001 and P08-QA-SEC-002 are RESOLVED/PASS. Foundation CI #179 / run 31824394665 passed on the exact material SHA with 454 tests, 0 skipped, 86% coverage and PostgreSQL 17.11. The pre-QA documentary carrier d50702bb942aa4c482dc95e336a9e4ecbad0e09c also passed Foundation CI #184 / run 31825973554."
   },
   "human_approval": {
-    "status": "pending",
-    "date": null,
-    "evidence": "Implementation and narrow reworks for P08-QA-SEC-001 and P08-QA-SEC-002 were explicitly authorized. QA/Security is GO, but final Phase 08 approval, PR, merge, release, deploy and Phase 09 remain unauthorized pending explicit human approval."
+    "status": "approved",
+    "date": "2026-08-14",
+    "evidence": "Human explicitly approved Phase 08 after Independent Review and QA/Security GO. This final product approval is recorded while the handoff remains candidate until a separately authorized PR/merge and official state/roadmap closeout, per governance. PR, merge, release, deploy, real providers, sandbox, credentials, public callbacks and Phase 09 remain unauthorized."
   }
 }
