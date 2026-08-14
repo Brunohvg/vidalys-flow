@@ -10,7 +10,7 @@ from apps.users.forms import EmailAuthenticationForm
 def root(request):
     if not request.user.is_authenticated:
         return redirect(f"{reverse('login')}?next={reverse('root')}")
-    return redirect("organizations:list")
+    return redirect("dashboard:home")
 
 
 urlpatterns = [
@@ -25,6 +25,7 @@ urlpatterns = [
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("health/", include("apps.platform.urls")),
+    path("dashboard/", include("apps.dashboard.urls")),
     path("organizations/", include("apps.organizations.urls")),
     path("customers/", include("apps.customers.urls")),
     path("products/", include("apps.products.urls")),
