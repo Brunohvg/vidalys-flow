@@ -2,16 +2,19 @@ import uuid
 from datetime import timedelta
 
 import pytest
+from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 
 from apps.customers.models import Customer
 from apps.fulfillment.models import Fulfillment
 from apps.messaging import services
 from apps.messaging.exceptions import (
+    IdempotencyConflict,
     InvalidMessage,
     MessagingPermissionDenied,
     OrganizationMismatch,
     ProviderEffectsDisabled,
+    VersionConflict,
 )
 from apps.messaging.models import (
     Message,
@@ -769,6 +772,7 @@ def test_rule_update_template_deactivation_and_pairing_are_guarded(
         channel=whatsapp_channel,
         purpose="order_confirmation",
         is_enabled=True,
+        expected_version=rule.version,
         idempotency_key=key(),
     )
     assert updated.id == rule.id and updated.version == 2 and updated.is_enabled
@@ -928,4 +932,139 @@ def test_internal_contract_validators_fail_closed_on_invalid_relationships(
             organization=organization,
             channel=whatsapp_channel,
             channel_kind="whatsapp",
+        )
+
+
+def test_rule_commands_preserve_idempotency_versions_and_expected_version(
+    organization,
+    manager,
+    manager_membership,
+    whatsapp_template,
+    whatsapp_channel,
+):
+    command_key = key()
+    rule = services.upsert_automation_rule(
+        organization=organization,
+        actor=manager,
+        event_type="order.confirmed",
+        template=whatsapp_template,
+        channel=whatsapp_channel,
+        purpose="order_confirmation",
+        is_enabled=False,
+        idempotency_key=command_key,
+    )
+    with pytest.raises(IdempotencyConflict):
+        services.upsert_automation_rule(
+            organization=organization,
+            actor=manager,
+            event_type="order.confirmed",
+            template=whatsapp_template,
+            channel=whatsapp_channel,
+            purpose="order_confirmation",
+            is_enabled=True,
+            idempotency_key=command_key,
+        )
+    second = services.upsert_automation_rule(
+        organization=organization,
+        actor=manager,
+        event_type="order.confirmed",
+        template=whatsapp_template,
+        channel=whatsapp_channel,
+        purpose="order_confirmation",
+        is_enabled=True,
+        expected_version=rule.version,
+        idempotency_key=key(),
+    )
+    third = services.upsert_automation_rule(
+        organization=organization,
+        actor=manager,
+        event_type="order.confirmed",
+        template=whatsapp_template,
+        channel=whatsapp_channel,
+        purpose="order_confirmation",
+        is_enabled=False,
+        expected_version=second.version,
+        idempotency_key=key(),
+    )
+    assert (rule.version, second.version, third.version) == (1, 2, 3)
+    with pytest.raises(VersionConflict):
+        services.upsert_automation_rule(
+            organization=organization,
+            actor=manager,
+            event_type="order.confirmed",
+            template=whatsapp_template,
+            channel=whatsapp_channel,
+            purpose="order_confirmation",
+            is_enabled=True,
+            expected_version=1,
+            idempotency_key=key(),
+        )
+
+
+def test_template_deactivation_checks_expected_version(
+    organization,
+    manager,
+    manager_membership,
+):
+    template = MessageTemplate.objects.create(
+        organization=organization,
+        semantic_key="stale_deactivation",
+        name="Stale",
+        channel="whatsapp",
+        body_text="Olá {customer_name}.",
+        parameter_schema=["customer_name"],
+    )
+    with pytest.raises(VersionConflict):
+        services.deactivate_template(
+            organization=organization,
+            actor=manager,
+            template=template,
+            expected_version=999,
+            idempotency_key=key(),
+        )
+    template.refresh_from_db()
+    assert template.is_active
+
+
+def test_used_template_and_message_snapshots_are_immutable_at_orm_and_database(
+    organization,
+    manager,
+    manager_membership,
+    messaging_order,
+    messaging_customer,
+    whatsapp_template,
+    whatsapp_channel,
+    allowed_preference,
+):
+    message = services.create_message_from_command(
+        organization=organization,
+        actor=manager,
+        source_type="order",
+        source_id=messaging_order.id,
+        purpose="order_confirmation",
+        template=whatsapp_template,
+        channel=whatsapp_channel,
+        contact_point=messaging_customer[1],
+        idempotency_key=key(),
+    )
+    with pytest.raises(TypeError):
+        MessageTemplate.objects.filter(id=whatsapp_template.id).update(body_text="mutado")
+    whatsapp_template.body_text = "mutado"
+    with pytest.raises(TypeError):
+        MessageTemplate.objects.bulk_update([whatsapp_template], ["body_text"])
+    message.destination_snapshot = "+5511000000000"
+    with pytest.raises(TypeError):
+        message.save(update_fields=("destination_snapshot",))
+    with pytest.raises(TypeError):
+        Message.objects.filter(id=message.id).update(destination_snapshot="+5511000000000")
+
+    with pytest.raises(DatabaseError), transaction.atomic(), connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE messaging_messagetemplate SET body_text = %s WHERE id = %s",
+            ["mutado no banco", whatsapp_template.id],
+        )
+    with pytest.raises(DatabaseError), transaction.atomic(), connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE messaging_message SET destination_snapshot = %s WHERE id = %s",
+            ["+5511000000000", message.id],
         )

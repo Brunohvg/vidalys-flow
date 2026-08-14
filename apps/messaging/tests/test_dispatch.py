@@ -284,7 +284,7 @@ def test_single_active_attempt_constraint(
         )
 
 
-@pytest.mark.parametrize("stale_kind", ["contact", "permission", "template", "channel", "source"])
+@pytest.mark.parametrize("stale_kind", ["contact", "permission", "channel", "source"])
 def test_dispatch_revalidates_mutable_dependencies(
     stale_kind,
     organization,
@@ -311,8 +311,6 @@ def test_dispatch_revalidates_mutable_dependencies(
         contact.save(update_fields=("normalized_value",))
     elif stale_kind == "permission":
         type(allowed_preference).objects.filter(id=allowed_preference.id).update(decision="suppressed")
-    elif stale_kind == "template":
-        type(whatsapp_template).objects.filter(id=whatsapp_template.id).update(is_active=False)
     elif stale_kind == "channel":
         whatsapp_channel.state = "disabled"
         whatsapp_channel.save(update_fields=("state",))

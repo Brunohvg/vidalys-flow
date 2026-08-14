@@ -790,6 +790,10 @@ def _revalidate_dispatch_contract(*, message):
 @transaction.atomic
 def build_send_request(*, message):
     message = _lock_message(organization=message.organization, message_id=message.id)
+    return _build_send_request_locked(message=message)
+
+
+def _build_send_request_locked(*, message):
     _revalidate_dispatch_contract(message=message)
     parameters = _render_context(message=message)
     text_body, html_body = render_message_body(template=message.template, parameters=parameters)
@@ -809,6 +813,75 @@ def build_send_request(*, message):
         locale=message.locale,
         template_parameters=tuple(str(parameters[key]) for key in message.template.parameter_schema),
     )
+
+
+@transaction.atomic
+def prepare_send_request(*, attempt_id, lease_token):
+    """Linearize send authorization and request construction before provider I/O.
+
+    The transaction locks the Message/attempt and all mutable eligibility
+    dependencies while moving the attempt to ``sending``. Provider I/O starts
+    only after this transaction commits, so a concurrent suppression/source or
+    channel change either commits before this authorization and blocks it, or
+    is ordered after the already-authorized send.
+    """
+    ref = MessageDeliveryAttempt.objects.filter(id=attempt_id).values("organization_id", "message_id").first()
+    if ref is None:
+        raise InvalidMessage("Tentativa não encontrada.")
+    message = _lock_message(organization=ref["organization_id"], message_id=ref["message_id"])
+    attempt = MessageDeliveryAttempt.objects.select_for_update().filter(id=attempt_id, message=message).first()
+    if attempt is None or attempt.dispatch_lease_token != lease_token:
+        raise InvalidMessage("Lease de envio inválido.")
+    if message.status != Message.Status.QUEUED or attempt.status != MessageDeliveryAttempt.Status.REQUESTED:
+        raise InvalidMessage("Tentativa não está pronta para iniciar o envio.")
+
+    # Lock each mutable eligibility record explicitly before the final check.
+    message.customer = Customer.objects.select_for_update().get(
+        id=message.customer_id,
+        organization=message.organization,
+    )
+    message.contact_point = ContactPoint.objects.select_for_update().get(
+        id=message.contact_point_id,
+        customer_id=message.customer_id,
+    )
+    message.template = MessageTemplate.objects.select_for_update().get(
+        id=message.template_id,
+        organization=message.organization,
+    )
+    channel = (
+        MessagingChannel.objects.select_for_update()
+        .select_related("connection")
+        .get(id=message.channel_id, organization=message.organization)
+    )
+    channel.connection = MessagingProviderConnection.objects.select_for_update().get(
+        id=channel.connection_id,
+        organization=message.organization,
+    )
+    message.channel = channel
+    MessagingPreference.objects.select_for_update().filter(
+        organization=message.organization,
+        contact_point_id=message.contact_point_id,
+        channel=message.channel_kind,
+        purpose=message.purpose,
+        is_active=True,
+    ).first()
+
+    attempt.status = MessageDeliveryAttempt.Status.SENDING
+    attempt.version += 1
+    attempt.save(update_fields=("status", "version", "updated_at"))
+    from_status = message.status
+    message.status = Message.Status.SENDING
+    message.version += 1
+    message.save(update_fields=("status", "version", "updated_at"))
+    request = _build_send_request_locked(message=message)
+    _history(
+        message=message,
+        from_status=from_status,
+        actor=None,
+        command_id=f"{attempt.id}:sending",
+        source="dispatch_worker",
+    )
+    return message, attempt, request
 
 
 @transaction.atomic
@@ -950,7 +1023,10 @@ def dispatch_message(*, attempt, adapter, idempotency_key):
         raise InvalidMessage("Adapter não corresponde ao provider do canal.")
     assert_capability(adapter.provider, "send_text")
     try:
-        request = build_send_request(message=message)
+        message, attempt, request = prepare_send_request(
+            attempt_id=attempt.id,
+            lease_token=attempt.dispatch_lease_token,
+        )
     except MessagingDomainError:
         return mark_failed(
             attempt_id=attempt.id,
@@ -958,7 +1034,6 @@ def dispatch_message(*, attempt, adapter, idempotency_key):
             idempotency_key=idempotency_key,
             reason_code="source_not_fresh",
         )
-    message, attempt = mark_sending(attempt_id=attempt.id, lease_token=attempt.dispatch_lease_token)
     try:
         if getattr(adapter, "external", True):
             require_network_allowed()
@@ -1660,6 +1735,7 @@ def deactivate_template(*, organization, actor, template, expected_version, idem
     scoped = MessageTemplate.objects.select_for_update().filter(organization=organization, id=template.id).first()
     if scoped is None:
         raise OrganizationMismatch("Template não pertence à organização.")
+    _ensure_version(obj=scoped, expected_version=expected_version)
     if Message.objects.filter(template=scoped).exists():
         raise InvalidMessage("Template já usado é imutável.")
     scoped.is_active = False
@@ -1748,6 +1824,7 @@ def upsert_automation_rule(
     purpose,
     is_enabled,
     idempotency_key,
+    expected_version=None,
 ):
     _require_manager(actor=actor, organization=organization)
     if event_type not in ALLOWLISTED_SOURCE_EVENTS:
@@ -1763,6 +1840,8 @@ def upsert_automation_rule(
         "template_id": str(template.id),
         "channel_id": str(channel.id),
         "purpose": purpose,
+        "is_enabled": is_enabled,
+        "expected_version": expected_version,
     }
     receipt, is_new = claim_command(
         organization=organization,
@@ -1781,15 +1860,34 @@ def upsert_automation_rule(
         if rule is None:
             raise IdempotencyConflict("Regra resultante não existe.")
         return rule
-    rule, created = MessageAutomationRule.objects.update_or_create(
+    # Locking the template serializes creation of the same natural rule and
+    # avoids a first-write race before the unique constraint is reached.
+    MessageTemplate.objects.select_for_update().get(organization=organization, id=template.id)
+    rule = MessageAutomationRule.objects.select_for_update().filter(
         organization=organization,
         event_type=event_type,
         template=template,
         channel=channel,
-        defaults={"purpose": purpose, "is_enabled": is_enabled, "version": 1},
-    )
-    if not created:
+    ).first()
+    if rule is None:
+        if expected_version is not None:
+            raise VersionConflict("Regra ainda não existe; versão esperada deve ser omitida.")
+        rule = MessageAutomationRule.objects.create(
+            organization=organization,
+            event_type=event_type,
+            template=template,
+            channel=channel,
+            purpose=purpose,
+            is_enabled=is_enabled,
+            version=1,
+        )
+    else:
+        if expected_version is None:
+            raise VersionConflict("Versão esperada é obrigatória para atualizar a regra.")
+        _ensure_version(obj=rule, expected_version=expected_version)
+        rule.purpose = purpose
+        rule.is_enabled = is_enabled
         rule.version += 1
         rule.save(update_fields=("purpose", "is_enabled", "version", "updated_at"))
-    complete_command(receipt=receipt, message=None)
+    complete_command(receipt=receipt, message=None, resulting_version=rule.version)
     return rule

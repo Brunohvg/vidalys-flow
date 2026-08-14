@@ -101,7 +101,8 @@ já foi atingido.
 
 - estado oficial: `project/state.json`;
 - última fase aprovada: `project/phases/05-payments.json`;
-- fase candidata em Review pendente: `project/phases/06-messaging.json`;
+- fase candidata remediada, aguardando novo Review:
+  `project/phases/06-messaging.json`;
 - contratos aprovados: `docs/domains/FULFILLMENT.md` e
   `docs/domains/PAYMENTS.md`;
 - ciclo de vida: `docs/decisions/ADR-012-FULFILLMENT-LIFECYCLE.md`;
@@ -122,10 +123,11 @@ já foi atingido.
 
 ## Continuação segura
 
-Não pule checkpoints. O plano da Fase 06 já foi aprovado. O próximo checkpoint
-após o candidato e CI no SHA exato é Review independente; depois seguem
-QA/Security, handoff, aprovação humana final e autorização separada de
-PR/merge. Sandbox e efeitos externos possuem checkpoints próprios.
+Não pule checkpoints. O plano da Fase 06 já foi aprovado e os blockers do
+Review 01 foram remediados. O próximo checkpoint após o novo candidato e CI no
+SHA exato é outro Review independente; depois seguem QA/Security, handoff,
+aprovação humana final e autorização separada de PR/merge. Sandbox e efeitos
+externos possuem checkpoints próprios.
 
 Mercado Pago e Pagar.me pertencem ao contrato aprovado de Payments; Appmax vem
 depois. Messaging propõe Evolution API linked-device, WhatsApp Cloud API

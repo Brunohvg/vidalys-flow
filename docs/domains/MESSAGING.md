@@ -42,10 +42,12 @@ tipo, ID e versão do agregado e relê a fonte; o payload do evento nunca é
 autorização nem conteúdo.
 
 Templates têm chave semântica, locale, canal, versão crescente e schema
-fechado. Uma versão usada torna-se imutável. O corpo renderizado existe apenas
-em memória no dispatch e não vai para banco, logs, auditoria, outbox ou
-receipts. O link hospedado é relido da tentativa ativa de Payments exatamente
-antes do envio e nunca é copiado para evidência operacional.
+fechado. Uma versão usada torna-se imutável tanto nas superfícies ORM quanto
+por guardas PostgreSQL; os relacionamentos e snapshots de `Message` recebem a
+mesma proteção. O corpo renderizado existe apenas em memória no dispatch e não
+vai para banco, logs, auditoria, outbox ou receipts. O link hospedado é relido
+da tentativa ativa de Payments exatamente antes do envio e nunca é copiado
+para evidência operacional.
 
 Cada envio exige Customer ativo e não mesclado, ContactPoint exato ainda ativo
 e inalterado e última `MessagingPreference` ativa como `allowed` para aquele
@@ -95,8 +97,24 @@ evidência sanitizada completos. Admin é read-only e Organization-scoped.
 
 Beat agenda consumo de fontes na fila `default` e dispatch na fila
 `integrations`. O Compose possui workers exclusivos para ambas. Rede não roda
-dentro de transação; locks e leases protegem o estado local, e revalidação da
-fonte ocorre sob locks antes de montar o request em memória.
+dentro de transação. A autorização final do envio trava Message, tentativa e
+todas as dependências mutáveis, revalida fonte, Customer, contato, permissão,
+template, canal, conexão e checkout, move o agregado para `sending` e monta o
+request na mesma transação. O commit dessa transação é o ponto de linearização:
+uma mudança concorrente confirmada antes dele bloqueia o envio; uma mudança
+posterior fica ordenada depois do envio já autorizado. O I/O começa somente
+após o commit e resultado ambíguo nunca é reenviado cegamente.
+
+Comandos de configuração incluem todos os campos semânticos no hash
+idempotente. Atualizar uma regra exige `expected_version`, trava a versão atual
+e a incrementa monotonicamente; criação exige que a versão esperada seja
+omitida. Desativação de template também valida a versão esperada e um template
+já usado não pode ser desativado ou reescrito.
+
+No consumidor de eventos, somente erros classificados de contrato geram
+rejeição definitiva. Falhas transitórias ou inesperadas não criam receipt de
+consumo e permanecem elegíveis para a próxima varredura, sem descartar o
+OutboxEvent original.
 
 Validação obrigatória: PostgreSQL 17 desde banco vazio, rollback/reaplicação da
 migration Messaging, testes de domínio e concorrência, fixtures offline de
@@ -105,7 +123,9 @@ independência, Ruff, Django checks, Docker e Compose.
 
 ## Próximo checkpoint
 
-O candidato deve ser entregue a Review Agent independente. Somente após Review
-sem blocker, QA/Security GO e aprovação humana final podem existir autorização
-separada para PR/merge. Sandbox, providers reais, callback público,
+O Review independente 01 solicitou as correções P06-R01 a P06-R05. A
+remediação material e sua matriz de regressão foram implementadas; o novo
+candidato deve passar pelos gates e por outro Review independente. Somente
+após Review sem blocker, QA/Security GO e aprovação humana final podem existir
+autorização separada para PR/merge. Sandbox, providers reais, callback público,
 infraestrutura e deploy continuam fora desta fase.

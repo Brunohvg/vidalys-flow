@@ -53,8 +53,9 @@ separados.
 - dependência funcional: Payments aprovada em
   `3558ca30a5652be320feb3f28ab46a350ae9cad7`;
 - plano: aprovado por decisão humana;
-- implementação: candidata concluída; Review independente está pendente e
-  QA/Security continua bloqueado até esse parecer;
+- implementação: candidata concluída e remediada após os achados P06-R01 a
+  P06-R05 do Review 01; novo CI e novo Review independente são os próximos
+  checkpoints, e QA/Security continua bloqueado até parecer sem blocker;
 - efeitos externos, sandbox, PR, merge e deploy: não autorizados.
 
 O candidato implementa mensagens exclusivamente transacionais, com núcleo canônico
@@ -69,6 +70,11 @@ O contrato aprovado está em `project/phases/06-messaging.json`, a visão em
 `docs/domains/MESSAGING_VISION.md` e o contrato candidato em
 `docs/domains/MESSAGING.md`. Nenhum provider, secret, sandbox, callback público
 ou efeito externo foi ativado.
+
+A remediação torna atômica a autorização final que antecede o I/O, protege no
+ORM e no PostgreSQL templates usados e snapshots, corrige idempotência e versão
+das regras e preserva eventos para nova tentativa após falhas transitórias. A
+matriz PostgreSQL reproduz diretamente cada falha registrada pelo Review 01.
 
 ## Independência do Flowlog
 

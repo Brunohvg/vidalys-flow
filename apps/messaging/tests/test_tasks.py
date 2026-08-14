@@ -2,8 +2,9 @@ import uuid
 
 import pytest
 from django.conf import settings
+from django.db import OperationalError
 
-from apps.messaging.models import Message
+from apps.messaging.models import Message, MessageCommandReceipt
 from apps.messaging.providers import SendResult
 from apps.messaging.services import create_message_from_command
 from apps.messaging.tasks import consume_source_events, dispatch_message_events
@@ -85,6 +86,39 @@ def test_disabled_rule_does_not_create_message(
         idempotency_key=f"messaging-disabled-{uuid.uuid4()}",
     )
     assert consume_source_events() == 0
+
+
+def test_transient_source_consumer_failure_remains_retryable(
+    organization,
+    manager,
+    messaging_order,
+    messaging_customer,
+    whatsapp_template,
+    whatsapp_channel,
+    allowed_preference,
+    enabled_order_rule,
+    monkeypatch,
+):
+    event = enqueue_event(
+        organization=organization,
+        event_type="order.confirmed",
+        aggregate_type="order",
+        aggregate_id=messaging_order.id,
+        payload={"order_id": str(messaging_order.id), "status": "confirmed", "version": messaging_order.version},
+        idempotency_key=f"messaging-transient-{uuid.uuid4()}",
+    )
+    original = consume_source_events.__globals__["consume_source_event"]
+
+    def transient_failure(*, event):
+        raise OperationalError("temporary database outage")
+
+    monkeypatch.setitem(consume_source_events.__globals__, "consume_source_event", transient_failure)
+    assert consume_source_events() == 0
+    assert not MessageCommandReceipt.objects.filter(source_event_id=event.id).exists()
+
+    monkeypatch.setitem(consume_source_events.__globals__, "consume_source_event", original)
+    assert consume_source_events() == 1
+    assert Message.objects.filter(source_event_id=event.id).count() == 1
 
 
 def test_dispatch_message_events_dispatches_pending_message(

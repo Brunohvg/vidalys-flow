@@ -316,6 +316,7 @@ def test_manager_configuration_journey(client, organization, manager, manager_me
             "channel": channel.id,
             "purpose": "order_confirmation",
             "is_enabled": "on",
+            "expected_version": "",
             "idempotency_key": key(),
         },
     )
@@ -554,6 +555,7 @@ def test_configuration_views_surface_domain_errors_without_writes(
                 "channel": whatsapp_channel.id,
                 "purpose": "order_confirmation",
                 "is_enabled": "on",
+                "expected_version": "",
                 "idempotency_key": key(),
             },
         ),

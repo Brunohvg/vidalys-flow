@@ -3,6 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.messaging.events import ALLOWLISTED_SOURCE_EVENTS, MESSAGE_CREATED
+from apps.messaging.exceptions import MessagingDomainError
 from apps.messaging.idempotency import claim_command, complete_command
 from apps.messaging.models import Message, MessageCommandReceipt, MessageDeliveryAttempt
 from apps.messaging.providers import adapter_for
@@ -44,8 +45,13 @@ def consume_source_events(*, limit=100):
     for event in events:
         try:
             processed += consume_source_event(event=event)
-        except Exception:
+        except MessagingDomainError:
             _record_source_consumed(event=event, rejected=True)
+            continue
+        except Exception:
+            # Infrastructure and unexpected failures remain eligible for the
+            # next poll. They must never be converted into permanent domain
+            # rejection by a transient database/lock/runtime condition.
             continue
         _record_source_consumed(event=event)
     return processed

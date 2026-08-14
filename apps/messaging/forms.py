@@ -119,6 +119,11 @@ class AutomationRuleForm(forms.Form):
     channel = forms.ModelChoiceField(queryset=MessagingChannel.objects.none(), label="Canal")
     purpose = forms.ChoiceField(choices=PURPOSE_CHOICES, label="Finalidade")
     is_enabled = forms.BooleanField(required=False, label="Habilitado")
+    expected_version = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Versão esperada (obrigatória ao atualizar)",
+    )
     idempotency_key = forms.CharField(max_length=64, widget=forms.HiddenInput)
 
     def __init__(self, *args, organization, **kwargs):

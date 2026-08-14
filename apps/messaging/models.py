@@ -163,6 +163,8 @@ class MessagingChannel(BaseModel):
 
 
 class MessageTemplate(BaseModel):
+    objects = ImmutableQuerySet.as_manager()
+
     class Channel(models.TextChoices):
         WHATSAPP = "whatsapp", "WhatsApp"
         EMAIL = "email", "E-mail"
@@ -398,6 +400,35 @@ class Message(BaseModel):
 
     def __str__(self):
         return f"{self.purpose} / {self.get_status_display()}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            immutable_fields = (
+                "organization_id",
+                "source_type",
+                "source_id",
+                "source_version",
+                "source_event_id",
+                "purpose",
+                "template_id",
+                "template_semantic_key",
+                "template_version",
+                "channel_id",
+                "channel_kind",
+                "locale",
+                "customer_id",
+                "customer_display_name",
+                "contact_point_id",
+                "destination_snapshot",
+                "permission_evidence_id",
+                "permission_policy_version",
+                "parameter_snapshot",
+                "created_by_id",
+            )
+            persisted = type(self)._base_manager.filter(pk=self.pk).values(*immutable_fields).first()
+            if persisted is None or any(getattr(self, field) != persisted[field] for field in immutable_fields):
+                raise TypeError("Snapshots e vínculos de Message são imutáveis.")
+        return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         raise TypeError("Message não pode ser excluído.")
