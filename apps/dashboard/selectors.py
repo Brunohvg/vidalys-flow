@@ -77,14 +77,18 @@ def recent_orders_for_organization(*, organization, limit=DASHBOARD_LIMIT):
 
 
 def order_workspace_for_organization(*, organization, order_id):
-    order = (
-        Order.objects.filter(organization=organization, id=order_id)
-        .select_related("customer", "payment_intent")
-        .prefetch_related("fulfillments")
-        .first()
-    )
+    order = Order.objects.filter(organization=organization, id=order_id).select_related("customer").first()
     if order is None:
         return None
+
+    payment = PaymentIntent.objects.filter(
+        organization=organization,
+        order=order,
+    ).first()
+    fulfillments = Fulfillment.objects.filter(
+        organization=organization,
+        order=order,
+    )
     messages = Message.objects.filter(
         organization=organization,
         source_type=Message.SourceType.ORDER,
@@ -92,8 +96,8 @@ def order_workspace_for_organization(*, organization, order_id):
     ).select_related("channel")[:DASHBOARD_LIMIT]
     return {
         "order": order,
-        "payment": getattr(order, "payment_intent", None),
-        "fulfillments": order.fulfillments.all(),
+        "payment": payment,
+        "fulfillments": fulfillments,
         "messages": messages,
     }
 
