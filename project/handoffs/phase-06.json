@@ -128,7 +128,11 @@
     "Callback authenticity is intentionally unavailable rather than approximated where a complete approved provider contract is absent.",
     "Coverage is above the 85% gate; the remediated candidate still requires a new independent Review of dispatch linearization, database immutability, configuration concurrency, transient-event recovery, permission evidence, callback replay, tenant isolation, and external-effect blocking."
   ],
-  "blockers": [],
+  "blockers": [
+    "P06-R06",
+    "P06-R07",
+    "P06-R08"
+  ],
   "remediation": {
     "status": "candidate_pending_independent_review",
     "material_head": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
@@ -144,21 +148,48 @@
   },
   "review": {
     "status": "changes_requested",
-    "candidate_head": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
-    "carrier_observed": "eb9bded670dcbff8709dec21e7903c96e461ce9a",
-    "report": "project/reviews/phase-06-review-01.md",
-    "material_ci_run": 31756127273,
-    "carrier_ci_run": 31756306732,
-    "local_tests": 386,
+    "candidate_head": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
+    "carrier_observed": "6bb3f533327fc47c6ba83536b3644b8b5129c28d",
+    "report": "project/reviews/phase-06-review-02.md",
+    "material_ci_run": 31758178500,
+    "carrier_ci_run": 31758401999,
+    "local_tests": 396,
     "local_skipped": 5,
-    "local_coverage_percent": 85.238841033673,
-    "blocking_findings": [
+    "local_coverage_percent": 85.29830464604633,
+    "findings_revalidated": [
       "P06-R01",
       "P06-R02",
       "P06-R03",
       "P06-R04",
       "P06-R05"
-    ]
+    ],
+    "blocking_findings": [
+      "P06-R06",
+      "P06-R07",
+      "P06-R08"
+    ],
+    "previous_review": {
+      "status": "changes_requested",
+      "candidate_head": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee",
+      "carrier_observed": "eb9bded670dcbff8709dec21e7903c96e461ce9a",
+      "report": "project/reviews/phase-06-review-01.md",
+      "material_ci_run": 31756127273,
+      "carrier_ci_run": 31756306732,
+      "blocking_findings": [
+        "P06-R01",
+        "P06-R02",
+        "P06-R03",
+        "P06-R04",
+        "P06-R05"
+      ],
+      "findings_addressed": [
+        "P06-R01",
+        "P06-R02",
+        "P06-R03",
+        "P06-R04",
+        "P06-R05"
+      ]
+    }
   },
   "human_approval": {
     "status": "pending",
