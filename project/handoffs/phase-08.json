@@ -62,8 +62,8 @@
     "context": "Foundation CI completed green on the replacement material candidate after P08-QA-SEC-002 rework"
   },
   "organization_isolation": {
-    "status": "reworked_pending_independent_revalidation",
-    "evidence": "P08-QA-SEC-001 remains fixed. P08-QA-SEC-002 rework adds explicit Organization filters to every relation traversed by dashboard composition/rendering: Order.customer, PaymentIntent.order, Fulfillment.order, Message.customer/channel, IntegrationDelivery.connection/endpoint. Adversarial tests construct inconsistent cross-tenant relations and require all affected selectors/counts to fail closed. Full material CI passed. Independent Review revalidation is still required before fresh QA/Security."
+    "status": "revalidated_ready_for_qa",
+    "evidence": "P08-QA-SEC-001 remains fixed. P08-QA-SEC-002 is resolved for Independent Review readiness: every relation traversed by dashboard composition/rendering is constrained by the active Organization, including Order.customer, PaymentIntent.order, Fulfillment.order, Message.customer/channel and IntegrationDelivery.connection/endpoint. Adversarial tests construct inconsistent cross-tenant relations and require affected selectors and counts to fail closed. Foundation CI #179 passed on the exact material SHA. Fresh QA/Security remains independently required."
   },
   "legacy_reuse": {
     "code": false,
@@ -88,16 +88,18 @@
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
-    "report": null,
+    "status": "complete",
+    "report": "project/reviews/phase-08-review-report.json",
     "candidate_head": "f6b003971342eb43eac3a9653290dafdd45c3275",
-    "blocking_findings": null,
-    "non_blocking_findings": null
+    "blocking_findings": [],
+    "non_blocking_findings": [
+      "GitHub Actions Node.js 20 deprecation warning remains a maintenance item; CI #179 completed successfully under forced Node.js 24."
+    ]
   },
   "qa_security": {
-    "status": "blocked",
+    "status": "pending",
     "report": null,
-    "evidence": "Previous QA/Security closed P08-QA-SEC-001 but issued NO-GO on P08-QA-SEC-002. The second material rework is implemented and green on CI #179. Fresh Independent Review revalidation is required before another QA/Security checkpoint."
+    "evidence": "Independent Review revalidation concluded READY_FOR_QA_AND_SECURITY on material SHA f6b003971342eb43eac3a9653290dafdd45c3275. P08-QA-SEC-002 is resolved for review readiness, but a fresh independent QA/Security checkpoint is still mandatory and was not executed by the Review Agent."
   },
   "human_approval": {
     "status": "pending",
