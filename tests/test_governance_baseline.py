@@ -48,6 +48,7 @@ def baseline_repository(tmp_path):
             "governance_baseline_allowed_paths": [
                 "AGENTS.md",
                 "project/",
+                "docs/PROJECT_STATUS.md",
                 "scripts/check_governance_baseline.py",
             ]
         },
@@ -71,6 +72,29 @@ def test_baseline_accepts_only_governance_paths(baseline_repository):
     root, _ = baseline_repository
 
     GovernanceBaselineGate(root).validate(head="HEAD", ref_name="chore/agent-orchestration")
+
+
+def test_baseline_accepts_exact_project_status_document(baseline_repository):
+    root, _ = baseline_repository
+    path = root / "docs/PROJECT_STATUS.md"
+    path.parent.mkdir()
+    path.write_text("# Project status\n", encoding="utf-8")
+    git(root, "add", "docs/PROJECT_STATUS.md")
+    git(root, "commit", "-m", "update project status")
+
+    GovernanceBaselineGate(root).validate(head="HEAD", ref_name="main")
+
+
+def test_baseline_rejects_other_docs_path(baseline_repository):
+    root, _ = baseline_repository
+    path = root / "docs/unapproved.md"
+    path.parent.mkdir()
+    path.write_text("# Product documentation\n", encoding="utf-8")
+    git(root, "add", "docs/unapproved.md")
+    git(root, "commit", "-m", "unapproved documentation")
+
+    with pytest.raises(BaselineError, match="unapproved product paths"):
+        GovernanceBaselineGate(root).validate(head="HEAD", ref_name="main")
 
 
 def test_baseline_rejects_unapproved_product_path(baseline_repository):
