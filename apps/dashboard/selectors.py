@@ -1,0 +1,112 @@
+from django.db.models import Q
+
+from apps.fulfillment.models import Fulfillment
+from apps.integrations.models import IntegrationConnection, IntegrationDelivery
+from apps.messaging.models import Message
+from apps.orders.models import Order
+from apps.payments.models import PaymentIntent
+
+DASHBOARD_LIMIT = 8
+
+
+def dashboard_summary(*, organization):
+    orders = Order.objects.filter(organization=organization)
+    payments = PaymentIntent.objects.filter(organization=organization)
+    fulfillments = Fulfillment.objects.filter(organization=organization)
+    messages = Message.objects.filter(organization=organization)
+    deliveries = IntegrationDelivery.objects.filter(organization=organization)
+
+    return {
+        "open_orders": orders.filter(status=Order.Status.CONFIRMED).count(),
+        "payment_attention": payments.filter(status=PaymentIntent.Status.REQUIRES_ATTENTION).count(),
+        "fulfillment_open": fulfillments.filter(
+            status__in=(
+                Fulfillment.Status.DRAFT,
+                Fulfillment.Status.PREPARING,
+                Fulfillment.Status.READY,
+                Fulfillment.Status.IN_TRANSIT,
+            )
+        ).count(),
+        "message_attention": messages.filter(status__in=(Message.Status.FAILED, Message.Status.UNCERTAIN)).count(),
+        "integration_attention": deliveries.filter(
+            status__in=(IntegrationDelivery.Status.FAILED, IntegrationDelivery.Status.UNCERTAIN)
+        ).count(),
+    }
+
+
+def payment_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
+    return PaymentIntent.objects.filter(
+        organization=organization,
+        status__in=(PaymentIntent.Status.REQUIRES_ATTENTION, PaymentIntent.Status.EXPIRED),
+    ).select_related("order")[:limit]
+
+
+def fulfillment_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
+    return Fulfillment.objects.filter(
+        organization=organization,
+        status__in=(
+            Fulfillment.Status.DRAFT,
+            Fulfillment.Status.PREPARING,
+            Fulfillment.Status.READY,
+            Fulfillment.Status.IN_TRANSIT,
+        ),
+    ).select_related("order")[:limit]
+
+
+def message_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
+    return Message.objects.filter(
+        organization=organization,
+        status__in=(Message.Status.FAILED, Message.Status.UNCERTAIN),
+    ).select_related("customer", "channel")[:limit]
+
+
+def integration_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
+    connections = IntegrationConnection.objects.filter(
+        organization=organization,
+        status=IntegrationConnection.Status.DEGRADED,
+    )[:limit]
+    deliveries = IntegrationDelivery.objects.filter(
+        organization=organization,
+        status__in=(IntegrationDelivery.Status.FAILED, IntegrationDelivery.Status.UNCERTAIN),
+    ).select_related("connection", "endpoint")[:limit]
+    return {"connections": connections, "deliveries": deliveries}
+
+
+def recent_orders_for_organization(*, organization, limit=DASHBOARD_LIMIT):
+    return Order.objects.filter(organization=organization).select_related("customer")[:limit]
+
+
+def order_workspace_for_organization(*, organization, order_id):
+    order = (
+        Order.objects.filter(organization=organization, id=order_id)
+        .select_related("customer", "payment_intent")
+        .prefetch_related("fulfillments")
+        .first()
+    )
+    if order is None:
+        return None
+    messages = Message.objects.filter(
+        organization=organization,
+        source_type=Message.SourceType.ORDER,
+        source_id=order.id,
+    ).select_related("channel")[:DASHBOARD_LIMIT]
+    return {
+        "order": order,
+        "payment": getattr(order, "payment_intent", None),
+        "fulfillments": order.fulfillments.all(),
+        "messages": messages,
+    }
+
+
+def dashboard_search_for_organization(*, organization, query, limit=DASHBOARD_LIMIT):
+    query = (query or "").strip()
+    if not query:
+        return Order.objects.none()
+    number_query = Q()
+    if query.isdigit():
+        number_query = Q(number=int(query))
+    return (
+        Order.objects.filter(organization=organization)
+        .filter(number_query | Q(customer_name_snapshot__icontains=query))
+        .select_related("customer")[:limit]
+    )
