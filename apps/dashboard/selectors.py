@@ -10,11 +10,19 @@ DASHBOARD_LIMIT = 8
 
 
 def dashboard_summary(*, organization):
-    orders = Order.objects.filter(organization=organization)
-    payments = PaymentIntent.objects.filter(organization=organization)
-    fulfillments = Fulfillment.objects.filter(organization=organization)
-    messages = Message.objects.filter(organization=organization)
-    deliveries = IntegrationDelivery.objects.filter(organization=organization)
+    orders = Order.objects.filter(organization=organization, customer__organization=organization)
+    payments = PaymentIntent.objects.filter(organization=organization, order__organization=organization)
+    fulfillments = Fulfillment.objects.filter(organization=organization, order__organization=organization)
+    messages = Message.objects.filter(
+        organization=organization,
+        customer__organization=organization,
+        channel__organization=organization,
+    )
+    deliveries = IntegrationDelivery.objects.filter(
+        organization=organization,
+        connection__organization=organization,
+        endpoint__organization=organization,
+    )
 
     return {
         "open_orders": orders.filter(status=Order.Status.CONFIRMED).count(),
@@ -37,6 +45,7 @@ def dashboard_summary(*, organization):
 def payment_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
     return PaymentIntent.objects.filter(
         organization=organization,
+        order__organization=organization,
         status__in=(PaymentIntent.Status.REQUIRES_ATTENTION, PaymentIntent.Status.EXPIRED),
     ).select_related("order")[:limit]
 
@@ -44,6 +53,7 @@ def payment_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
 def fulfillment_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
     return Fulfillment.objects.filter(
         organization=organization,
+        order__organization=organization,
         status__in=(
             Fulfillment.Status.DRAFT,
             Fulfillment.Status.PREPARING,
@@ -56,6 +66,8 @@ def fulfillment_attention_for_organization(*, organization, limit=DASHBOARD_LIMI
 def message_attention_for_organization(*, organization, limit=DASHBOARD_LIMIT):
     return Message.objects.filter(
         organization=organization,
+        customer__organization=organization,
+        channel__organization=organization,
         status__in=(Message.Status.FAILED, Message.Status.UNCERTAIN),
     ).select_related("customer", "channel")[:limit]
 
@@ -67,30 +79,47 @@ def integration_attention_for_organization(*, organization, limit=DASHBOARD_LIMI
     )[:limit]
     deliveries = IntegrationDelivery.objects.filter(
         organization=organization,
+        connection__organization=organization,
+        endpoint__organization=organization,
         status__in=(IntegrationDelivery.Status.FAILED, IntegrationDelivery.Status.UNCERTAIN),
     ).select_related("connection", "endpoint")[:limit]
     return {"connections": connections, "deliveries": deliveries}
 
 
 def recent_orders_for_organization(*, organization, limit=DASHBOARD_LIMIT):
-    return Order.objects.filter(organization=organization).select_related("customer")[:limit]
+    return Order.objects.filter(
+        organization=organization,
+        customer__organization=organization,
+    ).select_related("customer")[:limit]
 
 
 def order_workspace_for_organization(*, organization, order_id):
-    order = Order.objects.filter(organization=organization, id=order_id).select_related("customer").first()
+    order = (
+        Order.objects.filter(
+            organization=organization,
+            customer__organization=organization,
+            id=order_id,
+        )
+        .select_related("customer")
+        .first()
+    )
     if order is None:
         return None
 
     payment = PaymentIntent.objects.filter(
         organization=organization,
+        order__organization=organization,
         order=order,
     ).first()
     fulfillments = Fulfillment.objects.filter(
         organization=organization,
+        order__organization=organization,
         order=order,
     )
     messages = Message.objects.filter(
         organization=organization,
+        customer__organization=organization,
+        channel__organization=organization,
         source_type=Message.SourceType.ORDER,
         source_id=order.id,
     ).select_related("channel")[:DASHBOARD_LIMIT]
@@ -110,7 +139,10 @@ def dashboard_search_for_organization(*, organization, query, limit=DASHBOARD_LI
     if query.isdigit():
         number_query = Q(number=int(query))
     return (
-        Order.objects.filter(organization=organization)
+        Order.objects.filter(
+            organization=organization,
+            customer__organization=organization,
+        )
         .filter(number_query | Q(customer_name_snapshot__icontains=query))
         .select_related("customer")[:limit]
     )
