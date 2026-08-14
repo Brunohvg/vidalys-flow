@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="muted">{{ organization.name }} · visão operacional consolidada e somente leitura.</p>
+
+<form method="get" class="actions" role="search">
+  <input name="q" value="{{ search_query }}" placeholder="Buscar pedido por número ou cliente" aria-label="Buscar pedido">
+  <button type="submit">Buscar</button>
+</form>
+{% if search_query %}
+<section>
+  <h2>Resultados da busca</h2>
+  {% if search_results %}
+    <div class="grid">
+      {% for order in search_results %}
+        <article class="card"><strong>{{ order.display_number }}</strong><br>{{ order.customer_name_snapshot|default:order.customer.name }}<br><a href="{% url 'dashboard:order-workspace' order.id %}">Abrir workspace</a></article>
+      {% endfor %}
+    </div>
+  {% else %}<p class="muted">Nenhum pedido encontrado nesta organização.</p>{% endif %}
+</section>
+{% endif %}
+
+<section>
+  <h2>Agora</h2>
+  <div class="grid metrics">
+    <article class="card"><span class="muted">Pedidos confirmados</span><strong class="metric">{{ summary.open_orders }}</strong></article>
+    <article class="card"><span class="muted">Pagamentos requerendo atenção</span><strong class="metric">{{ summary.payment_attention }}</strong></article>
+    <article class="card"><span class="muted">Fulfillments em aberto</span><strong class="metric">{{ summary.fulfillment_open }}</strong></article>
+    <article class="card"><span class="muted">Mensagens com atenção</span><strong class="metric">{{ summary.message_attention }}</strong></article>
+    <article class="card"><span class="muted">Integrações com atenção</span><strong class="metric">{{ summary.integration_attention }}</strong></article>
+  </div>
+</section>
+
+<section>
+  <div class="section-heading"><h2>Pedidos recentes</h2><a href="{% url 'orders:list' %}">Ver todos</a></div>
+  {% if recent_orders %}
+  <table class="responsive-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>
+    {% for order in recent_orders %}<tr><td data-label="Pedido">{{ order.display_number }}</td><td data-label="Cliente">{{ order.customer_name_snapshot|default:order.customer.name }}</td><td data-label="Status"><span class="badge">{{ order.get_status_display }}</span></td><td data-label="Total">R$ {{ order.total }}</td><td data-label="Ação"><a href="{% url 'dashboard:order-workspace' order.id %}">Workspace</a></td></tr>{% endfor %}
+  </tbody></table>
+  {% else %}<p class="muted">Nenhum pedido nesta organização.</p>{% endif %}
+</section>
+
+<div class="grid">
+<section class="card"><div class="section-heading"><h2>Pagamentos</h2><a href="{% url 'payments:list' %}">Abrir</a></div>{% if payment_attention %}<ul class="clean-list">{% for item in payment_attention %}<li><a href="{% url 'dashboard:order-workspace' item.order_id %}">{{ item.order_number_snapshot }}</a> · {{ item.get_status_display }}</li>{% endfor %}</ul>{% else %}<p class="muted">Sem pagamentos exigindo atenção.</p>{% endif %}</section>
+<section class="card"><div class="section-heading"><h2>Fulfillment</h2><a href="{% url 'fulfillment:list' %}">Abrir</a></div>{% if fulfillment_attention %}<ul class="clean-list">{% for item in fulfillment_attention %}<li><a href="{% url 'dashboard:order-workspace' item.order_id %}">{{ item.display_number }}</a> · {{ item.get_status_display }}</li>{% endfor %}</ul>{% else %}<p class="muted">Sem fulfillment em aberto.</p>{% endif %}</section>
+<section class="card"><div class="section-heading"><h2>Mensagens</h2><a href="{% url 'messaging:list' %}">Abrir</a></div>{% if message_attention %}<ul class="clean-list">{% for item in message_attention %}<li>{{ item.customer_display_name }} · {{ item.get_status_display }} · {{ item.channel.display_name }}</li>{% endfor %}</ul>{% else %}<p class="muted">Sem mensagens com falha ou estado incerto.</p>{% endif %}</section>
+<section class="card"><div class="section-heading"><h2>Integrações</h2><a href="{% url 'integrations:list' %}">Abrir</a></div>{% if integration_connections or integration_deliveries %}<ul class="clean-list">{% for item in integration_connections %}<li>{{ item.key }} · conexão degradada</li>{% endfor %}{% for item in integration_deliveries %}<li>{{ item.operation_key }} · {{ item.get_status_display }}</li>{% endfor %}</ul>{% else %}<p class="muted">Sem integrações degradadas, falhas ou incertas.</p>{% endif %}</section>
+</div>
+{% endblock %}
