@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Atualizado em 13 de agosto de 2026. Este documento é um índice operacional; em
+Atualizado em 14 de agosto de 2026. Este documento é um índice operacional; em
 caso de divergência prevalecem `project/state.json`, o manifesto da fase,
 `project/constraints.json` e `AGENTS.md`.
 
@@ -16,15 +16,19 @@ caso de divergência prevalecem `project/state.json`, o manifesto da fase,
 - Fase 4 — Fulfillment: aprovada em
   `888685886d7a17c6eeb008674be86656e4f6fa40`;
 - Fase 5 — Payments: aprovada em
-  `3558ca30a5652be320feb3f28ab46a350ae9cad7`.
+  `3558ca30a5652be320feb3f28ab46a350ae9cad7`;
+- Fase 6 — Messaging: aprovada em
+  `e2140eb25cc10f1a79dad05a0507ba9141003ac9`.
 
-A implementação de Payments entrou na `main` pela PR #8, cujo merge commit é
-`3558ca30a5652be320feb3f28ab46a350ae9cad7`. A aprovação humana e o estado
-oficial foram fechados pela PR #9, merge commit
-`3e4fcfb064fbee350d3df131b2946974c8557098`. O GitHub Actions final da `main`,
-run `31651983767`, passou nesse SHA.
+A implementação de Payments entrou na `main` pela PR #8 e seu fechamento de
+governança ocorreu pela PR #9. A implementação de Messaging entrou na `main`
+pela PR #12, merge commit `e2140eb25cc10f1a79dad05a0507ba9141003ac9`, e
+o fechamento de governança ocorreu pela PR #13, merge commit
+`785084c85e96246e499e0edd1e3f96cd31f131a8`.
 
-Nenhum provider, sandbox, callback público, release ou deploy foi ativado.
+O GitHub Actions final da `main` após o fechamento da Fase 06 foi o run
+`31791302546`, concluído com sucesso. Nenhum provider real, sandbox, callback
+público, release ou deploy foi ativado.
 
 ## Fase 5 — Payments
 
@@ -46,42 +50,47 @@ Links é o segundo e Appmax permanece posterior. Isso não significa que nenhum
 deles esteja habilitado: credenciais, sandbox e produção exigem checkpoints
 separados.
 
-## Checkpoint atual — Fase 6 Messaging
+## Fase 6 — Messaging
 
-- branch: `phase/06-messaging`;
-- `actual_base_sha`: `3e4fcfb064fbee350d3df131b2946974c8557098`;
-- dependência funcional: Payments aprovada em
-  `3558ca30a5652be320feb3f28ab46a350ae9cad7`;
-- plano: aprovado por decisão humana;
-- implementação: candidata concluída; P06-R01 a P06-R05 foram confirmados
-  resolvidos pelo Review 02 e P06-R06 a P06-R08 estão remediados no novo
-  candidato; novo CI e novo Review independente são os próximos checkpoints,
-  e QA/Security continua bloqueado até parecer sem blocker;
-- efeitos externos, sandbox, PR, merge e deploy: não autorizados.
+A Fase 6 está concluída e aprovada. O plano foi aprovado, a implementação foi
+concluída, o Review 03 emitiu `APPROVED`, o QA/Security emitiu `GO`, o achado
+documental P06-R09 foi corrigido e a aprovação humana final autorizou o
+fechamento, PR e merge após CI verde.
 
-O candidato implementa mensagens exclusivamente transacionais, com núcleo canônico
-independente de provider, Evolution API v2.3.7 linked-device primeiro,
-WhatsApp Cloud API direta como alternativa oficial e Amazon SES depois.
-Templates são fechados e versionados, regras automáticas começam desabilitadas
-por Organization, permissão por finalidade falha fechado e links de pagamento
-são revalidados imediatamente antes do envio. Marketing, inbound, chatbot, IA,
-SMS e anexos ficam adiados.
+Messaging implementa mensagens exclusivamente transacionais, com núcleo
+canônico independente de provider, templates fechados e versionados, regras
+automáticas inicialmente desabilitadas por Organization, permissão por
+finalidade com comportamento fail-closed e revalidação de links de pagamento
+imediatamente antes do envio.
 
-O contrato aprovado está em `project/phases/06-messaging.json`, a visão em
-`docs/domains/MESSAGING_VISION.md` e o contrato candidato em
-`docs/domains/MESSAGING.md`. Nenhum provider, secret, sandbox, callback público
-ou efeito externo foi ativado.
+Foram implementados contratos offline e provider-neutral para Evolution API
+v2.3.7 linked-device, WhatsApp Cloud API direta e Amazon SES. Os efeitos
+externos permanecem desabilitados. Credenciais reais, pairing real, sandbox,
+callbacks públicos, consultas externas de status, ativação de produção e
+deploy continuam fora da autorização concedida para a Fase 06.
 
-A remediação torna atômica a autorização final que antecede o I/O, protege no
-ORM e no PostgreSQL templates usados e snapshots, corrige idempotência e versão
-das regras e preserva eventos para nova tentativa após falhas transitórias. A
-matriz PostgreSQL reproduz diretamente cada falha registrada pelo Review 01.
+A implementação final preserva autorização atômica antes de I/O, imutabilidade
+de templates e snapshots, idempotência, versionamento de regras, tratamento de
+aceitação ambígua sem retry cego, contratos exatos de versão de eventos e um
+catálogo server-side fechado de templates transacionais. A matriz cobre as seis
+fontes automáticas aprovadas e os casos negativos de versão, estado e conteúdo
+promocional.
 
-A segunda remediação separa `event_contract_version` da versão do agregado,
-exige correspondência exata entre evento, regra e estado atual da fonte, e
-substitui conteúdo configurável arbitrário por um catálogo server-side de
-templates transacionais. A matriz cobre todas as seis fontes aprovadas e os
-contratos negativos de versão e marketing.
+O contrato oficial está em `project/phases/06-messaging.json`, a visão em
+`docs/domains/MESSAGING_VISION.md`, o contrato entregue em
+`docs/domains/MESSAGING.md`, os Reviews em `project/reviews/`, o QA/Security em
+`project/qa/phase-06-qa-security.md` e o handoff final em
+`project/handoffs/phase-06.json`.
+
+## Próximo checkpoint — Fase 7 Integrations
+
+A Fase 7 — Integrations é a próxima fase prevista no roadmap, mas ainda não foi
+iniciada. `project/state.json` mantém `active_candidate: null`. Planejamento,
+branch de candidato, implementação ou qualquer alteração de escopo da Fase 7
+exigem nova autorização humana explícita.
+
+Também continuam sem autorização provider real, deploy, homologação, cutover ou
+qualquer efeito externo adiado pelas fases anteriores.
 
 ## Independência do Flowlog
 

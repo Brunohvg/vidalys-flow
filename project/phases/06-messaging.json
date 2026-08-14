@@ -6,15 +6,19 @@
   "dependency_head": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
   "base_ref": "main",
   "branch": "phase/06-messaging",
-  "status": "candidate",
+  "status": "approved",
   "plan_status": "approved",
   "implementation_status": "complete",
-  "review_status": "pending",
-  "qa_status": "blocked",
-  "human_approval_status": "pending",
+  "review_status": "complete",
+  "qa_status": "go",
+  "human_approval_status": "approved",
   "plan_approval": {
     "status": "approved",
     "evidence": "Explicit human approval in the project conversation on 2026-08-12; approval applies only to the Phase 06 technical plan and implementation checkpoint. It releases implementation with fakes and blocked network only, and does not authorize any provider, sandbox, public callback, credential, PR, merge, release, or deploy."
+  },
+  "final_approval": {
+    "status": "approved",
+    "evidence": "Final human approval authorized Phase 06 closure, PR and merge after P06-R09 correction and green CI. PR #12 merged the product candidate into main at e2140eb25cc10f1a79dad05a0507ba9141003ac9, PR #13 closed governance, and final main CI run 31791302546 succeeded. Provider real effects, deploy and Phase 07 initiation remain unauthorized."
   },
   "allowed_status_values": {
     "status": [
