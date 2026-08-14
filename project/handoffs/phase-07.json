@@ -2,7 +2,7 @@
   "schema_version": 1,
   "phase_id": 7,
   "phase_name": "Integrations",
-  "status": "candidate",
+  "status": "approved",
   "branch": "phase/07-integrations",
   "base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
   "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
@@ -100,8 +100,8 @@
     "status": "go",
     "report": "project/qa/phase-07-qa-security.md",
     "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
-    "carrier_head": "621f2b372fc8d0c59a7594fc24c5d796d9cd2ae9",
-    "ci_run": 31805550912,
+    "carrier_head": "5c47acfa3ece7e0a8a906636513d32a8bc436aae",
+    "ci_run": 31807750781,
     "blocking_findings": [],
     "residual_risks": [
       "tasks.py direct line coverage is 35 percent but service behavior and Celery topology are covered",
@@ -109,7 +109,8 @@
     ]
   },
   "human_approval": {
-    "status": "pending",
-    "evidence": "Human approved only the Phase 07 implementation plan using provider-neutral reference adapter and offline fakes. Real providers, sandbox, public callbacks, credentials, deploy, PR and merge remain unauthorized."
+    "status": "approved",
+    "date": "2026-08-14",
+    "evidence": "Human explicitly approved Phase 07 after independent Review and QA/Security GO. This final product approval does not authorize PR, merge, release, deploy, concrete providers, sandbox, public callbacks, credentials or Phase 08."
   }
 }
