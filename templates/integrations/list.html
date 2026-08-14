@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Integrações · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Integrações</h1>
+<p class="muted">{{ organization.name }} · núcleo provider-neutral; efeitos externos desabilitados.</p>
+<h2>Conexões</h2>
+<table class="responsive-table">
+  <thead><tr><th>Chave</th><th>Adapter</th><th>Estado</th><th>Falhas</th><th>Último sucesso</th></tr></thead>
+  <tbody>
+  {% for connection in connections %}
+    <tr><td data-label="Chave">{{ connection.key }}</td><td data-label="Adapter">{{ connection.adapter_key }}</td><td data-label="Estado"><span class="badge">{{ connection.get_status_display }}</span></td><td data-label="Falhas">{{ connection.failure_count }}</td><td data-label="Último sucesso">{{ connection.last_success_at|default:"—" }}</td></tr>
+  {% empty %}<tr><td colspan="5">Nenhuma conexão configurada.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<h2>Entregas</h2>
+<table class="responsive-table">
+  <thead><tr><th>Operação</th><th>Fonte</th><th>Estado</th><th>Conexão</th><th>Criado</th></tr></thead>
+  <tbody>
+  {% for delivery in deliveries %}
+    <tr><td data-label="Operação">{{ delivery.operation_key }}</td><td data-label="Fonte">{{ delivery.source_type }} / {{ delivery.source_id }}</td><td data-label="Estado"><span class="badge">{{ delivery.get_status_display }}</span></td><td data-label="Conexão">{{ delivery.connection.key }}</td><td data-label="Criado">{{ delivery.created_at }}</td></tr>
+  {% empty %}<tr><td colspan="5">Nenhuma entrega registrada.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% if deliveries.has_other_pages %}<p>Página {{ deliveries.number }} de {{ deliveries.paginator.num_pages }}</p>{% endif %}
+{% endblock %}
