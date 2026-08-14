@@ -5,7 +5,7 @@
   "status": "in_progress",
   "branch": "phase/09-infrastructure-homologation",
   "base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
-  "head_sha": "5ba7ef294f92f11f4f54a8a200148062bb641ca4",
+  "head_sha": "7ec3b5f3020fa3d2d4c5758e4f08596aa77984df",
   "commits": [
     {"sha": "069ea4d6ff4e17f61249e97ee8a75dc5509bf00b", "subject": "chore(governance): define Phase 09 infrastructure and homologation"},
     {"sha": "d1ef19fd4371e1b38ac8db0fc83e082eaba08165", "subject": "feat(infra): add Coolify homologation stack"},
@@ -14,7 +14,9 @@
     {"sha": "2fc217062f2053a2f07e754df9e0c9f272199a1b", "subject": "fix(infra): make HTTPS proxy readiness check internal-safe"},
     {"sha": "9b30e6bc83f235afd9aac0ac7ef60db2501c9ad2", "subject": "ci(infra): validate homologation compose topology"},
     {"sha": "2509900be2477c6f0b30a8cfc224308cffb35e5e", "subject": "chore(governance): activate Phase 09 candidate"},
-    {"sha": "5ba7ef294f92f11f4f54a8a200148062bb641ca4", "subject": "chore(governance): mark Phase 09 in progress"}
+    {"sha": "5ba7ef294f92f11f4f54a8a200148062bb641ca4", "subject": "chore(governance): mark Phase 09 in progress"},
+    {"sha": "e309e3db77c3eb41a5f2a7d150a4d3a3891fbc92", "subject": "docs(infra): add Phase 09 implementation handoff"},
+    {"sha": "7ec3b5f3020fa3d2d4c5758e4f08596aa77984df", "subject": "test(governance): advance active candidate fixture to Phase 09"}
   ],
   "delivered_scope": [
     "Phase 09 canonical manifest and active candidate based on main SHA 12b519c3e8237e1ebe43c1a0253b0747e0680e07.",
@@ -25,30 +27,35 @@
     "Production settings used in homologation with external effects fail-closed by default.",
     "Environment-variable contract with placeholders only; no real credentials.",
     "Operational runbook for Coolify topology, migrations, health, backup/restore, rollback, observability and provider subgates.",
-    "Foundation CI extended to render and validate docker-compose.homologation.yml."
+    "Foundation CI extended to render and validate docker-compose.homologation.yml.",
+    "Governance orchestrator fixture updated for the active Phase 09 candidate."
   ],
   "models": [],
   "migrations": [],
   "tests": {
-    "status": "pending_ci",
+    "status": "pending_ci_after_fixture_fix",
     "database": "PostgreSQL 17",
     "coverage_gate_minimum_percent": 85,
     "homologation_compose_validation": "configured in Foundation CI",
-    "external_network": "not authorized"
+    "external_network": "not authorized",
+    "previous_ci": "Foundation CI #204 failed only because the orchestrator test still expected active_candidate to be null; canonical governance validation itself passed."
   },
   "scans": {
-    "secret_scan": "pending Foundation CI",
-    "independence_scan": "pending Foundation CI",
-    "ruff": "pending Foundation CI",
-    "django_check": "pending Foundation CI",
-    "migration_consistency": "pending Foundation CI",
-    "docker_build": "pending Foundation CI",
-    "compose_validation": "pending Foundation CI",
-    "celery_runtime_topology": "pending Foundation CI"
+    "secret_scan": "pending replacement Foundation CI",
+    "independence_scan": "pending replacement Foundation CI",
+    "ruff": "pending replacement Foundation CI",
+    "django_check": "pending replacement Foundation CI",
+    "migration_consistency": "pending replacement Foundation CI",
+    "docker_build": "pending replacement Foundation CI",
+    "compose_validation": "pending replacement Foundation CI",
+    "celery_runtime_topology": "pending replacement Foundation CI"
   },
   "ci": {
-    "status": "pending",
-    "context": "Foundation CI must validate the Phase 09 branch HEAD before implementation can be marked complete."
+    "status": "pending_replacement_run",
+    "previous_run": 31840332904,
+    "previous_run_number": 204,
+    "previous_conclusion": "failure_at_orchestrator_fixture_only",
+    "context": "A replacement Foundation CI must validate the refreshed Phase 09 candidate before implementation is marked complete."
   },
   "organization_isolation": {
     "status": "unchanged_from_approved_product",
