@@ -294,24 +294,25 @@ def test_manager_configuration_journey(client, organization, manager, manager_me
     response = client.post(
         reverse("messaging:template_list"),
         {
-            "semantic_key": "email_order",
+            "semantic_key": "email_order_confirmation",
             "name": "Pedido por e-mail",
             "channel": "email",
             "locale": "pt-BR",
             "body_text": "Olá {customer_name}, pedido {order_number}.",
-            "body_html": "<p>Olá {customer_name}, pedido {order_number}.</p>",
+            "body_html": "",
             "parameter_schema": '["customer_name", "order_number"]',
             "provider_template_reference": "",
             "idempotency_key": key(),
         },
     )
     assert response.status_code == 302
-    template = MessageTemplate.objects.get(semantic_key="email_order")
+    template = MessageTemplate.objects.get(semantic_key="email_order_confirmation")
 
     response = client.post(
         reverse("messaging:rule_list"),
         {
             "event_type": "order.confirmed",
+            "event_version": 1,
             "template": template.id,
             "channel": channel.id,
             "purpose": "order_confirmation",
@@ -551,6 +552,7 @@ def test_configuration_views_surface_domain_errors_without_writes(
             "messaging:rule_list",
             {
                 "event_type": "order.confirmed",
+                "event_version": 1,
                 "template": whatsapp_template.id,
                 "channel": whatsapp_channel.id,
                 "purpose": "order_confirmation",

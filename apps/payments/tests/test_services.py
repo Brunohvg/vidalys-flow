@@ -599,14 +599,17 @@ def test_payment_audit_and_outbox_payloads_follow_closed_schema(
     )
     base_keys = {"payment_intent_id", "order_id", "status", "amount", "currency", "version"}
     optional_flags = {"has_order_conflict", "has_provider_inconsistency"}
+    optional_contract = {"event_contract_version"}
     payloads = list(AuditEvent.objects.filter(entity_type="payment_intent").values_list("payload", flat=True)) + list(
         OutboxEvent.objects.filter(aggregate_type="payment_intent").values_list("payload", flat=True)
     )
     assert payloads
     for payload in payloads:
         assert base_keys <= set(payload)
-        assert set(payload) <= base_keys | optional_flags
+        assert set(payload) <= base_keys | optional_flags | optional_contract
         assert all(isinstance(payload[key], bool) for key in set(payload) & optional_flags)
+        if "event_contract_version" in payload:
+            assert payload["event_contract_version"] == 1
 
 
 @pytest.mark.django_db

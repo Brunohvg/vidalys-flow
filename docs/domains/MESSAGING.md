@@ -39,15 +39,22 @@ Automação aceita somente `order.confirmed`, `fulfillment.ready`,
 `payment.checkout_activated` e `payment.status_changed`. A regra é
 Organization-scoped, versionada e nasce desabilitada. O consumidor confere
 tipo, ID e versão do agregado e relê a fonte; o payload do evento nunca é
-autorização nem conteúdo.
+autorização nem conteúdo. Todo evento possui `event_contract_version`
+separada da versão do agregado. Cada regra guarda essa versão e o consumidor
+exige igualdade com o contrato canônico antes de resolver a fonte. Versão
+ausente, booleana, desconhecida ou divergente falha fechada.
 
 Templates têm chave semântica, locale, canal, versão crescente e schema
-fechado. Uma versão usada torna-se imutável tanto nas superfícies ORM quanto
-por guardas PostgreSQL; os relacionamentos e snapshots de `Message` recebem a
-mesma proteção. O corpo renderizado existe apenas em memória no dispatch e não
-vai para banco, logs, auditoria, outbox ou receipts. O link hospedado é relido
-da tentativa ativa de Payments exatamente antes do envio e nunca é copiado
-para evidência operacional.
+fechado. Chave, finalidade, canal, locale, corpo e ordem exata dos parâmetros
+precisam coincidir com o catálogo transacional versionado no servidor. Um
+nome transacional não transforma texto arbitrário ou promocional em conteúdo
+aprovado; criação, envio manual, automação e dispatch revalidam o catálogo.
+Uma versão usada torna-se imutável tanto nas superfícies ORM quanto por guardas
+PostgreSQL; os relacionamentos e snapshots de `Message` recebem a mesma
+proteção. O corpo renderizado existe apenas em memória no dispatch e não vai
+para banco, logs, auditoria, outbox ou receipts. O link hospedado é relido da
+tentativa ativa de Payments exatamente antes do envio e nunca é copiado para
+evidência operacional.
 
 Cada envio exige Customer ativo e não mesclado, ContactPoint exato ainda ativo
 e inalterado e última `MessagingPreference` ativa como `allowed` para aquele
@@ -123,9 +130,10 @@ independência, Ruff, Django checks, Docker e Compose.
 
 ## Próximo checkpoint
 
-O Review independente 01 solicitou as correções P06-R01 a P06-R05. A
-remediação material e sua matriz de regressão foram implementadas; o novo
-candidato deve passar pelos gates e por outro Review independente. Somente
-após Review sem blocker, QA/Security GO e aprovação humana final podem existir
-autorização separada para PR/merge. Sandbox, providers reais, callback público,
-infraestrutura e deploy continuam fora desta fase.
+Os Reviews independentes 01 e 02 solicitaram P06-R01 a P06-R08. A segunda
+remediação acrescenta versão explícita de contrato, catálogo transacional
+fechado e matriz das seis fontes automáticas. O novo candidato deve passar
+pelos gates e por outro Review independente. Somente após Review sem blocker,
+QA/Security GO e aprovação humana final podem existir autorização separada
+para PR/merge. Sandbox, providers reais, callback público, infraestrutura e
+deploy continuam fora desta fase.

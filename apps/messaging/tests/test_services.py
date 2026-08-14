@@ -486,6 +486,85 @@ def test_create_template_rejects_placeholder_outside_schema(organization, manage
         )
 
 
+def test_promotional_or_arbitrary_template_is_structurally_rejected(
+    organization,
+    manager,
+    manager_membership,
+    messaging_order,
+    messaging_customer,
+    whatsapp_channel,
+    allowed_preference,
+):
+    with pytest.raises(InvalidMessage, match="catálogo transacional"):
+        services.create_template(
+            organization=organization,
+            actor=manager,
+            semantic_key="promotion",
+            name="Promoção",
+            channel="whatsapp",
+            locale="pt-BR",
+            body_text="PROMOÇÃO: compre novamente com desconto.",
+            body_html="",
+            parameter_schema=[],
+            provider_template_reference="",
+            idempotency_key=key(),
+        )
+
+    promotional = MessageTemplate.objects.create(
+        organization=organization,
+        semantic_key="promotion",
+        name="Promoção inserida fora do service",
+        channel="whatsapp",
+        body_text="PROMOÇÃO: compre novamente com desconto.",
+        parameter_schema=[],
+    )
+    with pytest.raises(InvalidMessage, match="catálogo transacional"):
+        services.create_message_from_command(
+            organization=organization,
+            actor=manager,
+            source_type=Message.SourceType.ORDER,
+            source_id=messaging_order.id,
+            purpose="order_confirmation",
+            template=promotional,
+            channel=whatsapp_channel,
+            contact_point=messaging_customer[1],
+            idempotency_key=key(),
+        )
+    with pytest.raises(InvalidMessage, match="catálogo transacional"):
+        services.upsert_automation_rule(
+            organization=organization,
+            actor=manager,
+            event_type="order.confirmed",
+            event_version=1,
+            template=promotional,
+            channel=whatsapp_channel,
+            purpose="order_confirmation",
+            is_enabled=True,
+            idempotency_key=key(),
+        )
+
+
+def test_automation_rule_rejects_unapproved_event_contract_version(
+    organization,
+    manager,
+    manager_membership,
+    whatsapp_template,
+    whatsapp_channel,
+):
+    with pytest.raises(InvalidMessage, match="Versão do contrato"):
+        services.upsert_automation_rule(
+            organization=organization,
+            actor=manager,
+            event_type="order.confirmed",
+            event_version=999,
+            template=whatsapp_template,
+            channel=whatsapp_channel,
+            purpose="order_confirmation",
+            is_enabled=True,
+            idempotency_key=key(),
+        )
+
+
 def test_record_preference_supersedes_previous(
     organization, manager, manager_membership, messaging_customer, allowed_preference
 ):
@@ -571,11 +650,11 @@ def test_manager_configures_connection_channel_template_and_rule(
     template = services.create_template(
         organization=organization,
         actor=manager,
-        semantic_key="configured_order",
+        semantic_key="order_confirmation",
         name="Pedido configurado",
         channel="whatsapp",
         locale="pt-BR",
-        body_text="Olá {customer_name}, pedido {order_number}.",
+        body_text="Olá {customer_name}, seu pedido {order_number} foi confirmado.",
         body_html="",
         parameter_schema=["customer_name", "order_number"],
         provider_template_reference="",
@@ -622,11 +701,11 @@ def test_template_versions_and_used_template_is_immutable(
     first = services.create_template(
         organization=organization,
         actor=manager,
-        semantic_key="versioned",
+        semantic_key="order_confirmation",
         name="Versão 1",
         channel="whatsapp",
         locale="pt-BR",
-        body_text="Olá {customer_name}, pedido {order_number}.",
+        body_text="Olá {customer_name}, seu pedido {order_number} foi confirmado.",
         body_html="",
         parameter_schema=["customer_name", "order_number"],
         provider_template_reference="",
@@ -635,17 +714,17 @@ def test_template_versions_and_used_template_is_immutable(
     second = services.create_template(
         organization=organization,
         actor=manager,
-        semantic_key="versioned",
+        semantic_key="order_confirmation",
         name="Versão 2",
         channel="whatsapp",
         locale="pt-BR",
-        body_text="Pedido {order_number} para {customer_name}.",
+        body_text="Olá {customer_name}, seu pedido {order_number} foi confirmado.",
         body_html="",
-        parameter_schema=["order_number", "customer_name"],
+        parameter_schema=["customer_name", "order_number"],
         provider_template_reference="",
         idempotency_key=key(),
     )
-    assert (first.version, second.version) == (1, 2)
+    assert (first.version, second.version) == (2, 3)
     _, contact = messaging_customer
     message = services.create_message_from_command(
         organization=organization,

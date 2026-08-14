@@ -53,9 +53,10 @@ separados.
 - dependência funcional: Payments aprovada em
   `3558ca30a5652be320feb3f28ab46a350ae9cad7`;
 - plano: aprovado por decisão humana;
-- implementação: candidata concluída e remediada após os achados P06-R01 a
-  P06-R05 do Review 01; novo CI e novo Review independente são os próximos
-  checkpoints, e QA/Security continua bloqueado até parecer sem blocker;
+- implementação: candidata concluída; P06-R01 a P06-R05 foram confirmados
+  resolvidos pelo Review 02 e P06-R06 a P06-R08 estão remediados no novo
+  candidato; novo CI e novo Review independente são os próximos checkpoints,
+  e QA/Security continua bloqueado até parecer sem blocker;
 - efeitos externos, sandbox, PR, merge e deploy: não autorizados.
 
 O candidato implementa mensagens exclusivamente transacionais, com núcleo canônico
@@ -75,6 +76,12 @@ A remediação torna atômica a autorização final que antecede o I/O, protege 
 ORM e no PostgreSQL templates usados e snapshots, corrige idempotência e versão
 das regras e preserva eventos para nova tentativa após falhas transitórias. A
 matriz PostgreSQL reproduz diretamente cada falha registrada pelo Review 01.
+
+A segunda remediação separa `event_contract_version` da versão do agregado,
+exige correspondência exata entre evento, regra e estado atual da fonte, e
+substitui conteúdo configurável arbitrário por um catálogo server-side de
+templates transacionais. A matriz cobre todas as seis fontes aprovadas e os
+contratos negativos de versão e marketing.
 
 ## Independência do Flowlog
 

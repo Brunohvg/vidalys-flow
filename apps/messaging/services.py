@@ -14,6 +14,7 @@ from apps.messaging.events import (
     ALLOWLISTED_SOURCE_EVENTS,
     MESSAGE_CREATED,
     MESSAGE_STATUS_CHANGED,
+    SOURCE_EVENT_CONTRACT_VERSIONS,
     SOURCE_EVENT_FULFILLMENT_COMPLETED,
     SOURCE_EVENT_FULFILLMENT_DISPATCHED,
     SOURCE_EVENT_FULFILLMENT_READY,
@@ -53,6 +54,7 @@ from apps.messaging.providers import (
     require_network_allowed,
     validate_provider_mode,
 )
+from apps.messaging.template_catalog import validate_transactional_template
 from apps.orders.models import Order
 from apps.payments.models import PaymentAttempt, PaymentIntent
 from apps.platform.services import enqueue_event
@@ -99,6 +101,14 @@ EVENT_AGGREGATE_TYPES = {
     SOURCE_EVENT_FULFILLMENT_COMPLETED: "fulfillment",
     SOURCE_EVENT_PAYMENT_CHECKOUT_ACTIVATED: "payment_intent",
     SOURCE_EVENT_PAYMENT_STATUS_CHANGED: "payment_intent",
+}
+EVENT_SOURCE_STATUSES = {
+    SOURCE_EVENT_ORDER_CONFIRMED: Order.Status.CONFIRMED,
+    SOURCE_EVENT_FULFILLMENT_READY: Fulfillment.Status.READY,
+    SOURCE_EVENT_FULFILLMENT_DISPATCHED: Fulfillment.Status.IN_TRANSIT,
+    SOURCE_EVENT_FULFILLMENT_COMPLETED: Fulfillment.Status.COMPLETED,
+    SOURCE_EVENT_PAYMENT_CHECKOUT_ACTIVATED: PaymentIntent.Status.AWAITING_PAYMENT,
+    SOURCE_EVENT_PAYMENT_STATUS_CHANGED: PaymentIntent.Status.PAID,
 }
 ALLOWED_EVIDENCE_FLAGS = frozenset({"has_delivery_ambiguity", "has_delivery_inconsistency"})
 
@@ -298,14 +308,24 @@ def _resolve_permission(*, organization, customer, contact_point, channel_kind, 
     return preference
 
 
-def _validate_template(*, organization, template, channel_kind):
+def _validate_template(*, organization, template, channel_kind, purpose=None):
     if template.organization_id != organization.id:
         raise OrganizationMismatch("Template não pertence à organização.")
     if not template.is_active:
         raise InvalidMessage("Template inativo.")
     if template.channel != channel_kind:
         raise InvalidMessage("Template incompatível com o canal.")
-    return validate_parameter_schema(template.parameter_schema)
+    schema = validate_parameter_schema(template.parameter_schema)
+    validate_transactional_template(
+        semantic_key=template.semantic_key,
+        channel=template.channel,
+        locale=template.locale,
+        body_text=template.body_text,
+        body_html=template.body_html,
+        parameter_schema=schema,
+        purpose=purpose,
+    )
+    return schema
 
 
 def _validate_channel(*, organization, channel, channel_kind):
@@ -349,7 +369,12 @@ def _create_message(
     idempotency_key,
     operation,
 ):
-    schema = _validate_template(organization=organization, template=template, channel_kind=channel.kind)
+    schema = _validate_template(
+        organization=organization,
+        template=template,
+        channel_kind=channel.kind,
+        purpose=purpose,
+    )
     _validate_channel(organization=organization, channel=channel, channel_kind=template.channel)
     needed = placeholders(template.body_text) | placeholders(template.body_html or "")
     if not needed.issubset(set(parameters) | {"checkout_link"}):
@@ -474,6 +499,8 @@ def create_message_from_event(*, organization, rule, source_event_id, source_id,
     )
     if source.version != source_version:
         raise InvalidMessage("Evento de origem está obsoleto para o agregado atual.")
+    if source.status != EVENT_SOURCE_STATUSES[rule.event_type]:
+        raise InvalidMessage("Estado atual da fonte é incompatível com o evento transacional.")
     contact_point = _resolve_primary_contact(customer=customer, channel_kind=channel.kind)
     if contact_point is None:
         raise InvalidMessage("Customer sem contato primário ativo para o canal.")
@@ -514,6 +541,14 @@ def consume_source_event(*, event):
         raise InvalidMessage("Evento sem organização.")
     purpose = EVENT_PURPOSES[event.event_type]
     source_type = EVENT_SOURCE_TYPES[event.event_type]
+    event_contract_version = event.payload.get("event_contract_version")
+    expected_contract_version = SOURCE_EVENT_CONTRACT_VERSIONS[event.event_type]
+    if (
+        isinstance(event_contract_version, bool)
+        or not isinstance(event_contract_version, int)
+        or event_contract_version != expected_contract_version
+    ):
+        raise InvalidMessage("Versão do contrato do evento ausente ou incompatível.")
     if event.aggregate_type != EVENT_AGGREGATE_TYPES[event.event_type]:
         raise InvalidMessage("Tipo do agregado não corresponde ao contrato do evento.")
     source_id = event.payload.get(
@@ -536,6 +571,7 @@ def consume_source_event(*, event):
     rules = MessageAutomationRule.objects.filter(
         organization=organization,
         event_type=event.event_type,
+        event_version=event_contract_version,
         is_enabled=True,
     ).select_related("template", "channel")
     created = 0
@@ -773,6 +809,7 @@ def _revalidate_dispatch_contract(*, message):
         organization=message.organization,
         template=message.template,
         channel_kind=message.channel_kind,
+        purpose=message.purpose,
     )
     _validate_channel(
         organization=message.organization,
@@ -1670,6 +1707,14 @@ def create_template(
     expected = placeholders(body_text) | placeholders(body_html or "")
     if not expected.issubset(schema):
         raise InvalidMessage("Template referencia parâmetro fora do schema aprovado.")
+    validate_transactional_template(
+        semantic_key=semantic_key,
+        channel=channel,
+        locale=locale,
+        body_text=body_text,
+        body_html=body_html,
+        parameter_schema=schema,
+    )
     payload = {
         "semantic_key": semantic_key,
         "name": name,
@@ -1819,6 +1864,7 @@ def upsert_automation_rule(
     organization,
     actor,
     event_type,
+    event_version=1,
     template,
     channel,
     purpose,
@@ -1829,14 +1875,27 @@ def upsert_automation_rule(
     _require_manager(actor=actor, organization=organization)
     if event_type not in ALLOWLISTED_SOURCE_EVENTS:
         raise InvalidMessage("Evento fora do allowlist de automação.")
+    if (
+        isinstance(event_version, bool)
+        or not isinstance(event_version, int)
+        or event_version != SOURCE_EVENT_CONTRACT_VERSIONS[event_type]
+    ):
+        raise InvalidMessage("Versão do contrato do evento não está aprovada.")
     if purpose != EVENT_PURPOSES[event_type]:
         raise InvalidMessage("Finalidade incompatível com o evento.")
     if template.organization_id != organization.id or channel.organization_id != organization.id:
         raise OrganizationMismatch("Template ou canal não pertence à organização.")
     if template.channel != channel.kind:
         raise InvalidMessage("Template incompatível com o canal da regra.")
+    _validate_template(
+        organization=organization,
+        template=template,
+        channel_kind=channel.kind,
+        purpose=purpose,
+    )
     payload = {
         "event_type": event_type,
+        "event_version": event_version,
         "template_id": str(template.id),
         "channel_id": str(channel.id),
         "purpose": purpose,
@@ -1854,6 +1913,7 @@ def upsert_automation_rule(
         rule = MessageAutomationRule.objects.filter(
             organization=organization,
             event_type=event_type,
+            event_version=event_version,
             template=template,
             channel=channel,
         ).first()
@@ -1875,6 +1935,7 @@ def upsert_automation_rule(
         rule = MessageAutomationRule.objects.create(
             organization=organization,
             event_type=event_type,
+            event_version=event_version,
             template=template,
             channel=channel,
             purpose=purpose,
@@ -1886,8 +1947,9 @@ def upsert_automation_rule(
             raise VersionConflict("Versão esperada é obrigatória para atualizar a regra.")
         _ensure_version(obj=rule, expected_version=expected_version)
         rule.purpose = purpose
+        rule.event_version = event_version
         rule.is_enabled = is_enabled
         rule.version += 1
-        rule.save(update_fields=("purpose", "is_enabled", "version", "updated_at"))
+        rule.save(update_fields=("event_version", "purpose", "is_enabled", "version", "updated_at"))
     complete_command(receipt=receipt, message=None, resulting_version=rule.version)
     return rule

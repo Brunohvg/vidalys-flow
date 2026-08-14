@@ -102,7 +102,8 @@ estoque, pagamentos, transportadoras, mensagens e integrações não participam.
 
 ```text
 evento aprovado ou comando manual allowlisted
-  → template transacional versionado
+  → event_contract_version validada contra a regra
+  → template transacional do catálogo fechado e versionado
   → Customer + ContactPoint + permissão revalidados
   → Message + tentativa idempotente
   → Evolution API | WhatsApp Cloud API | Amazon SES (efeito externo desligado)
@@ -111,7 +112,9 @@ evento aprovado ou comando manual allowlisted
 ```
 
 A implementação de Messaging não aceita texto livre, marketing ou contato sem
-permissão vigente. Regras automáticas começam desabilitadas por Organization.
+permissão vigente. O catálogo fixa finalidade, canal, locale, corpo e schema;
+apenas renomear conteúdo promocional não o torna elegível. Regras automáticas
+começam desabilitadas por Organization.
 Antes de enviar checkout, o worker relê a tentativa exata de Payments; links
 expirados, cancelados, substituídos ou em atenção não são enviados. Essa seção
 descreve o candidato local e não autoriza provider, sandbox ou deploy.

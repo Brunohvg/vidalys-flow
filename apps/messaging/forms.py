@@ -115,6 +115,7 @@ class AutomationRuleForm(forms.Form):
         ),
         label="Evento",
     )
+    event_version = forms.IntegerField(min_value=1, initial=1, label="Versão do contrato do evento")
     template = forms.ModelChoiceField(queryset=MessageTemplate.objects.none(), label="Template")
     channel = forms.ModelChoiceField(queryset=MessagingChannel.objects.none(), label="Canal")
     purpose = forms.ChoiceField(choices=PURPOSE_CHOICES, label="Finalidade")
@@ -131,6 +132,7 @@ class AutomationRuleForm(forms.Form):
         self.fields["template"].queryset = MessageTemplate.objects.filter(organization=organization, is_active=True)
         self.fields["channel"].queryset = MessagingChannel.objects.filter(organization=organization)
         if not self.is_bound:
+            self.initial.setdefault("event_version", 1)
             self.initial.setdefault("idempotency_key", str(uuid.uuid4()))
 
 
