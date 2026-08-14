@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "review_metadata": {
+    "phase_id": 7,
+    "phase_name": "Integrations",
+    "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+    "baseline_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
+    "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
+    "branch": "phase/07-integrations",
+    "review_status": "complete",
+    "review_role": "Independent Review Agent",
+    "review_date": "2026-08-14T10:30:00Z"
+  },
+  "baseline_validation": {
+    "approved_phase_ancestry": "PASS",
+    "evidence": "e2140eb25cc10f1a79dad05a0507ba9141003ac9 (Phase 06 head) is ancestor of phase/07-integrations",
+    "governance_baseline": "PASS",
+    "evidence_baseline": "git check_governance_baseline.py: OK — only permitted paths modified between 09d73050f1df9d52b13e61ae87a26db4b26f365c and candidate HEAD",
+    "base_sha_recorded": "PASS",
+    "evidence_sha": "project/handoffs/phase-07.json records base_sha: 09d73050f1df9d52b13e61ae87a26db4b26f365c"
+  },
+  "executable_scans": {
+    "secret_scan": {
+      "status": "PASS",
+      "command": "python3 scripts/check_secrets.py",
+      "result": "OK: nenhuma assinatura de secret real encontrada."
+    },
+    "independence_scan": {
+      "status": "PASS",
+      "command": "python3 scripts/check_independence.py",
+      "result": "OK: código executável independente; nenhum símbolo proibido encontrado."
+    },
+    "governance_scan": {
+      "status": "PASS",
+      "command": "python3 scripts/check_governance_baseline.py --head HEAD --ref-name phase/07-integrations --baseline-ref origin/main",
+      "result": "OK: approved phase ancestry and governance-only baseline are valid."
+    }
+  },
+  "domain_model_review": {
+    "canonical_models": {
+      "expected_count": 6,
+      "delivered_count": 6,
+      "status": "PASS",
+      "models": [
+        {
+          "name": "IntegrationConnection",
+          "status_values": ["inactive", "active", "degraded", "disabled"],
+          "organization_scoped": true,
+          "validation": "adapter_key restricted to 'reference'; config enforced empty",
+          "review": "PASS"
+        },
+        {
+          "name": "IntegrationEndpoint",
+          "direction_values": ["ingress", "egress"],
+          "versioned": true,
+          "contract_version_constraint": true,
+          "organization_scoped": true,
+          "review": "PASS"
+        },
+        {
+          "name": "IntegrationDelivery",
+          "status_values": ["pending", "queued", "sending", "accepted", "succeeded", "failed", "uncertain", "cancelled"],
+          "idempotency_key_constraint": "organization + idempotency_key unique",
+          "source_uniqueness_constraint": "endpoint + source_type/id/version + operation_key + contract_version unique",
+          "organization_scoped": true,
+          "review": "PASS"
+        },
+        {
+          "name": "IntegrationDeliveryAttempt",
+          "status_values": ["requested", "sending", "accepted", "succeeded", "failed", "uncertain", "cancelled"],
+          "lease_pattern": "lease_token + lease_expires_at for SENDING",
+          "one_active_constraint": "max 1 active (requested/sending/accepted/uncertain) per delivery",
+          "organization_scoped": true,
+          "review": "PASS"
+        },
+        {
+          "name": "IntegrationWebhookReceipt",
+          "deduplication": "connection + endpoint + external_event_id unique",
+          "disposition_tracking": "out_of_order detection via occurred_at",
+          "organization_scoped": true,
+          "review": "PASS"
+        },
+        {
+          "name": "IntegrationReconciliationRun",
+          "status_values": ["pending", "running", "succeeded", "failed", "uncertain"],
+          "idempotency": "organization + connection + subject_key + cursor unique",
+          "organization_scoped": true,
+          "review": "PASS"
+        }
+      ]
+    },
+    "migrations": {
+      "status": "PASS",
+      "count": 1,
+      "path": "apps/integrations/migrations/0001_initial.py",
+      "nature": "initial",
+      "database": "PostgreSQL",
+      "evidence": "18-line single migration, all 6 models + constraints, new database only"
+    }
+  },
+  "integration_features": {
+    "egress_delivery": {
+      "status": "PASS",
+      "features": [
+        "create_delivery() with idempotency_key and source identity",
+        "transactional outbox via platform.services.enqueue_event()",
+        "claim_delivery() with leases and sequence tracking",
+        "dispatch_delivery() with adapter.send()",
+        "Celery integrations queue via CELERY_TASK_ROUTES",
+        "Beat schedule: integrations-dispatch (10s), integrations-reconcile (30s)"
+      ],
+      "retry_pattern": "bounded (max 3), exponential backoff (2^sequence seconds), retryable flag"
+    },
+    "ingress_webhook": {
+      "status": "PASS",
+      "features": [
+        "ingest_webhook() with authentication requirement (fails closed)",
+        "replay window validation (now ± 5min/-1min)",
+        "contract version exact match",
+        "external_event_id deduplication within connection/endpoint",
+        "out_of_order disposition tracking",
+        "payload digest verification for tamper detection"
+      ]
+    },
+    "uncertainty_handling": {
+      "status": "PASS",
+      "mechanisms": [
+        "IntegrationAmbiguousError → uncertain status (no automatic retry)",
+        "recover_expired_delivery_leases() moves SENDING → uncertain if lease expired",
+        "reconcile_delivery() resolves uncertain via adapter.reconcile()"
+      ]
+    },
+    "circuit_breaker": {
+      "status": "PASS",
+      "scope": "Organization + Connection (failure_count per IntegrationConnection)",
+      "trigger": "3 consecutive failures → degraded status",
+      "recovery": "next success resets failure_count and status to active"
+    }
+  },
+  "payload_and_privacy": {
+    "payload_minimization": {
+      "status": "PASS",
+      "mechanism": "_canonical_payload(payload) applies allowlist",
+      "allowed_keys": ["scenario", "reconcile_scenario", "subject", "state", "version", "reason_code", "external_ref"],
+      "allowed_scalars": ["str", "int", "float", "bool", "None"],
+      "enforcement": "IntegrationContractError raised for unknown keys or nested objects",
+      "persistence": "only minimized dict + SHA256 digest stored, raw body never persisted"
+    },
+    "secret_handling": {
+      "status": "PASS",
+      "mechanisms": [
+        "secret_alias field for opaque references (not actual tokens)",
+        "config field validated to remain empty and non-secret in phase 07",
+        "adapter_key restricted to 'reference' (no concrete provider keys)",
+        "webhook receipts store digest + disposition, never raw body or headers"
+      ]
+    },
+    "external_state_isolation": {
+      "status": "PASS",
+      "evidence": "Models never take provider state directly; external_id is reference-only, never dictates Order/Fulfillment/Payment/Messaging state"
+    }
+  },
+  "authorization_and_isolation": {
+    "organization_scoping": {
+      "status": "PASS",
+      "evidence": "All 6 models have organization ForeignKey with on_delete=PROTECT; queries filtered by organization; tests include cross-org rejection"
+    },
+    "user_authorization": {
+      "status": "PASS",
+      "policies": "can_configure_integrations(user, org) requires Membership with role in (OWNER, ADMIN, MANAGER)",
+      "evidence": "test_permissions_require_active_membership_and_configuration_role passes"
+    },
+    "webhook_authentication": {
+      "status": "PASS",
+      "mechanisms": [
+        "ingest_webhook() requires authenticated=True (fails closed if False)",
+        "contract_version must match endpoint.contract_version exactly",
+        "occurred_at replay window enforced"
+      ]
+    },
+    "cross_organization_tests": {
+      "status": "PASS",
+      "test_count": 2,
+      "evidence": [
+        "test_cross_organization_endpoint_is_rejected(): IntegrationContractError when delivery.organization != endpoint.organization",
+        "test_circuit_breaker_is_connection_scoped(): org_a degraded state does not affect org_b"
+      ]
+    },
+    "operational_view_isolation": {
+      "status": "PASS",
+      "evidence": "test_operational_view_is_organization_scoped: user in org_a sees only org_a deliveries; payload state not exposed in HTML"
+    }
+  },
+  "tests_and_coverage": {
+    "test_files": ["tests/test_integrations.py", "tests/test_integrations_concurrency.py"],
+    "total_lines": 435,
+    "test_scenarios": 15,
+    "concurrency_tests": 1,
+    "critical_paths": [
+      {
+        "path": "adapter offline determinism",
+        "test": "test_reference_adapter_is_offline_and_deterministic",
+        "status": "PASS"
+      },
+      {
+        "path": "payload minimization",
+        "test": "test_payload_key_allowlist_rejects_arbitrary_or_nested_data",
+        "status": "PASS"
+      },
+      {
+        "path": "ambiguous acceptance",
+        "test": "test_ambiguous_acceptance_never_blind_retries",
+        "status": "PASS"
+      },
+      {
+        "path": "lease expiration",
+        "test": "test_expired_sending_lease_becomes_uncertain_instead_of_retrying",
+        "status": "PASS"
+      },
+      {
+        "path": "retry bounds",
+        "test": "test_transient_retry_is_bounded_and_circuit_breaker_degrades_connection",
+        "status": "PASS"
+      },
+      {
+        "path": "permanent failure",
+        "test": "test_permanent_failure_never_retries",
+        "status": "PASS"
+      },
+      {
+        "path": "webhook deduplication",
+        "test": "test_webhook_deduplicates_changed_replay_and_tracks_out_of_order",
+        "status": "PASS"
+      },
+      {
+        "path": "replay/auth/version validation",
+        "test": "test_webhook_fails_closed_for_auth_version_and_replay_window",
+        "status": "PASS"
+      },
+      {
+        "path": "reconciliation",
+        "test": "test_reconciliation_resolves_uncertain_delivery",
+        "status": "PASS"
+      },
+      {
+        "path": "cross-organization rejection",
+        "test": "test_cross_organization_endpoint_is_rejected",
+        "status": "PASS"
+      },
+      {
+        "path": "circuit breaker scoping",
+        "test": "test_circuit_breaker_is_connection_scoped",
+        "status": "PASS"
+      },
+      {
+        "path": "concurrent delivery claims",
+        "test": "test_concurrent_delivery_claims_create_exactly_one_active_attempt",
+        "status": "PASS"
+      }
+    ],
+    "coverage": {
+      "status": "PASS",
+      "reported_percent": 86,
+      "minimum_required": 85,
+      "note": "tasks.py has lower direct line coverage; behavior exercised via services + topology. Critical paths covered by direct tests and CI."
+    }
+  },
+  "configuration_changes": {
+    "settings": {
+      "status": "PASS",
+      "changes": [
+        "INSTALLED_APPS: +apps.integrations",
+        "CELERY_TASK_ROUTES: +dispatch_pending_deliveries → integrations queue, +reconcile_uncertain_deliveries → integrations queue",
+        "CELERY_BEAT_SCHEDULE: +integrations-dispatch (10s), +integrations-reconcile (30s)"
+      ]
+    },
+    "celery_autodiscover": {
+      "status": "PASS",
+      "file": "config/celery.py",
+      "change": "+apps.integrations in autodiscover_tasks"
+    },
+    "url_routing": {
+      "status": "PASS",
+      "file": "config/urls.py",
+      "change": "path('integrations/', include('apps.integrations.urls'))"
+    }
+  },
+  "deferred_scope": {
+    "status": "PASS",
+    "items": [
+      "Real providers (Nuvemshop, ERP, marketplace, etc.)",
+      "Concrete commercial connectors and provider-specific adapters",
+      "Credentials, tokens, certificates, signatures",
+      "Sandbox calls and production activation",
+      "Public webhook registration and callbacks",
+      "Arbitrary HTTP callbacks or remote code execution",
+      "ERP, fiscal, accounting, tax, inventory and marketing connectors",
+      "Phase 08 dashboard and Phases 09-10 infrastructure/deploy"
+    ],
+    "evidence": "All deferred items correctly excluded from implementation; reference adapter and offline fakes only"
+  },
+  "blocking_findings": [],
+  "non_blocking_findings": [
+    {
+      "finding_id": "NBF-001",
+      "category": "governance_metadata",
+      "severity": "informational",
+      "title": "Commits after candidate marker",
+      "description": "Two commits post-date the 'mark implementation candidate' commit (a2c1b1d): f6ca63f (docs: add candidate handoff) and 9179418 (fix: normalize handoff commit SHAs). Both are governance/documentation only; no code changes to delivered integrations domain.",
+      "evidence": [
+        "f6ca63f changes: +project/handoffs/phase-07.json (documentation)",
+        "9179418 changes: project/handoffs/phase-07.json line normalization (metadata)",
+        "No changes to apps/integrations/ code after a2c1b1d"
+      ],
+      "impact": "metadata clarity; code delivery unchanged",
+      "recommendation": "Acceptable. Future candidates could normalize commit SHAs before marking, but current approach does not compromise code quality or governance."
+    },
+    {
+      "finding_id": "NBF-002",
+      "category": "test_coverage",
+      "severity": "informational",
+      "title": "Low direct line coverage in tasks.py",
+      "description": "tasks.py has lower direct line coverage (noted in handoff) because behavior is exercised primarily through services and runtime topology (Celery Beat schedule + worker dispatch).",
+      "evidence": "Handoff notes 'Integrations task module has low direct line coverage because behavior is exercised primarily through services and runtime topology; critical service paths and registration are covered by direct tests/CI.'",
+      "impact": "none; critical paths covered",
+      "recommendation": "Acceptable per manifesto. Integration tests and CI topology validation compensate."
+    }
+  ],
+  "architecture_alignment": {
+    "provider_neutral": "PASS",
+    "canonical_boundary": "PASS",
+    "idempotency_strategy": "PASS",
+    "error_semantics": "PASS",
+    "organization_isolation": "PASS",
+    "fail_closed_defaults": "PASS",
+    "network_isolation": "PASS",
+    "backward_compatibility": "PASS"
+  },
+  "handoff_validation": {
+    "schema_compliance": "PASS",
+    "phase_manifest_consistency": "PASS",
+    "delivery_scope_accuracy": "PASS",
+    "risk_statement_accuracy": "PASS"
+  },
+  "review_conclusion": {
+    "status": "READY_FOR_QA_AND_SECURITY",
+    "gate_result": "PASS",
+    "blockers_count": 0,
+    "non_blockers_count": 2,
+    "summary": "Phase 07 Integrations implementation is architecturally sound, correctly implements provider-neutral domain boundary, enforces organization isolation, idempotency, uncertainty handling, and fail-closed security. No blocking findings detected. Code quality, test coverage, and governance checks pass. Ready for QA/Security review and final human approval.",
+    "evidence_references": [
+      "project/phases/07-integrations.json",
+      "project/handoffs/phase-07.json",
+      "project/constraints.json",
+      "AGENTS.md",
+      "docs/domains/INTEGRATIONS_VISION.md"
+    ]
+  }
+}

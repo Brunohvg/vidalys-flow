@@ -68,10 +68,15 @@ def test_logout_requires_post_and_ends_session(client):
     [
         "/clientes-v2/",
         "/pedidos-v2/",
-        "/integrations/",
         "/marketing/",
         "/restock/",
     ],
 )
 def test_known_legacy_routes_do_not_exist(client, path):
     assert client.get(path).status_code == 404
+
+
+def test_native_integrations_route_exists_and_requires_authentication(client):
+    response = client.get("/integrations/")
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))

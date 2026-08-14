@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "phase_id": 7,
+  "phase_name": "Integrations",
+  "review_report": "project/reviews/phase-07-review-report.json",
+  "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+  "review_commit": "75e4d14c53d01a55b6734570d3b4729adb0a9c05",
+  "original_review_date": "2026-08-14T10:30:00Z",
+  "corrected_review_date": "2026-08-14T13:30:00Z",
+  "timezone_context": "America/Sao_Paulo (UTC-03:00)",
+  "reason": "The review time was recorded as 10:30 local America/Sao_Paulo time but incorrectly suffixed with Z. The equivalent UTC timestamp is 13:30Z.",
+  "scope": "Documentary timestamp correction only. Review findings, candidate head, gate result and reviewer conclusions are unchanged."
+}

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.fulfillment",
     "apps.payments",
     "apps.messaging",
+    "apps.integrations",
 ]
 
 MIDDLEWARE = [
@@ -138,16 +139,12 @@ CELERY_TASK_ROUTES = {
     "apps.payments.tasks.dispatch_checkout_cancellations": {"queue": "integrations"},
     "apps.messaging.tasks.consume_source_events": {"queue": "default"},
     "apps.messaging.tasks.dispatch_messages": {"queue": "integrations"},
+    "apps.integrations.tasks.dispatch_pending_deliveries": {"queue": "integrations"},
+    "apps.integrations.tasks.reconcile_uncertain_deliveries": {"queue": "integrations"},
 }
 CELERY_BEAT_SCHEDULE = {
-    "platform-outbox-publisher": {
-        "task": "apps.platform.tasks.publish_pending_outbox",
-        "schedule": 10.0,
-    },
-    "platform-heartbeat": {
-        "task": "apps.platform.tasks.record_beat_heartbeat",
-        "schedule": 30.0,
-    },
+    "platform-outbox-publisher": {"task": "apps.platform.tasks.publish_pending_outbox", "schedule": 10.0},
+    "platform-heartbeat": {"task": "apps.platform.tasks.record_beat_heartbeat", "schedule": 30.0},
     "fulfillment-order-cancellations": {
         "task": "apps.fulfillment.tasks.consume_order_cancellations",
         "schedule": 10.0,
@@ -168,9 +165,14 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.messaging.tasks.consume_source_events",
         "schedule": 10.0,
     },
-    "messaging-dispatch": {
-        "task": "apps.messaging.tasks.dispatch_messages",
+    "messaging-dispatch": {"task": "apps.messaging.tasks.dispatch_messages", "schedule": 10.0},
+    "integrations-dispatch": {
+        "task": "apps.integrations.tasks.dispatch_pending_deliveries",
         "schedule": 10.0,
+    },
+    "integrations-reconcile": {
+        "task": "apps.integrations.tasks.reconcile_uncertain_deliveries",
+        "schedule": 30.0,
     },
 }
 
