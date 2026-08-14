@@ -90,7 +90,10 @@ def test_delivery_success_minimization_and_transactional_outbox():
         organization=org,
         idempotency_key=f"integration-delivery:{delivery.id}:queued",
     )
-    assert event.payload == {"delivery_id": str(delivery.id), "operation_key": "export"}
+    assert event.payload["delivery_id"] == str(delivery.id)
+    assert event.payload["operation_key"] == "[REDACTED]"
+    assert event.payload["event_contract_version"] == 1
+    assert "state" not in event.payload
     dispatch_delivery(delivery.id)
     delivery.refresh_from_db()
     assert delivery.status == IntegrationDelivery.Status.SUCCEEDED
@@ -100,9 +103,21 @@ def test_delivery_success_minimization_and_transactional_outbox():
 def test_payload_key_allowlist_rejects_arbitrary_or_nested_data():
     org, _, endpoint, _ = setup_integration()
     with pytest.raises(IntegrationContractError):
-        make_delivery(org, endpoint, source_id="x", idem="bad-1", payload={"customer_email": "x@example.com"})
+        make_delivery(
+            org,
+            endpoint,
+            source_id="x",
+            idem="bad-1",
+            payload={"customer_email": "x@example.com"},
+        )
     with pytest.raises(IntegrationContractError):
-        make_delivery(org, endpoint, source_id="y", idem="bad-2", payload={"state": {"nested": "no"}})
+        make_delivery(
+            org,
+            endpoint,
+            source_id="y",
+            idem="bad-2",
+            payload={"state": {"nested": "no"}},
+        )
 
 
 def test_reference_configuration_rejects_arbitrary_data_and_concrete_adapters():
@@ -123,7 +138,13 @@ def test_reference_configuration_rejects_arbitrary_data_and_concrete_adapters():
 
 def test_ambiguous_acceptance_never_blind_retries():
     org, _, endpoint, _ = setup_integration()
-    delivery = make_delivery(org, endpoint, source_id="2", idem="idem-2", payload={"scenario": "timeout"})
+    delivery = make_delivery(
+        org,
+        endpoint,
+        source_id="2",
+        idem="idem-2",
+        payload={"scenario": "timeout"},
+    )
     dispatch_delivery(delivery.id)
     delivery.refresh_from_db()
     assert delivery.status == IntegrationDelivery.Status.UNCERTAIN
@@ -263,7 +284,13 @@ def test_webhook_fails_closed_for_auth_version_and_replay_window(
 
 def test_reconciliation_resolves_uncertain_delivery():
     org, _, endpoint, _ = setup_integration()
-    delivery = make_delivery(org, endpoint, source_id="3", idem="idem-3", payload={"scenario": "timeout"})
+    delivery = make_delivery(
+        org,
+        endpoint,
+        source_id="3",
+        idem="idem-3",
+        payload={"scenario": "timeout"},
+    )
     dispatch_delivery(delivery.id)
     delivery.refresh_from_db()
     run = reconcile_delivery(delivery)
@@ -318,14 +345,27 @@ def test_permissions_require_active_membership_and_configuration_role():
 def test_operational_view_is_organization_scoped(client):
     org_a, _, endpoint_a, _ = setup_integration(slug="view-a-integrations")
     org_b, _, endpoint_b, _ = setup_integration(slug="view-b-integrations")
-    make_delivery(org_a, endpoint_a, source_id="visible", idem="visible-1", payload={"state": "visible-state"})
-    make_delivery(org_b, endpoint_b, source_id="hidden", idem="hidden-1", payload={"state": "hidden-state"})
+    make_delivery(
+        org_a,
+        endpoint_a,
+        source_id="tenant-a-visible-delivery",
+        idem="visible-1",
+        payload={"state": "tenant-a-private-state"},
+    )
+    make_delivery(
+        org_b,
+        endpoint_b,
+        source_id="tenant-b-secret-delivery",
+        idem="hidden-1",
+        payload={"state": "tenant-b-private-state"},
+    )
     user = User.objects.create_user("integrations-view@example.com")
     Membership.objects.create(organization=org_a, user=user, role=Membership.Role.OPERATOR)
     client.force_login(user)
     response = client.get("/integrations/")
     body = response.content.decode()
     assert response.status_code == 200
-    assert "visible" in body
-    assert "hidden" not in body
-    assert "visible-state" not in body
+    assert "tenant-a-visible-delivery" in body
+    assert "tenant-b-secret-delivery" not in body
+    assert "tenant-a-private-state" not in body
+    assert "tenant-b-private-state" not in body
