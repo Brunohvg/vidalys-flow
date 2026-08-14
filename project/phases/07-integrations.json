@@ -53,10 +53,11 @@
     "Authenticated inbound webhook gateway with per-connection routing, replay protection, deduplication, payload minimization and exact contract-version validation.",
     "Reconciliation of uncertain exchanges without blind retry or direct provider control over canonical domain state.",
     "Sanitized operator visibility for connection health, degraded state, last successful exchange and reconciliation outcome.",
-    "Offline adapter contracts/fakes only until concrete connectors and sandbox access receive separate explicit approval."
+    "Provider-neutral reference adapter and offline fakes that exercise the complete integration lifecycle with outbound network blocked; no concrete commercial connector is required for Phase 07 acceptance."
   ],
   "deferred_features": [
     "production credentials, real provider calls, sandbox calls, public webhook registration and production activation",
+    "concrete commercial connectors until each one receives a separate explicit product and contract approval",
     "generic user-programmable HTTP actions, arbitrary URL callbacks or arbitrary code execution",
     "two-way synchronization without an explicit target-domain command contract",
     "bulk Flowlog import, database synchronization, shared runtime or infrastructure reuse",
@@ -114,7 +115,7 @@
       "valid, invalid, missing, replayed, duplicated, oversized, malformed, wrong-version, wrong-account and cross-Organization webhook cases",
       "payload minimization and proof that raw bodies, credentials, signatures, tokens and arbitrary metadata do not reach logs, AuditEvent, OutboxEvent, receipts or exceptions",
       "reconciliation success, permanent failure, uncertainty, duplicate runs and concurrent execution",
-      "offline adapter fixtures with outbound network blocked",
+      "provider-neutral reference adapter and offline fakes covering success, transient failure, permanent failure, timeout, ambiguous acceptance, replay, duplication, out-of-order evidence, rate limiting, backoff, circuit-breaker degradation and reconciliation with outbound network blocked",
       "Celery registration, routing, queue declaration and dedicated integrations worker consumption",
       "empty PostgreSQL migration, technical rollback and regression of all approved prior phases"
     ],
@@ -132,7 +133,7 @@
     "Ruff and Django check",
     "migration consistency, empty PostgreSQL 17 migration and technical rollback",
     "PostgreSQL tests and coverage",
-    "offline integration contract fixtures with outbound network disabled",
+    "provider-neutral offline reference-adapter contract fixtures with outbound network disabled",
     "Celery topology gate",
     "Docker build and Compose validation"
   ],
@@ -141,19 +142,19 @@
     "cross-domain dependency direction and prohibition on direct provider mutation of canonical domain state",
     "authentication, replay protection, idempotency, retry classification, timeout ambiguity, circuit-breaker and reconciliation rules",
     "credential aliases, environment separation, payload minimization, PII handling and sanitized operational evidence",
-    "connector-specific capability and contract matrix after the first concrete connectors receive human approval",
+    "provider-neutral reference-adapter contract used for Phase 07 validation; connector-specific capability and contract matrices are required only after a concrete connector receives separate human approval",
     "updated system flow, roadmap, domain contract and handoff before phase closure"
   ],
   "acceptance_criteria": [
-    "The canonical integration boundary, models, lifecycles, authorization, idempotency, retry ambiguity and deferred scope are explicitly approved before implementation.",
+    "The canonical integration boundary, models, lifecycles, authorization, idempotency, retry ambiguity, reference-adapter strategy and deferred scope are explicitly approved before implementation.",
     "Implementation starts from actual_base_sha 09d73050f1df9d52b13e61ae87a26db4b26f365c and depends on approved Phase 06 product head e2140eb25cc10f1a79dad05a0507ba9141003ac9.",
-    "The first concrete connectors and their ingress/egress contracts are separately named and approved before adapter implementation.",
+    "No concrete commercial connector is required to implement or accept Phase 07; the provider-neutral reference adapter and offline fakes must validate the complete ingress, egress, failure, uncertainty and reconciliation architecture. Any concrete connector requires a later explicit checkpoint defining its capabilities, ingress/egress contracts and authorization before adapter implementation.",
     "Every integration entity is Organization-scoped and tenant identity never comes from untrusted payload fields.",
     "External systems never dictate Orders, Fulfillment, Payments or Messaging state directly; target-domain changes use explicit approved canonical commands.",
     "Raw external payloads and secrets are excluded from canonical persistence and operational evidence by construction and tests.",
     "No network call occurs in request database transactions or ordinary CI; external effects remain disabled without separate sandbox/production authorization.",
     "All CI gates pass on the candidate HEAD, independent Review has no unresolved blocker and QA/Security emits GO before final approval.",
-    "Human approval remains explicit before implementation, provider selection, sandbox, PR, merge, release, deploy or the next phase."
+    "Human approval remains explicit before implementation, any concrete provider selection, sandbox, PR, merge, release, deploy or the next phase."
   ],
   "checks": [
     "python scripts/agent_orchestrator.py validate-all",
@@ -163,7 +164,7 @@
     "ruff check",
     "Django check and migration consistency",
     "PostgreSQL test suite with coverage",
-    "offline integration contract fixtures with network blocked",
+    "provider-neutral offline reference-adapter contract fixtures with network blocked",
     "Celery topology gate",
     "Docker build and Compose config"
   ],
@@ -197,10 +198,10 @@
     "Planning and, only after explicit plan approval, a new greenfield provider-neutral Integrations domain for approved Vidalys Flow domains.",
     "Organization-scoped connection/endpoint configuration, reliable egress, authenticated ingress, idempotency, bounded retries, uncertainty, circuit-breaker/degraded state and reconciliation.",
     "Minimal adapters to approved domain public contracts without those domains importing Integrations.",
-    "Offline connector contracts/fakes, new Integrations models, services, selectors, policies, workers, tests, migrations, server-rendered operational views, documentation, audit and sanitized internal outbox integration."
+    "Provider-neutral reference adapter and offline fakes, new Integrations models, services, selectors, policies, workers, tests, migrations, server-rendered operational views, documentation, audit and sanitized internal outbox integration."
   ],
   "forbidden_scope": [
-    "Implementing code before human approval of this plan or selecting concrete connectors without explicit approval.",
+    "Implementing code before human approval of this plan or implementing any concrete connector without its own explicit approval.",
     "Any provider, sandbox, public-webhook, credential, production, deploy or Coolify effect.",
     "Generic arbitrary HTTP actions, arbitrary callbacks, remote code execution or unsandboxed user-programmable integrations.",
     "Direct mutation of approved domain canonical states from provider payloads or statuses.",
