@@ -10,7 +10,7 @@
   "plan_status": "approved",
   "implementation_status": "complete",
   "review_status": "complete",
-  "qa_status": "blocked",
+  "qa_status": "pending",
   "human_approval_status": "pending",
   "initiation_authorization": {
     "status": "authorized",
