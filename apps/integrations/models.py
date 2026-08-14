@@ -1,7 +1,13 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
 from apps.core.models import BaseModel
+
+
+def _validate_reference_config(value):
+    if value not in ({}, None):
+        raise ValidationError("Phase 07 reference configuration must remain empty and non-secret.")
 
 
 class IntegrationConnection(BaseModel):
@@ -20,7 +26,7 @@ class IntegrationConnection(BaseModel):
     adapter_key = models.SlugField(max_length=100, default="reference")
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.INACTIVE)
     secret_alias = models.CharField(max_length=160, blank=True)
-    config = models.JSONField(default=dict, blank=True)
+    config = models.JSONField(default=dict, blank=True, validators=[_validate_reference_config])
     failure_count = models.PositiveIntegerField(default=0)
     last_success_at = models.DateTimeField(null=True, blank=True)
     degraded_at = models.DateTimeField(null=True, blank=True)
@@ -32,6 +38,15 @@ class IntegrationConnection(BaseModel):
                 name="integrations_connection_key_org_uniq",
             )
         ]
+
+    def clean(self):
+        super().clean()
+        if self.adapter_key != "reference":
+            raise ValidationError({"adapter_key": "Concrete adapters require separate approval."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 class IntegrationEndpoint(BaseModel):
@@ -53,7 +68,7 @@ class IntegrationEndpoint(BaseModel):
     direction = models.CharField(max_length=8, choices=Direction.choices)
     contract_version = models.PositiveIntegerField(default=1)
     is_active = models.BooleanField(default=False)
-    config = models.JSONField(default=dict, blank=True)
+    config = models.JSONField(default=dict, blank=True, validators=[_validate_reference_config])
 
     class Meta:
         constraints = [
@@ -62,6 +77,15 @@ class IntegrationEndpoint(BaseModel):
                 name="integrations_endpoint_version_uniq",
             ),
         ]
+
+    def clean(self):
+        super().clean()
+        if self.connection_id and self.organization_id != self.connection.organization_id:
+            raise ValidationError("Endpoint and connection must belong to the same Organization.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 class IntegrationDelivery(BaseModel):

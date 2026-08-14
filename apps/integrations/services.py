@@ -27,6 +27,8 @@ from .models import (
 MAX_FAILURES_BEFORE_DEGRADED = 3
 MAX_ATTEMPTS = 3
 LEASE_SECONDS = 90
+WEBHOOK_MAX_AGE = timedelta(minutes=5)
+WEBHOOK_MAX_FUTURE_SKEW = timedelta(minutes=1)
 ALLOWED_PAYLOAD_KEYS = {
     "scenario",
     "reconcile_scenario",
@@ -101,6 +103,31 @@ def create_delivery(
 
 
 @transaction.atomic
+def recover_expired_delivery_leases(now=None):
+    now = now or timezone.now()
+    attempts = list(
+        IntegrationDeliveryAttempt.objects.select_for_update()
+        .select_related("delivery")
+        .filter(
+            status=IntegrationDeliveryAttempt.Status.SENDING,
+            lease_expires_at__lt=now,
+        )
+    )
+    for attempt in attempts:
+        attempt.status = IntegrationDeliveryAttempt.Status.UNCERTAIN
+        attempt.result_code = "lease_expired"
+        attempt.retryable = False
+        attempt.lease_token = ""
+        attempt.lease_expires_at = None
+        attempt.save()
+        delivery = IntegrationDelivery.objects.select_for_update().get(id=attempt.delivery_id)
+        delivery.status = IntegrationDelivery.Status.UNCERTAIN
+        delivery.next_attempt_at = None
+        delivery.save(update_fields=("status", "next_attempt_at", "updated_at"))
+    return len(attempts)
+
+
+@transaction.atomic
 def claim_delivery(delivery_id):
     delivery = (
         IntegrationDelivery.objects.select_for_update()
@@ -109,9 +136,11 @@ def claim_delivery(delivery_id):
     )
     if delivery.status not in {IntegrationDelivery.Status.QUEUED, IntegrationDelivery.Status.FAILED}:
         return None
+    if delivery.status == IntegrationDelivery.Status.FAILED and delivery.next_attempt_at is None:
+        return None
     if delivery.next_attempt_at and delivery.next_attempt_at > timezone.now():
         return None
-    if delivery.connection.status not in {IntegrationConnection.Status.ACTIVE, IntegrationConnection.Status.DEGRADED}:
+    if delivery.connection.status != IntegrationConnection.Status.ACTIVE:
         return None
     prior = delivery.attempts.count()
     if prior >= MAX_ATTEMPTS:
@@ -196,7 +225,26 @@ def _finish_attempt(
     return delivery
 
 
-def ingest_webhook(*, connection, endpoint, external_event_id, contract_version, payload, authenticated):
+def _validate_webhook_time(occurred_at):
+    if occurred_at is None or not timezone.is_aware(occurred_at):
+        raise IntegrationContractError("authenticated webhook timestamp is required")
+    now = timezone.now()
+    if occurred_at < now - WEBHOOK_MAX_AGE:
+        raise IntegrationContractError("webhook is outside replay window")
+    if occurred_at > now + WEBHOOK_MAX_FUTURE_SKEW:
+        raise IntegrationContractError("webhook timestamp is too far in the future")
+
+
+def ingest_webhook(
+    *,
+    connection,
+    endpoint,
+    external_event_id,
+    contract_version,
+    payload,
+    authenticated,
+    occurred_at,
+):
     if not authenticated:
         raise IntegrationContractError("webhook authentication failed")
     if endpoint.connection_id != connection.id or endpoint.organization_id != connection.organization_id:
@@ -205,7 +253,14 @@ def ingest_webhook(*, connection, endpoint, external_event_id, contract_version,
         raise IntegrationContractError("ingress endpoint is inactive")
     if contract_version != endpoint.contract_version:
         raise IntegrationContractError("contract version mismatch")
+    _validate_webhook_time(occurred_at)
     _, digest = _canonical_payload(payload)
+    latest = (
+        IntegrationWebhookReceipt.objects.filter(endpoint=endpoint, occurred_at__isnull=False)
+        .order_by("-occurred_at")
+        .first()
+    )
+    disposition = "out_of_order" if latest and occurred_at < latest.occurred_at else "accepted"
     receipt, created = IntegrationWebhookReceipt.objects.get_or_create(
         connection=connection,
         endpoint=endpoint,
@@ -214,7 +269,8 @@ def ingest_webhook(*, connection, endpoint, external_event_id, contract_version,
             "organization": connection.organization,
             "contract_version": contract_version,
             "payload_digest": digest,
-            "disposition": "accepted",
+            "disposition": disposition,
+            "occurred_at": occurred_at,
         },
     )
     if not created and receipt.payload_digest != digest:

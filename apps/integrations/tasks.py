@@ -2,11 +2,12 @@ from celery import shared_task
 from django.utils import timezone
 
 from .models import IntegrationDelivery
-from .services import dispatch_delivery, reconcile_delivery
+from .services import dispatch_delivery, reconcile_delivery, recover_expired_delivery_leases
 
 
 @shared_task
 def dispatch_pending_deliveries(limit=50):
+    recover_expired_delivery_leases()
     ids = list(
         IntegrationDelivery.objects.filter(
             status__in=("queued", "failed"),
