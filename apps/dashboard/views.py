@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_GET
 
 from apps.organizations.selectors import active_organization_for_user
 
@@ -26,6 +27,7 @@ def _active_organization_or_redirect(request):
 
 
 @login_required
+@require_GET
 def dashboard_home(request):
     organization, response = _active_organization_or_redirect(request)
     if response:
@@ -51,6 +53,7 @@ def dashboard_home(request):
 
 
 @login_required
+@require_GET
 def order_workspace(request, order_id):
     organization, response = _active_organization_or_redirect(request)
     if response:
