@@ -14,7 +14,7 @@
   {% if search_results %}
     <div class="grid">
       {% for order in search_results %}
-        <article class="card"><strong>{{ order.display_number }}</strong><br>{{ order.customer_name_snapshot|default:order.customer.name }}<br><a href="{% url 'dashboard:order-workspace' order.id %}">Abrir workspace</a></article>
+        <article class="card"><strong>{{ order.display_number }}</strong><br>{{ order.customer_name_snapshot|default:order.customer.display_name }}<br><a href="{% url 'dashboard:order-workspace' order.id %}">Abrir workspace</a></article>
       {% endfor %}
     </div>
   {% else %}<p class="muted">Nenhum pedido encontrado nesta organização.</p>{% endif %}
@@ -36,7 +36,7 @@
   <div class="section-heading"><h2>Pedidos recentes</h2><a href="{% url 'orders:list' %}">Ver todos</a></div>
   {% if recent_orders %}
   <table class="responsive-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>
-    {% for order in recent_orders %}<tr><td data-label="Pedido">{{ order.display_number }}</td><td data-label="Cliente">{{ order.customer_name_snapshot|default:order.customer.name }}</td><td data-label="Status"><span class="badge">{{ order.get_status_display }}</span></td><td data-label="Total">R$ {{ order.total }}</td><td data-label="Ação"><a href="{% url 'dashboard:order-workspace' order.id %}">Workspace</a></td></tr>{% endfor %}
+    {% for order in recent_orders %}<tr><td data-label="Pedido">{{ order.display_number }}</td><td data-label="Cliente">{{ order.customer_name_snapshot|default:order.customer.display_name }}</td><td data-label="Status"><span class="badge">{{ order.get_status_display }}</span></td><td data-label="Total">R$ {{ order.total }}</td><td data-label="Ação"><a href="{% url 'dashboard:order-workspace' order.id %}">Workspace</a></td></tr>{% endfor %}
   </tbody></table>
   {% else %}<p class="muted">Nenhum pedido nesta organização.</p>{% endif %}
 </section>
