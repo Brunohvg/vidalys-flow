@@ -6,12 +6,12 @@
   "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
   "base_ref": "main",
   "branch": "phase/07-integrations",
-  "status": "approved",
+  "status": "candidate",
   "plan_status": "approved",
   "implementation_status": "complete",
   "review_status": "complete",
   "qa_status": "go",
-  "human_approval_status": "approved",
+  "human_approval_status": "pending",
   "initiation_authorization": {
     "status": "authorized",
     "evidence": "Human authorized Phase 07 planning on 2026-08-14 America/Sao_Paulo."
@@ -24,7 +24,7 @@
   "final_approval": {
     "status": "approved",
     "date": "2026-08-14",
-    "evidence": "Human explicitly approved Phase 07 after independent Review completed, QA/Security emitted GO, and CI run 31807750781 succeeded on carrier SHA 5c47acfa3ece7e0a8a906636513d32a8bc436aae. This approval closes the human product gate only; PR, merge, release, deploy, concrete providers, sandbox, public callbacks, credentials and Phase 08 remain separately unauthorized."
+    "evidence": "Human explicitly approved Phase 07 after independent Review completed, QA/Security emitted GO, and CI run 31807750781 succeeded on carrier SHA 5c47acfa3ece7e0a8a906636513d32a8bc436aae. Human subsequently authorized PR and merge. Until the official state/roadmap closeout after merge, canonical future-phase fields remain candidate/pending as required by the governance validator. Release, deploy, concrete providers, sandbox, public callbacks, credentials and Phase 08 remain separately unauthorized."
   },
   "allowed_status_values": {
     "status": ["planned", "in_progress", "candidate", "approved", "rejected"],
