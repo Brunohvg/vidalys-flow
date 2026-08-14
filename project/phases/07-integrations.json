@@ -5,7 +5,6 @@
   "dependency_phase": 6,
   "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
   "base_ref": "main",
-  "actual_base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
   "branch": "phase/07-integrations",
   "status": "planned",
   "plan_status": "pending",
@@ -15,7 +14,7 @@
   "human_approval_status": "pending",
   "initiation_authorization": {
     "status": "authorized",
-    "evidence": "Human explicitly authorized initiation of the next step on 2026-08-14 America/Sao_Paulo. This authorization opens only the Phase 07 planning checkpoint; it does not approve the technical plan, implementation, provider effects, sandbox, public callbacks, credentials, PR, merge, release or deploy."
+    "evidence": "Human explicitly authorized initiation of the next step on 2026-08-14 America/Sao_Paulo. This opens only the Phase 07 planning checkpoint and does not approve implementation, provider effects, sandbox, public callbacks, credentials, PR, merge, release or deploy."
   },
   "allowed_status_values": {
     "status": ["planned", "in_progress", "candidate", "approved", "rejected"],
@@ -25,7 +24,6 @@
     "qa_status": ["blocked", "pending", "in_progress", "go", "no_go"],
     "human_approval_status": ["pending", "approved", "rejected"]
   },
-  "objective": "Provide a provider-neutral external integration boundary for approved Vidalys Flow domains, with strict Organization isolation, authenticated ingress, reliable egress, idempotency, retries, reconciliation and observable failure handling without allowing external systems to dictate canonical domain state.",
   "allowed_apps": [
     "integrations",
     "messaging",
@@ -40,91 +38,174 @@
     "users",
     "core"
   ],
-  "forbidden_apps": [
-    "dashboard",
-    "inventory",
-    "tax",
-    "accounting",
-    "marketing"
+  "forbidden_apps": ["dashboard", "inventory", "tax", "accounting", "marketing"],
+  "expected_models": [
+    {"name": "IntegrationConnection", "purpose": "Organization-scoped external-system connection with provider key, capability snapshot, lifecycle, non-secret configuration and opaque secret aliases."},
+    {"name": "IntegrationEndpoint", "purpose": "Versioned Organization-scoped ingress or egress endpoint under one connection."},
+    {"name": "IntegrationDelivery", "purpose": "Canonical outbound delivery aggregate bound to one approved internal source event or command."},
+    {"name": "IntegrationDeliveryAttempt", "purpose": "Serialized external attempt with lease, bounded retry evidence, sanitized external identifiers and ambiguous-acceptance handling."},
+    {"name": "IntegrationWebhookReceipt", "purpose": "Authenticated, deduplicated and minimized inbound evidence containing only allowlisted canonical fields and digest."},
+    {"name": "IntegrationReconciliationRun", "purpose": "Organization-scoped reconciliation execution for uncertain or unresolved exchanges."}
   ],
-  "proposed_scope": [
-    "Organization-scoped integration connections and endpoint configuration containing only non-secret metadata plus opaque secret aliases.",
-    "Provider-neutral outbound command delivery using the existing integrations queue, transactional outbox, leases, bounded retries, backoff, circuit-breaker state and sanitized delivery evidence.",
-    "Authenticated inbound webhook gateway with per-connection routing, replay protection, deduplication, payload minimization and exact event-version contracts.",
-    "Canonical integration receipts and reconciliation jobs that never copy raw provider payloads, credentials or sensitive customer content into logs, AuditEvent or OutboxEvent.",
-    "Explicit adapters for approved external-system contracts implemented with effects disabled and offline fixtures until separate sandbox authorization.",
-    "Operator and manager visibility for connection health, last successful exchange, degraded state, reconciliation status and sanitized error codes.",
-    "Cross-Organization isolation, authorization, idempotency, concurrency, timeout, retry and ambiguous-acceptance tests on PostgreSQL 17."
-  ],
-  "proposed_models": [
-    {
-      "name": "IntegrationConnection",
-      "purpose": "Organization-scoped external-system connection with provider key, mode, capability snapshot, lifecycle, non-secret configuration and opaque credential aliases."
-    },
-    {
-      "name": "IntegrationEndpoint",
-      "purpose": "One Organization-scoped ingress or egress endpoint under a connection, with versioned contract, external identifier and enabled/disabled state."
-    },
-    {
-      "name": "IntegrationDelivery",
-      "purpose": "Canonical outbound delivery aggregate bound to an approved internal source event or command, preserving minimized deterministic routing evidence and delivery lifecycle."
-    },
-    {
-      "name": "IntegrationDeliveryAttempt",
-      "purpose": "Serialized external attempt with lease, retry evidence, sanitized external identifiers, timeout classification and ambiguous-acceptance handling."
-    },
-    {
-      "name": "IntegrationWebhookReceipt",
-      "purpose": "Authenticated, deduplicated and minimized inbound evidence identified by connection, endpoint, external event id, digest, contract version and canonical disposition."
-    },
-    {
-      "name": "IntegrationReconciliationRun",
-      "purpose": "Organization-scoped reconciliation execution for unresolved or uncertain exchanges, with deterministic cursor/evidence and sanitized outcome."
-    }
-  ],
-  "proposed_states": {
-    "connection": ["inactive", "active", "degraded", "disabled"],
-    "delivery": ["pending", "queued", "sending", "accepted", "succeeded", "failed", "uncertain", "cancelled"],
-    "attempt": ["requested", "sending", "accepted", "succeeded", "failed", "uncertain", "cancelled"],
-    "rule": "External provider states are translated by adapters and never copied directly into canonical fields. uncertain is non-terminal and requires reconciliation or an explicit authorized resolution."
-  },
-  "security_and_reliability_rules": [
-    "Every connection, endpoint, receipt, delivery and reconciliation run belongs to exactly one Organization.",
-    "Organization is derived from authenticated Membership or from the connection resolved by an authenticated webhook endpoint; no free Organization id is trusted from external payloads.",
-    "Secrets are referenced only by opaque aliases and are never persisted in canonical tables, logs, AuditEvent, OutboxEvent or exception text.",
-    "Ingress fails closed when authentication, signature/secret validation, timestamp/replay policy, connection status or contract version is invalid.",
-    "Outbound network I/O occurs outside database transactions and only after durable canonical intent/outbox state is committed.",
-    "At most one active attempt exists per delivery; ambiguous external acceptance never triggers blind retry.",
-    "Retries are bounded and classified by failure type; permanent authentication, authorization or schema errors do not retry automatically.",
-    "Circuit-breaker/degraded state is Organization- and connection-scoped and cannot affect another tenant.",
-    "Raw external payloads are not retained by default; only allowlisted scalar evidence and cryptographic digests may be persisted.",
-    "No adapter may mutate Orders, Fulfillment, Payments or Messaging directly from provider status. Changes must pass through an approved canonical command/event contract owned by the target domain."
+  "expected_features": [
+    "Provider-neutral Organization-scoped connection and endpoint configuration with only non-secret metadata and opaque credential aliases.",
+    "Reliable outbound integration delivery using transactional outbox, the integrations Celery queue, leases, bounded retries, backoff and explicit uncertain state.",
+    "Authenticated inbound webhook gateway with per-connection routing, replay protection, deduplication, payload minimization and exact contract-version validation.",
+    "Reconciliation of uncertain exchanges without blind retry or direct provider control over canonical domain state.",
+    "Sanitized operator visibility for connection health, degraded state, last successful exchange and reconciliation outcome.",
+    "Offline adapter contracts/fakes only until concrete connectors and sandbox access receive separate explicit approval."
   ],
   "deferred_features": [
     "production credentials, real provider calls, sandbox calls, public webhook registration and production activation",
     "generic user-programmable HTTP actions, arbitrary URL callbacks or arbitrary code execution",
-    "two-way data synchronization without an explicit domain contract",
-    "bulk import of legacy Flowlog data, database synchronization or shared runtime access",
+    "two-way synchronization without an explicit target-domain command contract",
+    "bulk Flowlog import, database synchronization, shared runtime or infrastructure reuse",
     "ERP, fiscal, accounting, tax, inventory and marketing connectors",
-    "dashboard redesign and complete-experience work reserved for Phase 08",
-    "Coolify, infrastructure provisioning, DNS, TLS, observability rollout and homologation reserved for Phase 09",
-    "production deploy and cutover reserved for Phases 09 and 10"
+    "dashboard and complete-experience work reserved for Phase 08",
+    "infrastructure, DNS, TLS, homologation and production deploy reserved for Phases 09 and 10"
   ],
-  "planning_questions_requiring_human_approval": [
-    "Which concrete external connectors belong to the first Phase 07 implementation tranche.",
-    "Which ingress and egress event contracts are approved for each connector.",
-    "Whether any read-only consultation of Flowlog integration code is permitted for historical failure-mode research.",
-    "Whether the proposed canonical models and lifecycle states are approved before implementation begins."
+  "states": {
+    "requirement": "Proposed canonical lifecycles requiring explicit human approval before implementation.",
+    "connection_states": ["inactive", "active", "degraded", "disabled"],
+    "delivery_states": ["pending", "queued", "sending", "accepted", "succeeded", "failed", "uncertain", "cancelled"],
+    "attempt_states": ["requested", "sending", "accepted", "succeeded", "failed", "uncertain", "cancelled"],
+    "rule": "External provider states are translated by adapters and never copied directly into canonical domain fields; uncertain requires reconciliation or explicit authorized resolution."
+  },
+  "snapshots": [
+    "IntegrationDelivery stores Organization, connection/endpoint, source type/id/version, contract version, operation key and only allowlisted scalar routing evidence.",
+    "IntegrationWebhookReceipt stores connection, endpoint, external event identifier, digest, timestamps, contract version and canonical disposition; raw bodies and full headers are not retained.",
+    "Credentials, tokens, signatures, cookies, certificates, arbitrary metadata, documents and raw provider payloads are never persisted in canonical integration records.",
+    "AuditEvent and OutboxEvent contain canonical IDs, semantic operation/event keys, versions, state and sanitized reason flags only."
   ],
-  "quality_gates": [
-    "Governance state and manifest validation",
-    "Approved phase ancestry and governance baseline",
-    "Secret and independence scans",
+  "idempotency": [
+    "Every mutable integration command uses an Organization-scoped idempotency key and canonical payload hash.",
+    "Outbound delivery creation is unique for the approved source event/command, endpoint and contract version so outbox replay cannot duplicate intent.",
+    "At most one requested, sending, accepted or uncertain attempt exists per delivery.",
+    "Timeout after possible provider acceptance becomes uncertain unless the provider contract proves retry safety; no blind retry is allowed.",
+    "Inbound external event identifiers are deduplicated within authenticated connection/endpoint scope and are never trusted globally.",
+    "Reconciliation runs are idempotent by Organization, connection, subject and reconciliation cursor/version."
+  ],
+  "money_rules": [
+    "Integrations never computes, changes, rounds, discounts, surcharges or owns canonical money values.",
+    "Financial values may only be transported from approved immutable domain snapshots under an allowlisted versioned contract.",
+    "Provider fees, commissions and external accounting data do not alter canonical Order or Payment totals in this phase."
+  ],
+  "authorization": [
+    "Organization for human operations comes from authenticated active Membership and is never accepted as a free request identifier.",
+    "Only OWNER, ADMIN and MANAGER may create, enable, disable or reconcile IntegrationConnection and IntegrationEndpoint configuration.",
+    "OPERATOR may view masked/sanitized integration status required for operations but cannot configure credentials, endpoints or retries.",
+    "Inbound Organization is derived from the authenticated connection/endpoint, never from caller-supplied tenant fields.",
+    "Workers revalidate Organization, connection state, endpoint version, source contract and permissions before external dispatch or target-domain command execution.",
+    "Every selector, service, worker, webhook and admin surface requires direct cross-Organization tests."
+  ],
+  "migrations": {
+    "new_only": true,
+    "legacy_reuse": false,
+    "empty_postgresql_required": true,
+    "technical_rollback_required": true,
+    "data_migrations_allowed": false
+  },
+  "tests": {
+    "database": "PostgreSQL 17",
+    "network_access": false,
+    "required": [
+      "connection and endpoint authorization, inactive Membership, masking and cross-Organization isolation",
+      "outbound creation, outbox replay, single active attempt, lease expiry, bounded retry, timeout and ambiguous acceptance",
+      "valid, invalid, missing, replayed, duplicated, oversized, malformed, wrong-version, wrong-account and cross-Organization webhook cases",
+      "payload minimization and proof that raw bodies, credentials, signatures, tokens and arbitrary metadata do not reach logs, AuditEvent, OutboxEvent, receipts or exceptions",
+      "reconciliation success, permanent failure, uncertainty, duplicate runs and concurrent execution",
+      "offline adapter fixtures with outbound network blocked",
+      "Celery registration, routing, queue declaration and dedicated integrations worker consumption",
+      "empty PostgreSQL migration, technical rollback and regression of all approved prior phases"
+    ],
+    "sandbox_contract_validation": "Requires separate explicit human authorization and is not part of ordinary CI."
+  },
+  "coverage": {
+    "minimum_total_percent": 85,
+    "domain_expectation": "Critical authentication, tenant isolation, idempotency, retry ambiguity, webhook replay, privacy, concurrency and reconciliation paths require direct behavioral tests regardless of total coverage."
+  },
+  "ci": [
+    "locked dependency installation with no unapproved provider SDK",
+    "JSON and governance validation",
+    "approved phase ancestry and governance baseline",
+    "secret and independence scans",
     "Ruff and Django check",
-    "PostgreSQL 17 migrations from empty database and rollback/reapply",
-    "Unit, integration, authorization, cross-Organization, idempotency, retry, concurrency and reconciliation tests",
-    "Minimum repository coverage defined by project constraints",
-    "Docker, Compose and Celery topology validation",
-    "Independent Review and QA/Security before final human approval"
+    "migration consistency, empty PostgreSQL 17 migration and technical rollback",
+    "PostgreSQL tests and coverage",
+    "offline integration contract fixtures with outbound network disabled",
+    "Celery topology gate",
+    "Docker build and Compose validation"
+  ],
+  "documentation": [
+    "canonical IntegrationConnection, IntegrationEndpoint, delivery, attempt, webhook receipt and reconciliation lifecycles",
+    "cross-domain dependency direction and prohibition on direct provider mutation of canonical domain state",
+    "authentication, replay protection, idempotency, retry classification, timeout ambiguity, circuit-breaker and reconciliation rules",
+    "credential aliases, environment separation, payload minimization, PII handling and sanitized operational evidence",
+    "connector-specific capability and contract matrix after the first concrete connectors receive human approval",
+    "updated system flow, roadmap, domain contract and handoff before phase closure"
+  ],
+  "acceptance_criteria": [
+    "The canonical integration boundary, models, lifecycles, authorization, idempotency, retry ambiguity and deferred scope are explicitly approved before implementation.",
+    "Implementation starts from actual_base_sha 09d73050f1df9d52b13e61ae87a26db4b26f365c and depends on approved Phase 06 product head e2140eb25cc10f1a79dad05a0507ba9141003ac9.",
+    "The first concrete connectors and their ingress/egress contracts are separately named and approved before adapter implementation.",
+    "Every integration entity is Organization-scoped and tenant identity never comes from untrusted payload fields.",
+    "External systems never dictate Orders, Fulfillment, Payments or Messaging state directly; target-domain changes use explicit approved canonical commands.",
+    "Raw external payloads and secrets are excluded from canonical persistence and operational evidence by construction and tests.",
+    "No network call occurs in request database transactions or ordinary CI; external effects remain disabled without separate sandbox/production authorization.",
+    "All CI gates pass on the candidate HEAD, independent Review has no unresolved blocker and QA/Security emits GO before final approval.",
+    "Human approval remains explicit before implementation, provider selection, sandbox, PR, merge, release, deploy or the next phase."
+  ],
+  "checks": [
+    "python scripts/agent_orchestrator.py validate-all",
+    "python scripts/check_governance_baseline.py --head HEAD --ref-name phase/07-integrations --baseline-ref origin/main",
+    "python scripts/check_secrets.py",
+    "python scripts/check_independence.py",
+    "ruff check",
+    "Django check and migration consistency",
+    "PostgreSQL test suite with coverage",
+    "offline integration contract fixtures with network blocked",
+    "Celery topology gate",
+    "Docker build and Compose config"
+  ],
+  "report_format": {
+    "required_sections": [
+      "checkpoint",
+      "branch",
+      "dependency_head",
+      "base_ref",
+      "actual_base_sha",
+      "canonical_models_and_states",
+      "ingress_and_egress_contracts",
+      "authentication_and_replay",
+      "idempotency_retry_and_reconciliation",
+      "authorization_and_isolation",
+      "privacy_and_secret_handling",
+      "tests_and_gates",
+      "risks",
+      "deferred",
+      "human_decisions_required"
+    ]
+  },
+  "handoff_format": {
+    "path": "project/handoffs/phase-07.json",
+    "base_sha_semantics": "The exact origin/main SHA resolved before branch creation; this is actual_base_sha in checkpoint reports.",
+    "required_fields": [
+      "schema_version", "phase_id", "phase_name", "status", "branch", "base_sha", "head_sha", "commits", "delivered_scope", "models", "migrations", "tests", "scans", "ci", "organization_isolation", "legacy_reuse", "deferred", "risks", "blockers", "human_approval"
+    ]
+  },
+  "allowed_scope": [
+    "Planning and, only after explicit plan approval, a new greenfield provider-neutral Integrations domain for approved Vidalys Flow domains.",
+    "Organization-scoped connection/endpoint configuration, reliable egress, authenticated ingress, idempotency, bounded retries, uncertainty, circuit-breaker/degraded state and reconciliation.",
+    "Minimal adapters to approved domain public contracts without those domains importing Integrations.",
+    "Offline connector contracts/fakes, new Integrations models, services, selectors, policies, workers, tests, migrations, server-rendered operational views, documentation, audit and sanitized internal outbox integration."
+  ],
+  "forbidden_scope": [
+    "Implementing code before human approval of this plan or selecting concrete connectors without explicit approval.",
+    "Any provider, sandbox, public-webhook, credential, production, deploy or Coolify effect.",
+    "Generic arbitrary HTTP actions, arbitrary callbacks, remote code execution or unsandboxed user-programmable integrations.",
+    "Direct mutation of approved domain canonical states from provider payloads or statuses.",
+    "Persisting or printing raw provider payloads, full headers, credentials, tokens, signatures, cookies, certificates, documents or arbitrary metadata.",
+    "ERP, fiscal, accounting, tax, inventory, marketing, dashboard, infrastructure, homologation, cutover or later-phase implementation.",
+    "Any Flowlog code, migration, data, ID, database, runtime, credential, service, machine or infrastructure reuse or linkage."
   ]
 }
