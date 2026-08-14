@@ -1,0 +1,129 @@
+name: vidalys-flow-homologation
+
+x-app: &app
+  build:
+    context: .
+  env_file:
+    - path: .env.homologation
+      required: false
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.production
+    SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+    DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    CELERY_BROKER_URL: redis://redis:6379/0
+    REDIS_CACHE_URL: redis://redis:6379/1
+    VIDALYS_DEMO_MODE: ${VIDALYS_DEMO_MODE:-1}
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS:?ALLOWED_HOSTS is required}
+    CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:?CSRF_TRUSTED_ORIGINS is required}
+    CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+  restart: unless-stopped
+  networks:
+    - app
+
+services:
+  web:
+    <<: *app
+    depends_on:
+      release:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    command:
+      - .venv/bin/gunicorn
+      - config.wsgi:application
+      - --bind=0.0.0.0:8000
+      - --workers=${GUNICORN_WORKERS:-2}
+      - --threads=${GUNICORN_THREADS:-4}
+      - --timeout=${GUNICORN_TIMEOUT:-60}
+      - --no-control-socket
+      - --access-logfile=-
+      - --error-logfile=-
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - .venv/bin/python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready/', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  worker-default:
+    <<: *app
+    depends_on:
+      release:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    command: [".venv/bin/celery", "-A", "config", "worker", "--loglevel=INFO", "--queues=default"]
+    healthcheck:
+      test: ["CMD-SHELL", ".venv/bin/celery -A config inspect ping -d \"celery@$$HOSTNAME\" --timeout 5 | grep -q pong"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 25s
+
+  worker-integrations:
+    <<: *app
+    depends_on:
+      release:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    command: [".venv/bin/celery", "-A", "config", "worker", "--loglevel=INFO", "--queues=integrations"]
+    healthcheck:
+      test: ["CMD-SHELL", ".venv/bin/celery -A config inspect ping -d \"celery@$$HOSTNAME\" --timeout 5 | grep -q pong"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 25s
+
+  beat:
+    <<: *app
+    depends_on:
+      release:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    command:
+      [
+        ".venv/bin/celery",
+        "-A",
+        "config",
+        "beat",
+        "--loglevel=INFO",
+        "--schedule=/tmp/celerybeat-schedule",
+      ]
+    healthcheck:
+      test: ["CMD-SHELL", "case \"$$(tr '\\0' ' ' < /proc/1/cmdline)\" in *'celery -A config beat'*) exit 0 ;; *) exit 1 ;; esac"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  release:
+    <<: *app
+    command: [".venv/bin/python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+networks:
+  app:
+    driver: bridge
