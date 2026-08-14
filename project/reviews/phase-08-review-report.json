@@ -1,223 +1,224 @@
 {
   "schema_version": 1,
-  "review_checkpoint": "independent_review",
+  "review_checkpoint": "independent_review_revalidation",
+  "checkpoint": "Independent Review revalidation after QA/Security blocker P08-QA-SEC-001",
   "phase_id": 8,
   "phase_name": "Dashboard and complete experience",
-  "candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-  "base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
-  "reviewed_at": "2026-08-14T00:00:00Z",
+  "repository": "Brunohvg/vidalys-flow",
+  "branch": "phase/08-dashboard-experience",
+  "candidate_head": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+  "previous_candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+  "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+  "base_ref": "main",
+  "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
+  "reviewed_at": "2026-08-14T16:53:00Z",
   "reviewer_role": "Independent Review Agent",
   "status": "READY_FOR_QA_AND_SECURITY",
+  "material_sha_confirmation": "Independent Review revalidation was performed against material candidate b8eac30feafa8a41249e3f0af5e68e3c9159b4c1. Governance/report commits created after that SHA do not redefine the material candidate.",
   "blocking_findings": [],
   "non_blocking_findings": [
     {
-      "id": "info_001",
-      "category": "governance",
+      "id": "P08-IR-REVAL-INFO-001",
+      "category": "governance_history",
       "severity": "informational",
-      "title": "Post-candidate handoff creation in remotePhase 08 branch",
-      "description": "The implementer created a handoff document in commit 3c8a80c (origin/phase/08-dashboard-experience HEAD) after marking the material candidate in commit 156ae0d. This is standard practice: mark candidate, create handoff, push. The review was conducted on the candidate material SHA 52ee5050a8538c4e44392cadaa6d496f0adc2db4 as registered in the handoff. This is not a blocking finding; it documents the sequence.",
-      "evidence": "Commits 156ae0d..3c8a80c show mark-candidate followed by handoff creation with no code changes between them."
+      "title": "Prior review-governance artifacts were corrected non-destructively",
+      "description": "The branch history contains the earlier Independent Review artifact sequence, a revert that removed accidental Phase 08 review artifacts from main, and a governance-only merge restoring the corrected main baseline. The new material candidate subsequently passed the approved-phase ancestry and governance-baseline CI gate. This history is noteworthy but does not block the revalidated candidate."
+    },
+    {
+      "id": "P08-IR-REVAL-INFO-002",
+      "category": "ci_maintenance",
+      "severity": "low",
+      "title": "GitHub Actions Node.js deprecation warning",
+      "description": "Foundation CI completed successfully but emitted a warning that actions/checkout@v4 and astral-sh/setup-uv@v5 target deprecated Node.js 20 and are currently forced to run on Node.js 24. This is a maintenance item outside the Phase 08 functional blocker and does not affect the green result."
     }
   ],
-  "architecture_review": {
+  "qa_blocker_revalidation": {
+    "finding_id": "P08-QA-SEC-001",
+    "previous_status": "blocking_no_go",
+    "revalidation_status": "RESOLVED_FOR_REVIEW_READINESS",
+    "finding": "The previous candidate loaded PaymentIntent through order.payment_intent and Fulfillment through order.fulfillments without independently applying the active Organization filter at those relationship boundaries.",
+    "fix": "Commit 68fc86e950460ffae271965927ddd840b210173a removes implicit related-object loading from the workspace and queries PaymentIntent.objects.filter(organization=organization, order=order) and Fulfillment.objects.filter(organization=organization, order=order). Order remains independently scoped by organization and id, and Messages remain scoped by organization plus ORDER source identity.",
+    "adversarial_test": "Commit b533ba4efde2e87467ea4975c14b4705805b2eb3 adds test_order_workspace_rejects_cross_organization_related_records. The test creates an Order in Organization A while creating PaymentIntent and Fulfillment records in Organization B that still reference that Order, then verifies the Organization A workspace returns neither cross-tenant child.",
+    "conclusion": "The rework directly addresses the root cause of P08-QA-SEC-001 rather than relying on relational consistency assumptions. A fresh QA/Security checkpoint remains mandatory and was not executed in this session."
+  },
+  "candidate_comparison": {
+    "base": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "head": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "relationship": "ahead",
+    "commits_ahead": 14,
+    "material_rework_commits": [
+      {"sha": "68fc86e950460ffae271965927ddd840b210173a", "subject": "fix(dashboard): enforce tenant boundary in order workspace"},
+      {"sha": "b533ba4efde2e87467ea4975c14b4705805b2eb3", "subject": "test(dashboard): cover cross-tenant workspace relations"}
+    ],
+    "other_delta": "The remaining commits are review/governance/baseline/candidate-marker artifacts. Net executable delta from the previous material candidate is limited to apps/dashboard/selectors.py and the new dashboard adversarial test; there is no provider, infrastructure, callback, deployment or Phase 09 implementation delta."
+  },
+  "read_model_boundaries": {
     "status": "APPROVED",
-    "read_model_boundaries": {
-      "status": "APPROVED",
-      "findings": "Dashboard correctly implements a synchronous read-model layer over approved Vidalys Flow domains. No new business lifecycle is introduced. Read-model is composed from Orders (primary axis), Payments (requires_attention/expired), Fulfillment (draft/preparing/ready/in_transit), Messaging (failed/uncertain messages sourced from Orders), and Integrations (degraded connections, failed/uncertain deliveries). Dependency direction is strictly inbound; no dashboard state is written back to canonical domains."
-    },
-    "organization_isolation": {
-      "status": "APPROVED",
-      "findings": "All selectors receive an Organization object resolved from authenticated user's active Membership; Organization never derives from request data. Cross-Organization tests confirm: dashboard_summary, search, and order_workspace correctly filter and return fail-closed (404 for cross-org workspace). No cross-Organization visibility leaks detected."
-    },
-    "http_contract_read_only": {
-      "status": "APPROVED",
-      "findings": "Dashboard endpoints are decorated with @login_required and @require_GET. All views are GET-only; POST requests return HTTP 405 Method Not Allowed as validated by test_dashboard_views_are_read_only_and_cross_org_workspace_is_404. No command endpoints or mutations are present."
-    },
-    "attention_queues": {
-      "status": "APPROVED",
-      "findings": "Attention queues are correctly bounded (DASHBOARD_LIMIT = 8) and operational lists, not inbox or workflow models. They link users back to canonical domain views for actions. No inbound WhatsApp sales conversation domain is hidden inside Dashboard; Messaging remains canonical boundary for existing message records. Queues mirror canonical states: payment.requires_attention, fulfillment.draft/preparing/ready/in_transit, message.failed/uncertain, delivery.failed/uncertain."
-    },
-    "order_workspace": {
-      "status": "APPROVED",
-      "findings": "Order workspace correctly composes Organization-scoped Order with Customer context, PaymentIntent (one-to-one), Fulfillments, and directly-sourced transactional Messages (source_type=ORDER, organization-filtered). Workspace is read-only and provides navigation to canonical domain screens. No parallel lifecycle or independent state is created. Test confirms workspace returns None for cross-Organization Orders."
-    },
-    "privacy_and_fields": {
-      "status": "APPROVED",
-      "findings": "Templates expose only operationally-necessary fields: order.display_number, customer_name_snapshot (authorized snapshot), status labels (public API enums), total (BRL domain value), KPI counts. No credentials, webhook secrets, raw callback payloads, arbitrary provider metadata, or complete private contact snapshots are exposed. Connection.key and delivery.operation_key are operational, not credentials."
+    "summary": "Dashboard remains a synchronous read-composition layer over canonical domains and creates no canonical business lifecycle or persistence model.",
+    "organization_filters": {
+      "order": "Order.objects.filter(organization=organization, id=order_id)",
+      "payment_intent": "PaymentIntent.objects.filter(organization=organization, order=order)",
+      "fulfillment": "Fulfillment.objects.filter(organization=organization, order=order)",
+      "messages": "Message.objects.filter(organization=organization, source_type=ORDER, source_id=order.id)",
+      "summary_and_attention_queues": "All Orders, PaymentIntents, Fulfillments, Messages, IntegrationConnections and IntegrationDeliveries are selected with organization=organization before classification or rendering."
     }
   },
-  "governance_review": {
+  "attention_queues": {
     "status": "APPROVED",
-    "baseline_and_ancestry": {
-      "status": "PASSED",
-      "evidence": "python3 scripts/check_governance_baseline.py --head HEAD --ref-name phase/08-dashboard-experience --baseline-ref origin/main returned OK: approved phase ancestry and governance-only baseline are valid. approved_phase_head cba7d6cbebbc... (Phase 07) is a proper ancestor of base_sha 005e11c1c7c14440562806fe0301f3a0ad4763b5 and all commits between approved_phase and base are governance-only."
-    },
-    "secrets_scan": {
-      "status": "PASSED",
-      "evidence": "python3 scripts/check_secrets.py returned OK: nenhuma assinatura de secret real encontrada. No real private keys, credentials, tokens, API keys, or sensitive patterns detected anywhere in the candidate."
-    },
-    "independence_scan": {
-      "status": "PASSED",
-      "evidence": "python3 scripts/check_independence.py returned OK: código executável independente; nenhum símbolo proibido encontrado. No forbidden Flowlog symbols, no legacy runtime imports, no provider-specific field violations. Dashboard is fully independent greenfield code."
-    },
-    "branch_identifier_governance": {
-      "status": "APPROVED",
-      "evidence": "Commit 321387d (fix(governance): trust explicit roadmap branch identifiers) correctly refactored agent_orchestrator.py to trust explicit branch identifiers from project/phases/<id>-<name>.json instead of deriving branch names from human-readable phase titles. This aligns with Vidalys Flow governance philosophy documented in AGENTS.md Section: Explicit roadmap branch identifiers are authoritative."
-    }
+    "summary": "Bounded operational queues continue to mirror canonical domain states and remain scoped by Organization. The P08-QA-SEC-001 rework did not alter queue classification or introduce dashboard-owned business rules."
+  },
+  "workspace_composition": {
+    "status": "APPROVED",
+    "organization_and_order_filtering": "CONFIRMED for both PaymentIntent and Fulfillment simultaneously.",
+    "cross_tenant_adversarial_coverage": "CONFIRMED by test_order_workspace_rejects_cross_organization_related_records.",
+    "cross_tenant_order_behavior": "Existing view test continues to require 404 when a user requests an Order belonging to another Organization.",
+    "parallel_state": "None. Workspace returns canonical Order, PaymentIntent, Fulfillment and Message records only."
+  },
+  "authorization_and_isolation": {
+    "status": "APPROVED_FOR_REVIEW",
+    "authentication": "dashboard_home and order_workspace remain decorated with @login_required.",
+    "active_organization": "Organization is resolved through active_organization_for_user(user=request.user, session=request.session); no arbitrary request Organization identifier is accepted by dashboard views.",
+    "http_authorization_behavior": "Cross-Organization Order workspace requests fail closed with HTTP 404.",
+    "relationship_isolation": "PaymentIntent and Fulfillment now independently require matching active Organization and the already Organization-scoped Order.",
+    "qa_note": "This is Independent Review evidence only. QA/Security must independently retest authorization and isolation before issuing GO/NO-GO."
+  },
+  "privacy": {
+    "status": "APPROVED_FOR_REVIEW",
+    "summary": "Order Workspace continues to render only operational identifiers, customer display/snapshot name, statuses, amounts, fulfillment display numbers, message purpose/status and channel display name. No raw provider payload, secret, credential, arbitrary integration metadata or public callback material was introduced by the rework."
+  },
+  "read_only_and_side_effects": {
+    "status": "APPROVED",
+    "http_contract": "Both dashboard views remain @require_GET; POST behavior remains HTTP 405 in direct tests.",
+    "persistence": "apps.dashboard still exposes zero persistence models and Phase 08 introduces no dashboard migrations.",
+    "external_effects": "No provider call, sandbox call, credential handling, public callback registration, deployment action or release behavior exists in the executable delta from the previous candidate."
+  },
+  "performance_and_n_plus_one": {
+    "status": "APPROVED_WITH_LOW_RESIDUAL_RISK",
+    "recent_orders": "Existing test_recent_orders_keeps_customer_reads_in_one_query remains present and verifies five recent Orders plus customer display reads execute in one query through select_related(customer).",
+    "workspace": "The security fix replaces implicit related-object loading with explicit PaymentIntent and Fulfillment queries. This adds a fixed bounded number of queries for one workspace request but does not create a per-row N+1 pattern. Message channel remains select_related and all dashboard lists remain bounded by DASHBOARD_LIMIT=8 where applicable.",
+    "conclusion": "No performance regression rising to a review blocker was identified."
   },
   "tests_and_gates": {
     "status": "APPROVED",
     "test_summary": {
-      "total_tests": 449,
+      "previous_candidate_tests": 449,
+      "new_adversarial_tests_added": 1,
+      "material_candidate_tests": 450,
       "skipped": 0,
-      "passed": 449,
       "coverage_percent": 86,
-      "minimum_required": 85,
-      "database": "PostgreSQL 17.11",
-      "dashboard_direct_tests": 5,
-      "organization_isolation_tests": "passed",
-      "read_only_contract_tests": "passed",
-      "bounded_query_n_plus_one_tests": "passed"
+      "minimum_required_percent": 85,
+      "database": "PostgreSQL 17",
+      "dashboard_direct_tests": 6,
+      "organization_isolation": "passed",
+      "read_only_contract": "passed",
+      "bounded_query_n_plus_one_regression": "passed"
     },
     "ci_evidence": {
-      "workflow_id": 31816297653,
-      "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+      "workflow": "Foundation CI",
+      "run_number": 173,
+      "run_id": 31820928561,
+      "head_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
       "run_attempt": 1,
-      "conclusion": "success",
-      "context": "Foundation CI #160 on material Phase 08 candidate"
+      "status": "completed",
+      "conclusion": "success"
     },
-    "scans_passed": [
-      "secret_scan",
-      "independence_scan",
-      "ruff",
-      "django_check",
-      "migration_consistency",
-      "governance_validation",
-      "approved_phase_ancestry_and_baseline",
-      "docker_build",
-      "compose_validation",
-      "celery_runtime_topology"
-    ],
-    "regression_checks": {
-      "n_plus_one_regression": "PASSED — test_recent_orders_keeps_customer_reads_in_one_query validates select_related(customer) eliminates N+1 for 5 orders in 1 query",
-      "no_dashboard_models": "PASSED — test_dashboard_app_has_no_persistence_models confirms apps.dashboard has zero models",
-      "no_migrations": "PASSED — No migrations directory present in apps/dashboard; expected_models and expected_migrations both empty",
-      "no_external_calls": "PASSED — Static review confirms no network, provider, or credential code"
-    }
+    "passed_steps": [
+      "Governance JSON syntax",
+      "Governance state and roadmap",
+      "Governance manifests and handoffs",
+      "Governance prompt versioning",
+      "Approved phase ancestry and governance baseline",
+      "Orchestrator tests",
+      "Secret scan",
+      "Independence scan",
+      "Ruff",
+      "Django check",
+      "Migration consistency",
+      "Apply new migrations to empty PostgreSQL 17",
+      "Technical rollback and reapply Fulfillment migration",
+      "Technical rollback and reapply Payments migration",
+      "Technical rollback and reapply Messaging migration",
+      "Technical rollback and reapply Integrations migration",
+      "Tests and coverage",
+      "Docker build",
+      "Compose validation",
+      "Celery runtime topology"
+    ]
   },
-  "acceptance_criteria_validation": {
-    "plan_approval": {
-      "criterion": "Plan is explicitly approved before implementation",
-      "status": "PASSED",
-      "evidence": "project/phases/08-dashboard-experience.json shows plan_status=approved, plan_approval.status=approved, date=2026-08-14"
-    },
-    "base_sha_and_dependency": {
-      "criterion": "Implementation based on actual_base_sha 005e11c1c7c14440562806fe0301f3a0ad4763b5 and approved Phase 07 dependency head",
-      "status": "PASSED",
-      "evidence": "handoff base_sha matches, dependency_head cba7d6cbebbc is Phase 07 approved_phase_head from project/state.json"
-    },
-    "no_canonical_model": {
-      "criterion": "Dashboard introduces no canonical business-state model or migration",
-      "status": "PASSED",
-      "evidence": "models=[], migrations=[], apps.dashboard.get_models()=[], no migration files present"
-    },
-    "organization_scoped_reads": {
-      "criterion": "All dashboard reads scoped by active Organization Membership and cross-Organization tests pass",
-      "status": "PASSED",
-      "evidence": "test_dashboard_summary_and_search_are_organization_scoped, test_order_workspace_composes_only_active_organization, test_dashboard_views_are_read_only_and_cross_org_workspace_is_404 all demonstrate proper isolation"
-    },
-    "canonical_queue_correctness": {
-      "criterion": "Operational counts and queues derive from canonical domain states without rewriting their business rules",
-      "status": "PASSED",
-      "evidence": "selectors query Payment.REQUIRES_ATTENTION | EXPIRED, Fulfillment.DRAFT | PREPARING | READY | IN_TRANSIT, Message.FAILED | UNCERTAIN, IntegrationDelivery.FAILED | UNCERTAIN. These enums are defined in canonical domains; dashboard does not extend or reinterpret them."
-    },
-    "order_workspace_composition": {
-      "criterion": "Order workspace composes existing customer/payment/fulfillment/messaging context without creating a parallel lifecycle",
-      "status": "PASSED",
-      "evidence": "order_workspace_for_organization composes .select_related(payment_intent).prefetch_related(fulfillments) and Message.objects.filter(source_type=ORDER, source_id=order.id). All source entities are canonical; no parallel Order state is created in dashboard."
-    },
-    "no_external_effects": {
-      "criterion": "No external network call, provider activation, credential, public callback or deploy occurs",
-      "status": "PASSED",
-      "evidence": "Static code review confirms no imports of provider clients, no HTTP calls, no credential handling, no Coolify or infrastructure code, no callback registration. All external effects are deferred to Phases 09-10."
-    },
-    "coverage_and_ci": {
-      "criterion": "Total coverage remains at least 85% and CI is green on the material candidate",
-      "status": "PASSED",
-      "evidence": "coverage_percent=86, ci.conclusion=success on head_sha 52ee5050a8538c4e44392cadaa6d496f0adc2db4"
-    },
-    "independent_review_and_qa": {
-      "criterion": "Independent Review and QA/Security GO are required before final human approval",
-      "status": "IN_PROGRESS",
-      "evidence": "This review concludes READY_FOR_QA_AND_SECURITY. QA/Security must issue GO/NO-GO independently. Human approval remains required and has not yet been granted."
-    },
-    "authorization_gates": {
-      "criterion": "PR, merge, release, deploy and Phase 09 require separate explicit human authorization",
-      "status": "NOTED",
-      "evidence": "These actions remain blocked and require explicit human authorization recorded in project/state.json. No agent performs these actions."
-    }
+  "scope_validation": {
+    "status": "CONFIRMED",
+    "phase_08_only": true,
+    "provider_real": false,
+    "sandbox": false,
+    "credentials": false,
+    "public_callbacks": false,
+    "deploy": false,
+    "release": false,
+    "phase_09": false,
+    "evidence": "Comparison from 52ee5050a8538c4e44392cadaa6d496f0adc2db4 to b8eac30feafa8a41249e3f0af5e68e3c9159b4c1 shows the executable rework is restricted to the Dashboard selector boundary and its tests; CI secret/independence/governance gates also pass on the new material candidate."
   },
-  "residual_risks": [
+  "risks": [
     {
-      "id": "risk_001",
-      "title": "Dashboard is a synchronous derived read model",
-      "description": "Future data volume and operational query patterns may require dedicated projection/cache work. This is intentionally outside Phase 08 scope and is documented as a known risk in the handoff.",
-      "mitigation": "Phase 09 (Infrastructure and homologation) will address performance and infrastructure patterns. Attention queues are bounded (limit=8) to prevent query explosion.",
-      "severity": "low"
+      "id": "P08-IR-REVAL-RISK-001",
+      "severity": "low",
+      "title": "Synchronous dashboard read model",
+      "description": "Future data growth may require projection or caching work. Phase 08 intentionally keeps the dashboard derived and synchronous."
     },
     {
-      "id": "risk_002",
-      "title": "Attention queues must not accumulate independent business rules",
-      "description": "Attention queues intentionally mirror canonical domain states (payment.requires_attention, fulfillment.draft, etc.). Future changes must not introduce new dashboard-specific classification rules or workflows.",
-      "mitigation": "Code review and test gates ensure queues are read-only derived views. Domain owners remain responsible for queue classification logic.",
-      "severity": "low"
+      "id": "P08-IR-REVAL-RISK-002",
+      "severity": "low",
+      "title": "Fixed query overhead introduced for stronger tenant isolation",
+      "description": "PaymentIntent and Fulfillment are now loaded through independent explicit queries. The cost is bounded per workspace request and is preferable to trusting cross-domain relation integrity for tenant isolation."
     },
     {
-      "id": "risk_003",
-      "title": "Inbound WhatsApp sales conversation domain remains out-of-scope",
-      "description": "Phase 08 does not include inbound WhatsApp sales conversation or omnichannel inbox. Messaging is the canonical boundary for existing message records. A future inbound sales domain must be explicitly scoped and approved.",
-      "mitigation": "Dashboard does not attempt to aggregate sales conversations. Deferred list clearly excludes inbound WhatsApp conversation domain.",
-      "severity": "informational"
+      "id": "P08-IR-REVAL-RISK-003",
+      "severity": "informational",
+      "title": "Attention classification remains coupled to canonical domain states",
+      "description": "Future dashboard changes must continue to mirror canonical states rather than accumulating a separate dashboard workflow."
     }
   ],
-  "deferred_scope_validation": {
-    "status": "CONFIRMED",
-    "deferred_items": [
-      "inbound WhatsApp sales conversation domain or omnichannel inbox",
-      "new CRM, inventory, ERP, fiscal, tax, accounting or marketing lifecycle",
-      "real providers, credentials, sandbox calls and public callbacks",
-      "infrastructure/homologation, deploy and cutover in Phases 09-10",
-      "PR, merge, release and Phase 09 until separately authorized"
-    ],
-    "validation": "None of the deferred items are present in the candidate. Dashboard scope is limited to read-composition of existing approved domains."
-  },
+  "residual_risks": [
+    "The Independent Review does not replace fresh adversarial QA/Security execution on b8eac30feafa8a41249e3f0af5e68e3c9159b4c1.",
+    "Workspace isolation relies on every future related boundary preserving explicit Organization scoping; regression tests should remain mandatory.",
+    "GitHub Actions dependencies should be refreshed before the Node.js deprecation warning becomes an execution failure."
+  ],
+  "deferred": [
+    "inbound WhatsApp sales conversation domain or omnichannel inbox",
+    "new CRM, inventory, ERP, fiscal, tax, accounting or marketing lifecycle",
+    "real providers, credentials, sandbox calls and public callbacks",
+    "infrastructure/homologation, deploy and cutover in Phases 09-10",
+    "PR, merge, release and Phase 09 until separately authorized"
+  ],
+  "human_decisions_required": [
+    "No final Phase 08 human approval is recorded.",
+    "PR, merge, release, deploy and Phase 09 remain separately gated and unauthorized in this checkpoint."
+  ],
   "checkpoint_recommendation": {
     "status": "READY_FOR_QA_AND_SECURITY",
-    "rationale": "Independent Review validates that Phase 08 implementation adheres to architecture, governance, and acceptance criteria. All executable scans pass. Tests are comprehensive (449 tests, 86% coverage). Organization isolation, read-only contract, and N+1 regression are verified. No blocking findings. Residual risks are documented and mitigated by design. The candidate is ready for QA and Security review to issue independent GO/NO-GO technical assessment.",
-    "next_checkpoint": "QA and Security will validate: compliance with regulatory requirements (LGPD), security audit of endpoints, credential handling, webhook signature verification (deferred), data privacy patterns, and absence of side effects. Following QA/Security GO, human approval is required before PR, merge, release, or deploy."
+    "rationale": "P08-QA-SEC-001 is materially corrected by explicit Organization+Order filtering on PaymentIntent and Fulfillment, backed by an adversarial inconsistent cross-tenant relation test. Existing authentication, GET-only behavior, privacy, bounded read patterns and no-persistence behavior remain intact. Foundation CI #173 is fully green on the exact new material SHA. No new blocking finding was identified.",
+    "next_checkpoint": "Fresh QA/Security on the same material candidate. Do not infer QA/Security GO from this Independent Review revalidation."
   },
   "evidence_sources": [
-    "project/phases/08-dashboard-experience.json — Phase manifest with acceptance criteria",
-    "project/handoffs/phase-08.json (commit 3c8a80c) — Handoff with CI and test evidence",
-    "apps/dashboard/views.py — HTTP endpoints with @login_required, @require_GET",
-    "apps/dashboard/selectors.py — Organization-filtered read model composition",
-    "apps/dashboard/tests/test_dashboard.py — 5 direct tests including cross-org isolation, N+1, read-only",
-    "templates/dashboard/home.html, order_workspace.html — Field-level privacy review",
-    "git log 52ee505..005e11c1 — 24 commits from base to candidate, inspected for scope compliance",
-    "scripts/check_governance_baseline.py — Governance baseline validation PASSED",
-    "scripts/check_secrets.py — Secret scan PASSED",
-    "scripts/check_independence.py — Independence scan PASSED",
-    "GitHub Actions CI workflow #160 — All 10 scan categories PASSED, 449 tests PASSED, 86% coverage",
-    "docs/domains/DASHBOARD.md — Architecture documentation review",
-    "docs/agents/QUALITY_GATES.md — Gate alignment review",
-    "project/constraints.json — Forbidden patterns and imports validation"
+    "AGENTS.md and docs/agents/* at material candidate b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "project/state.json, project/roadmap.json and project/constraints.json at the material candidate",
+    "project/phases/08-dashboard-experience.json and project/handoffs/phase-08.json",
+    "docs/domains/DASHBOARD.md",
+    "apps/dashboard/selectors.py at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "apps/dashboard/views.py at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "apps/dashboard/tests/test_dashboard.py at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "templates/dashboard/order_workspace.html at b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "Commit 68fc86e950460ffae271965927ddd840b210173a",
+    "Commit b533ba4efde2e87467ea4975c14b4705805b2eb3",
+    "Comparison 52ee5050a8538c4e44392cadaa6d496f0adc2db4...b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "Foundation CI #173 / run 31820928561, exact head_sha b8eac30feafa8a41249e3f0af5e68e3c9159b4c1, conclusion success"
   ],
   "review_metadata": {
     "review_date": "2026-08-14",
-    "repository": "Brunohvg/vidalys-flow",
     "branch_reviewed": "phase/08-dashboard-experience",
-    "candidate_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-    "approval_status": "NOT_APPROVED_BY_REVIEWER",
-    "notes": "Independent Review Agent does not approve or auto-emit product approval. This review documents technical findings and checkpoints readiness for QA/Security. Human approval remains required and separate."
+    "candidate_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "previous_candidate_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "qa_security_executed_in_this_session": false,
+    "approval_status": "NOT_FINAL_PRODUCT_APPROVAL",
+    "notes": "This checkpoint only restores readiness for an independent QA/Security rerun. It does not issue QA/Security GO, final human approval, PR authorization, merge authorization, release authorization, deploy authorization or Phase 09 authorization."
   }
 }
