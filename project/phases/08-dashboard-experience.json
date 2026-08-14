@@ -1,0 +1,162 @@
+{
+  "schema_version": 2,
+  "id": 8,
+  "name": "Dashboard and complete experience",
+  "dependency_phase": 7,
+  "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+  "base_ref": "main",
+  "branch": "phase/08-dashboard-experience",
+  "status": "in_progress",
+  "plan_status": "approved",
+  "implementation_status": "in_progress",
+  "review_status": "blocked",
+  "qa_status": "blocked",
+  "human_approval_status": "pending",
+  "initiation_authorization": {
+    "status": "authorized",
+    "evidence": "Human authorized Phase 08 planning on 2026-08-14 America/Sao_Paulo."
+  },
+  "plan_approval": {
+    "status": "approved",
+    "date": "2026-08-14",
+    "evidence": "After receiving the Phase 08 plan, human explicitly authorized implementation. This authorizes the planned dashboard/complete-experience implementation only and does not authorize PR, merge, deploy, real providers, sandbox, credentials, public callbacks, Phase 09 or release."
+  },
+  "final_approval": {
+    "status": "pending",
+    "date": null,
+    "evidence": "not_recorded"
+  },
+  "allowed_status_values": {
+    "status": ["planned", "in_progress", "candidate", "approved", "rejected"],
+    "plan_status": ["pending", "approved", "rejected"],
+    "implementation_status": ["blocked", "pending", "in_progress", "complete"],
+    "review_status": ["blocked", "pending", "in_progress", "complete", "changes_requested"],
+    "qa_status": ["blocked", "pending", "in_progress", "go", "no_go"],
+    "human_approval_status": ["pending", "approved", "rejected"]
+  },
+  "allowed_apps": ["dashboard", "integrations", "messaging", "payments", "fulfillment", "orders", "customers", "products", "audit", "platform", "organizations", "users", "core"],
+  "forbidden_apps": ["inventory", "tax", "accounting", "marketing"],
+  "expected_models": [],
+  "expected_features": [
+    "Organization-scoped operational dashboard composed only from canonical Customers, Orders, Fulfillment, Payments, Messaging and Integrations data.",
+    "Read-only attention queues for orders, payments, fulfillment, messaging and integrations with explicit links back to canonical domain screens.",
+    "Consolidated order workspace showing customer, payment, fulfillment and messaging context without duplicating domain state.",
+    "Unified navigation, responsive empty states and operational filters suitable for desktop and mobile use.",
+    "Explicit roadmap branch identifiers are authoritative; governance no longer derives Git branch names from human-readable phase titles."
+  ],
+  "deferred_features": [
+    "inbound WhatsApp sales conversation domain or omnichannel inbox",
+    "new CRM, inventory, ERP, fiscal, tax, accounting or marketing lifecycle",
+    "real providers, credentials, sandbox calls and public callbacks",
+    "infrastructure/homologation, deploy and cutover in Phases 09-10"
+  ],
+  "states": {
+    "dashboard_states": [],
+    "rule": "Dashboard creates no canonical business lifecycle. Every indicator and queue is derived from existing Organization-scoped domain state."
+  },
+  "snapshots": [
+    "No new persistent dashboard snapshot is planned.",
+    "Views expose only the minimum operational fields necessary and must not surface raw payloads, credentials, secrets, full private contact snapshots or arbitrary integration metadata."
+  ],
+  "idempotency": [
+    "Dashboard endpoints are read-only GET operations and do not introduce command idempotency keys.",
+    "Any action link hands control to the owning domain, which retains its existing idempotency and authorization rules."
+  ],
+  "money_rules": [
+    "Dashboard never computes or mutates canonical money.",
+    "Displayed payment/order amounts come from canonical Order or PaymentIntent fields and remain BRL domain values."
+  ],
+  "authorization": [
+    "Organization derives from active Membership and session, never from an arbitrary request Organization id.",
+    "Any active Organization member may view the operational dashboard; actions remain governed by the owning domain policies.",
+    "Selectors receive an Organization object and apply Organization filters at every domain boundary.",
+    "Cross-Organization visibility requires direct negative tests."
+  ],
+  "migrations": {
+    "new_only": true,
+    "legacy_reuse": false,
+    "empty_postgresql_required": true,
+    "technical_rollback_required": false,
+    "data_migrations_allowed": false
+  },
+  "tests": {
+    "database": "PostgreSQL 17",
+    "network_access": false,
+    "required": [
+      "active Membership and cross-Organization isolation",
+      "dashboard KPI and attention-queue correctness for canonical domain states",
+      "consolidated order workspace cannot cross Organization boundaries",
+      "read-only GET behavior and no dashboard persistence model",
+      "empty-state and navigation rendering",
+      "query-count/N+1 regression for bounded dashboard lists",
+      "governance branch-id validation and full regression suite"
+    ],
+    "sandbox_contract_validation": "Not applicable; external validation remains separately authorized."
+  },
+  "coverage": {
+    "minimum_total_percent": 85,
+    "domain_expectation": "Dashboard selectors, isolation, queue classification, workspace composition and authorization require direct tests."
+  },
+  "ci": [
+    "locked dependencies",
+    "governance validation",
+    "baseline/ancestry",
+    "secret and independence scans",
+    "Ruff and Django check",
+    "migration consistency and historical rollback gates",
+    "PostgreSQL tests and coverage",
+    "Docker and Compose",
+    "Celery topology regression"
+  ],
+  "documentation": [
+    "dashboard read-model boundaries and dependency direction",
+    "attention-queue classification rules",
+    "authorization/isolation and privacy behavior",
+    "responsive navigation and consolidated workspace",
+    "handoff before review"
+  ],
+  "acceptance_criteria": [
+    "Plan is explicitly approved before implementation.",
+    "Implementation remains based on actual_base_sha 005e11c1c7c14440562806fe0301f3a0ad4763b5 and approved Phase 07 product head cba7d6cbebbcf672bb313472d5e1d7e431e48df5.",
+    "Dashboard introduces no canonical business-state model or migration.",
+    "All dashboard reads are scoped by active Organization Membership and cross-Organization tests pass.",
+    "Operational counts and queues derive from canonical domain states without rewriting their business rules.",
+    "Order workspace composes existing customer/payment/fulfillment/messaging context without creating a parallel lifecycle.",
+    "No external network call, provider activation, credential, public callback or deploy occurs.",
+    "Total coverage remains at least 85% and CI is green on the material candidate.",
+    "Independent Review and QA/Security GO are required before final human approval.",
+    "PR, merge, release, deploy and Phase 09 require separate explicit human authorization."
+  ],
+  "checks": [
+    "python scripts/agent_orchestrator.py validate-all",
+    "python scripts/check_governance_baseline.py --head HEAD --ref-name phase/08-dashboard-experience --baseline-ref origin/main",
+    "python scripts/check_secrets.py",
+    "python scripts/check_independence.py",
+    "ruff check",
+    "Django check and migration consistency",
+    "PostgreSQL test suite with coverage",
+    "Docker build and Compose config",
+    "Celery topology regression"
+  ],
+  "report_format": {
+    "required_sections": ["checkpoint", "branch", "dependency_head", "base_ref", "actual_base_sha", "read_model_boundaries", "attention_queues", "workspace_composition", "authorization_and_isolation", "privacy", "tests_and_gates", "risks", "deferred", "human_decisions_required"]
+  },
+  "handoff_format": {
+    "path": "project/handoffs/phase-08.json",
+    "base_sha_semantics": "Exact origin/main SHA resolved before branch creation.",
+    "required_fields": ["schema_version", "phase_id", "phase_name", "status", "branch", "base_sha", "head_sha", "commits", "delivered_scope", "models", "migrations", "tests", "scans", "ci", "organization_isolation", "legacy_reuse", "deferred", "risks", "blockers", "human_approval"]
+  },
+  "allowed_scope": [
+    "Greenfield Organization-scoped dashboard/read-composition layer using approved Vidalys Flow domains only.",
+    "Operational KPIs, attention queues, consolidated order workspace, navigation, filters, responsive templates, selectors, policies and tests.",
+    "Narrow governance correction so explicit roadmap/manifest branch identifiers are authoritative."
+  ],
+  "forbidden_scope": [
+    "Any new business lifecycle that belongs to Orders, Fulfillment, Payments, Messaging or Integrations.",
+    "Inbound WhatsApp conversation/inbox domain hidden inside Dashboard.",
+    "Any real provider, sandbox, credential, public callback, production effect, deploy or Coolify action.",
+    "ERP, fiscal, accounting, tax, inventory, marketing, infrastructure, homologation or cutover.",
+    "Any Flowlog runtime/data/code/infrastructure reuse or linkage.",
+    "PR, merge, release or Phase 09 without separate explicit human authorization."
+  ]
+}
