@@ -34,6 +34,22 @@ def test_enqueue_is_idempotent(organization):
     )
     assert first == second
     assert OutboxEvent.objects.count() == 1
+    assert first.payload["event_contract_version"] == 1
+
+
+@pytest.mark.parametrize("event_contract_version", (True, 0, "1"))
+@pytest.mark.django_db
+def test_enqueue_rejects_invalid_event_contract_version(organization, event_contract_version):
+    with pytest.raises(ValueError, match="inteiro positivo"):
+        enqueue_event(
+            organization=organization,
+            event_type="organization.created",
+            aggregate_type="organization",
+            aggregate_id=organization.id,
+            payload={"id": str(organization.id)},
+            idempotency_key=f"invalid-contract-{event_contract_version}",
+            event_contract_version=event_contract_version,
+        )
 
 
 @pytest.mark.django_db

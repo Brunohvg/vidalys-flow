@@ -1,0 +1,20 @@
+{
+  "contract": "Evolution API v2.3.7 send text message",
+  "source": "https://docs.evolutionfoundation.com.br/evolution-api/send-text-message",
+  "verified_on": "2026-08-12",
+  "request": {
+    "destination": "+5511999998888",
+    "body": "Olá",
+    "body_html": "",
+    "template_reference": "",
+    "provider_correlation_tag": "vf:correlation",
+    "channel_kind": "whatsapp",
+    "provider": "evolution",
+    "locale": "pt-BR",
+    "template_parameters": []
+  },
+  "expected_payload": {
+    "number": "5511999998888",
+    "textMessage": {"text": "Olá"}
+  }
+}

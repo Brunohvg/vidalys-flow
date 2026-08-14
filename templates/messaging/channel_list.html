@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Canais · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Canais</h1>
+<p class="muted">{{ organization.name }}</p>
+<table class="responsive-table">
+  <thead><tr><th>Nome</th><th>Tipo</th><th>Estado</th><th>ID externo</th><th>Ações</th></tr></thead>
+  <tbody>
+  {% for channel in channels %}
+    <tr>
+      <td data-label="Nome">{{ channel.display_name }}</td>
+      <td data-label="Tipo">{{ channel.get_kind_display }}</td>
+      <td data-label="Estado">{{ channel.get_state_display }}</td>
+      <td data-label="ID externo">{{ channel.external_channel_id }}</td>
+      <td data-label="Ações">
+        <form class="inline" method="post" action="{% url 'messaging:channel_activate' channel.id %}">
+          {% csrf_token %}<input type="hidden" name="expected_version" value="{{ channel.version }}">
+          <input type="hidden" name="idempotency_key" value="{% now 'u' %}-{{ channel.id }}"><button type="submit">Ativar</button>
+        </form>
+        <form class="inline" method="post" action="{% url 'messaging:channel_disable' channel.id %}">
+          {% csrf_token %}<input type="hidden" name="expected_version" value="{{ channel.version }}">
+          <input type="hidden" name="idempotency_key" value="{% now 'u' %}-{{ channel.id }}"><button type="submit">Desabilitar</button>
+        </form>
+      </td>
+    </tr>
+  {% empty %}<tr><td colspan="5">Nenhum canal.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<section><h2>Novo canal</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Criar</button></form></section>
+{% endblock %}

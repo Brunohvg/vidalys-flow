@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Templates · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Templates transacionais</h1>
+<p class="muted">{{ organization.name }}</p>
+<table class="responsive-table">
+  <thead><tr><th>Chave</th><th>Canal</th><th>Locale</th><th>Versão</th><th>Ativo</th></tr></thead>
+  <tbody>
+  {% for template in templates %}
+    <tr>
+      <td data-label="Chave">{{ template.semantic_key }}</td>
+      <td data-label="Canal">{{ template.get_channel_display }}</td>
+      <td data-label="Locale">{{ template.locale }}</td>
+      <td data-label="Versão">{{ template.version }}</td>
+      <td data-label="Ativo">{{ template.is_active }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="5">Nenhum template.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<section><h2>Novo template</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Criar</button></form></section>
+{% endblock %}

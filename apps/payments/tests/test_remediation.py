@@ -370,6 +370,7 @@ def test_cancel_verified_then_explicitly_reopen_and_switch_provider(
         "amount",
         "currency",
         "version",
+        "event_contract_version",
     }
     assert cancellation_event.payload["payment_attempt_id"] == str(attempt.id)
     intent.refresh_from_db()

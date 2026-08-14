@@ -16,7 +16,13 @@ def enqueue_event(
     payload,
     idempotency_key,
     available_at=None,
+    event_contract_version=1,
 ):
+    if isinstance(event_contract_version, bool) or not isinstance(event_contract_version, int):
+        raise ValueError("event_contract_version deve ser um inteiro positivo.")
+    if event_contract_version < 1:
+        raise ValueError("event_contract_version deve ser um inteiro positivo.")
+    versioned_payload = {**payload, "event_contract_version": event_contract_version}
     event, _ = OutboxEvent.objects.get_or_create(
         organization=organization,
         idempotency_key=idempotency_key,
@@ -24,7 +30,7 @@ def enqueue_event(
             "event_type": event_type,
             "aggregate_type": aggregate_type,
             "aggregate_id": str(aggregate_id),
-            "payload": sanitize_payload(payload),
+            "payload": sanitize_payload(versioned_payload),
             "available_at": available_at or timezone.now(),
         },
     )

@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Atualizado em 12 de agosto de 2026. Este documento é um índice operacional; em
+Atualizado em 13 de agosto de 2026. Este documento é um índice operacional; em
 caso de divergência prevalecem `project/state.json`, o manifesto da fase,
 `project/constraints.json` e `AGENTS.md`.
 
@@ -13,136 +13,89 @@ caso de divergência prevalecem `project/state.json`, o manifesto da fase,
   `b28a019871274e9da1ca1cb65043c5e208b0e727`;
 - Fase 3 — Orders: aprovada em
   `d36558636586b766a4d3b5b8f83abcb2505f78e0`;
-- Fase 4 — Fulfillment: material revisado em
-  `70364bc7c8a381dc958b2c7e2976f6d28d015023`, evidências consolidadas em
-  `7b2e92d939e9fd39b3baec1c12b900297a0d6548` e ratificação humana registrada
-  após a auditoria de governança;
-- merge de governança que registra a aprovação da Fase 3 em `main`:
-  `a98ceab40f9c40d19dd9c24b666846fb05e63b2d`.
+- Fase 4 — Fulfillment: aprovada em
+  `888685886d7a17c6eeb008674be86656e4f6fa40`;
+- Fase 5 — Payments: aprovada em
+  `3558ca30a5652be320feb3f28ab46a350ae9cad7`.
 
-Orders e Fulfillment estão integrados à `main`. Nenhum deploy foi executado.
+A implementação de Payments entrou na `main` pela PR #8, cujo merge commit é
+`3558ca30a5652be320feb3f28ab46a350ae9cad7`. A aprovação humana e o estado
+oficial foram fechados pela PR #9, merge commit
+`3e4fcfb064fbee350d3df131b2946974c8557098`. O GitHub Actions final da `main`,
+run `31651983767`, passou nesse SHA.
 
-## Fase 4 — Fulfillment
+Nenhum provider, sandbox, callback público, release ou deploy foi ativado.
 
-- branch: `phase/04-fulfillment`;
-- `actual_base_sha`: `a98ceab40f9c40d19dd9c24b666846fb05e63b2d`;
-- dependência funcional aprovada: `d36558636586b766a4d3b5b8f83abcb2505f78e0`;
-- plano: aprovado para implementação em 8 de agosto de 2026;
-- implementação: concluída e remediada após o Review independente 01;
-- candidato material: `70364bc7c8a381dc958b2c7e2976f6d28d015023`;
-- evidência do candidato: 208 testes aprovados, nenhum skip e 86% de cobertura
-  total no GitHub Actions run `31259856105`;
-- ambiente local: PostgreSQL 17.10, Redis, web, worker Celery e Beat saudáveis
-  em Docker, com migrations desde banco vazio e rollback técnico validados;
-- Review independente 01: `CHANGES_REQUESTED`, com achados remediados;
-- Review independente 02: `APPROVED` sem bloqueadores;
-- QA/Segurança: `GO` técnico;
-- merge da implementação: PR #3, commit `323861ef62db547a3947f63018a16b908cbc0f55`;
-- aprovação final: ratificada explicitamente após a auditoria de governança;
-- release e deploy: não autorizados.
+## Fase 5 — Payments
 
-O handoff e suas evidências estão em `project/handoffs/phase-04.json`. Os
-pareceres estão em `project/reviews/phase-04-review-01.md` e
-`project/reviews/phase-04-review-02.md`; o GO técnico está em
-`project/qa/phase-04-qa-security.md`.
+Payments implementa intents financeiros canônicos para o valor integral em
+BRL de um Order confirmado, uma tentativa ativa por vez, links de checkout
+hospedado, adapters desabilitados de Mercado Pago e Pagar.me, callbacks
+verificados, reconciliação e cancelamento correlacionado. O provider nunca
+dita o estado canônico e Payments não muda Order nem Fulfillment.
 
-Fulfillment implementa lotes parciais de entrega ou retirada com estados
-logísticos próprios, alocação quantitativa concorrente, idempotência e
-privacidade. Ele não adiciona estoque, pagamento, provider nem estado novo a
-Orders. A remediação padroniza locks em `Order -> Fulfillment`, amplia os
-testes concorrentes e cross-organization, comprova sanitização e registra a
-tarefa de cancelamento no worker Celery.
+Após ciclos de Review e remediação, o Review 05 emitiu `APPROVED`. O QA/Security
+final emitiu `GO`: 277 testes PostgreSQL sem skip, 70 testes diretos de
+Payments, cobertura exata de 85,24744994333207%, migrations desde banco vazio,
+rollback/reaplicação e topologia Celery real com workers exclusivos para
+`default` e `integrations`. Relatórios e handoff permanecem em
+`project/reviews/`, `project/qa/` e `project/handoffs/phase-05.json`.
 
-### Recuperação de governança
+Mercado Pago Checkout Pro é o primeiro rollout planejado; Pagar.me v5 Payment
+Links é o segundo e Appmax permanece posterior. Isso não significa que nenhum
+deles esteja habilitado: credenciais, sandbox e produção exigem checkpoints
+separados.
 
-As PRs #3 e #5 foram mescladas antes de o fluxo de aprovação e a suíte de
-governança estarem coerentes. A aprovação da Fase 4 foi posteriormente
-ratificada pelo humano, sem reescrever o histórico. O relato completo e os CIs
-vermelhos preservados estão em
-`project/incidents/phase-04-governance-recovery.md`.
+## Checkpoint atual — Fase 6 Messaging
+
+- branch: `phase/06-messaging`;
+- `actual_base_sha`: `3e4fcfb064fbee350d3df131b2946974c8557098`;
+- dependência funcional: Payments aprovada em
+  `3558ca30a5652be320feb3f28ab46a350ae9cad7`;
+- plano: aprovado por decisão humana;
+- implementação: candidata concluída; P06-R01 a P06-R05 foram confirmados
+  resolvidos pelo Review 02 e P06-R06 a P06-R08 estão remediados no novo
+  candidato; novo CI e novo Review independente são os próximos checkpoints,
+  e QA/Security continua bloqueado até parecer sem blocker;
+- efeitos externos, sandbox, PR, merge e deploy: não autorizados.
+
+O candidato implementa mensagens exclusivamente transacionais, com núcleo canônico
+independente de provider, Evolution API v2.3.7 linked-device primeiro,
+WhatsApp Cloud API direta como alternativa oficial e Amazon SES depois.
+Templates são fechados e versionados, regras automáticas começam desabilitadas
+por Organization, permissão por finalidade falha fechado e links de pagamento
+são revalidados imediatamente antes do envio. Marketing, inbound, chatbot, IA,
+SMS e anexos ficam adiados.
+
+O contrato aprovado está em `project/phases/06-messaging.json`, a visão em
+`docs/domains/MESSAGING_VISION.md` e o contrato candidato em
+`docs/domains/MESSAGING.md`. Nenhum provider, secret, sandbox, callback público
+ou efeito externo foi ativado.
+
+A remediação torna atômica a autorização final que antecede o I/O, protege no
+ORM e no PostgreSQL templates usados e snapshots, corrige idempotência e versão
+das regras e preserva eventos para nova tentativa após falhas transitórias. A
+matriz PostgreSQL reproduz diretamente cada falha registrada pelo Review 01.
+
+A segunda remediação separa `event_contract_version` da versão do agregado,
+exige correspondência exata entre evento, regra e estado atual da fonte, e
+substitui conteúdo configurável arbitrário por um catálogo server-side de
+templates transacionais. A matriz cobre todas as seis fontes aprovadas e os
+contratos negativos de versão e marketing.
 
 ## Independência do Flowlog
 
-Foundation, Customers, Products, Orders e Fulfillment não consultam mais o
-Flowlog. Fulfillment foi elaborado a partir dos contratos aprovados da própria
-Vidalys Flow, sem consultar código legado. Não existe acesso ou vínculo com
-runtime, banco, Redis, secrets, migrations, dados, IDs, providers, servidor ou
-infraestrutura do Flowlog.
+Após autorização humana explícita, o planejamento de Messaging consultou
+somente os caminhos registrados de Messaging no SHA congelado do Flowlog, em
+modo leitura, para entender o adapter Evolution e as falhas do legado. Nada foi
+copiado ou conectado. A Vidalys Flow não consulta em runtime, importa, migra
+ou compartilha código, banco, Redis, arquivos, contatos, templates, mensagens,
+usuários, IDs, autenticação, secrets, workers, webhooks, servidor ou
+infraestrutura com o sistema antigo.
 
-## Pagamentos e infraestrutura
+## Infraestrutura
 
-Payments está em remediação operacional autorizada após NO-GO de QA/Security
-da Fase 5 e voltará a Review independente na branch
-`phase/05-payments`, criada exatamente de
-`4fd3a9259e9e2f31acdab44f13499eade79ab59e`. O plano propõe um núcleo
-provider-neutral, Mercado Pago Checkout Pro primeiro, Pagar.me v5 Payment Links
-segundo e Appmax posteriormente. O plano foi aprovado em 8 de agosto de 2026;
-a implementação candidata está autorizada somente com fakes e fixtures sem
-rede. Credencial, sandbox, callback público e efeito externo continuam
-proibidos.
-
-O candidato implementa o agregado provider-neutral, migration nova,
-idempotência, locks, tentativa única, adapters desabilitados, callback Mercado
-Pago com assinatura e consulta autoritativa injetável, bloqueio do callback
-Pagar.me, reconciliação, cancelamento interno de Order, masking, HTML e testes
-PostgreSQL. Isso ainda não representa implementação aprovada: novo Review
-independente, novo QA/Segurança e aprovação humana continuam pendentes. O
-primeiro candidato técnico foi
-`707401a13a4cd493409e6258301a1aaa22cba68b`, validado pelo GitHub Actions run
-`31287810333` com 240 testes, 85% de cobertura e todos os gates verdes.
-
-O Review independente 01 concluiu `CHANGES_REQUESTED`: seis achados altos
-bloqueiam QA/Segurança, principalmente em lease do dispatcher, monotonicidade
-de estados, replay, imutabilidade monetária, matriz obrigatória de testes e
-ordem global de locks. O parecer está em
-`project/reviews/phase-05-review-01.md`; nenhuma correção foi feita pelo
-revisor. A remediação autorizada foi concluída no candidato material
-`0ca4ae6d4db782e66d5636fd3374033621d4418a` e implementa lease persistente e worker de outbox,
-transições monotônicas com `requires_attention` protegido, replay baseado no
-`X-Request-Id` autenticado, snapshots imutáveis também no PostgreSQL, ordem
-global de locks, busca sem oráculo de PII, schemas fechados e a matriz de
-testes concorrentes. O GitHub Actions run `31288840331` passou no SHA material
-exato com 257 testes e cobertura exibida de 85% (85,46% sem arredondamento).
-
-O Review independente 02 também concluiu `CHANGES_REQUESTED`. A segunda
-remediação autorizada corrige os bloqueadores apontados: revalidação antes do
-dispatch, preservação de resultado externo em corrida, lease de 90 segundos,
-backoff persistente, isolamento por evento, falha terminal, cancelamento
-verificado, reabertura/troca explícita, autorização antes de I/O e matriz
-direta de tenant/admin/rede. O parecer original permanece em
-`project/reviews/phase-05-review-02.md`.
-
-A validação local da segunda remediação aprovou 268 testes sem skip em
-PostgreSQL 17.10, com cobertura exata de 85,01%. O Compose efêmero também
-comprovou aplicação desde banco vazio e rollback/reaplicação das migrations de
-Payments. O GitHub Actions run `31290039417` passou no SHA material exato
-`ff434938179670ac8a23102dd7b4cceb45dec7a9`; o carrier posterior alterou somente
-o handoff.
-
-O Review independente 03 concluiu `CHANGES_REQUESTED`. Foram encontrados três
-bloqueadores: evento antigo de cancelamento pode atingir checkout posterior,
-resposta autoritativa paga ou inconsistente pode ser descartada pelo worker de
-cancelamento e o admin não exige manager tier para evidência financeira. O
-parecer está em `project/reviews/phase-05-review-03.md`; nenhuma correção foi
-feita pelo revisor e QA/Segurança permanece bloqueado.
-
-A terceira remediação correlacionou cada cancelamento ao PaymentAttempt e ao
-evento exatos, consome o trabalho terminalmente, impede evento antigo de agir
-sobre checkout reaberto, aplica toda resposta autoritativa à máquina canônica
-e exige Membership ativa de manager tier no admin financeiro. O candidato
-material foi `464c2ac9af1bbeaacf0f33cccec7af5a73feb94e`; o Review 04 aprovou
-o domínio sem bloqueadores.
-
-A validação local da terceira remediação aprovou 275 testes sem skip em
-PostgreSQL 17.10, cobertura acima de 85%, migrations desde banco vazio e
-rollback/reaplicação completa no Compose. O primeiro QA/Security, porém,
-emitiu NO-GO: `apps.payments` não participava do autodiscovery Celery e não
-existia worker para a fila `integrations`. A remediação atual registra as
-tasks, adiciona `worker-integrations` e inclui um gate executável que cruza
-agenda, rotas, registro e filas consumidas. Novo Review e novo QA/Security são
-obrigatórios antes de qualquer aprovação humana final.
-
-A arquitetura exige máquina, PostgreSQL, Redis, secrets e observabilidade
-exclusivos da Vidalys Flow. O repositório não comprova que a máquina de
-produção já foi provisionada; isso será verificado na Fase 9. Deploy continua
-pendente.
+A arquitetura e o Compose usam PostgreSQL, Redis, workers e aplicação próprios
+da Vidalys Flow. O repositório não comprova máquina de produção provisionada;
+homologação e infraestrutura exclusiva pertencem à Fase 9. O go-live pertence
+à Fase 10 e continua sem autorização.

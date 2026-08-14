@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Mensagem · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>{{ message.purpose }}</h1>
+<p class="muted">{{ organization.name }}</p>
+<div class="grid">
+  <div class="card">
+    <strong>Cliente</strong>: {{ detail.customer_name }}<br>
+    <strong>Destino</strong>: {{ detail.destination }}<br>
+    <strong>Template</strong>: {{ detail.template }}<br>
+    <strong>Estado</strong>: {{ message.get_status_display }}
+  </div>
+</div>
+<section>
+  <h2>Tentativas</h2>
+  <table class="responsive-table">
+    <thead><tr><th>Estado</th><th>ID externo</th><th>Envios</th></tr></thead>
+    <tbody>
+    {% for attempt in detail.attempts %}
+      <tr>
+        <td data-label="Estado">{{ attempt.status }}</td>
+        <td data-label="ID externo">{{ attempt.external_message_id }}</td>
+        <td data-label="Envios">{{ attempt.dispatch_attempts }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="3">Nenhuma tentativa.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% if can_configure %}
+<section>
+  <h2>Cancelar</h2>
+  <form method="post" action="{% url 'messaging:cancel' message.id %}">
+    {% csrf_token %}{{ cancel_form.as_p }}
+    <button class="danger" type="submit">Cancelar mensagem</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

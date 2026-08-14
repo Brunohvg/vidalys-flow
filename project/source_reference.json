@@ -35,8 +35,10 @@
   "domains_still_consultable": [
     {
       "domain": "Messaging",
-      "reference_app": null,
-      "status": "pending"
+      "reference_app": "apps/messaging; legacy apps/integrations/whatsapp and apps/notifications audited only for failure modes",
+      "status": "consulted_for_planning",
+      "consulted_sha": "31a3e7b8fe305b93cdcbcdfa7420b8e597412756",
+      "consulted_at": "2026-08-12"
     },
     {
       "domain": "Integrations",

@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "phase_id": 6,
+  "phase_name": "Messaging",
+  "status": "candidate",
+  "branch": "phase/06-messaging",
+  "base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
+  "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
+  "commits": [
+    {"sha": "8c1ace99a0c59b3f65d18d84e03f4e895555964b", "subject": "docs(messaging): plan phase 06"},
+    {"sha": "bc4f80dd30579115d95b1dd7b5a9762e0917d058", "subject": "docs(messaging): add Evolution API provider plan"},
+    {"sha": "e13e90b4fbd9677ac96185d63d982ab3736f7de7", "subject": "docs(governance): record Phase 06 plan human approval"},
+    {"sha": "e09dfabd77aba4e088cfae8d26bd6a91a11440ee", "subject": "feat(messaging): implement transactional messaging core"},
+    {"sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b", "subject": "fix(messaging): remediate independent review findings"},
+    {"sha": "cf871a561e529aa331479b13c792e6b2fcac6743", "subject": "fix(messaging): close event and template contracts"}
+  ],
+  "delivered_scope": [
+    "Organization-scoped transactional Messaging with immutable snapshots, idempotency, leases, optimistic version checks and pessimistic locks",
+    "manual and approved automatic transactional messaging for Order, Fulfillment and Payment sources",
+    "closed server-side transactional template catalog and exact event-contract version validation",
+    "offline provider-neutral contracts for Evolution API, WhatsApp Cloud and Amazon SES with external effects disabled",
+    "fail-closed permission, source, checkout, callback, tenant-isolation and provider safety controls"
+  ],
+  "models": [
+    "messaging.MessagingProviderConnection",
+    "messaging.MessagingChannel",
+    "messaging.MessageTemplate",
+    "messaging.MessagingPreference",
+    "messaging.MessageAutomationRule",
+    "messaging.Message",
+    "messaging.MessageDeliveryAttempt",
+    "messaging.MessageStatusHistory",
+    "messaging.MessageCommandReceipt",
+    "messaging.MessageWebhookReceipt"
+  ],
+  "migrations": [
+    "apps/messaging/migrations/0001_initial.py",
+    "apps/messaging/migrations/0002_immutable_snapshots.py"
+  ],
+  "tests": {
+    "count": 413,
+    "skipped": 5,
+    "ci_passed": 418,
+    "coverage_percent": 85.3952772073922,
+    "database": "PostgreSQL 17.10",
+    "result": "passed",
+    "messaging_direct_tests": 138,
+    "critical_concurrency_security_and_contract_regressions": "passed"
+  },
+  "scans": {
+    "secret_scan": "passed",
+    "independence_scan": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_consistency": "passed",
+    "governance_validation": "passed",
+    "docker_build": "passed",
+    "compose_validation": "passed",
+    "celery_runtime_topology": "passed"
+  },
+  "ci": {
+    "workflow_id": 31761251578,
+    "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
+    "run_attempt": 1,
+    "conclusion": "success"
+  },
+  "organization_isolation": {
+    "status": "passed",
+    "evidence": "Organization-explicit services, selectors, workers, callbacks, commands and persistent records; active Membership policies and direct cross-organization tests fail closed."
+  },
+  "legacy_reuse": {
+    "code": false,
+    "data": false,
+    "migrations": false,
+    "runtime": false,
+    "infrastructure": false,
+    "flowlog_reference": "Read-only product-idea audit only; no technical linkage or artifact reuse."
+  },
+  "deferred": [
+    "provider credentials, real pairing, sandbox calls, public callbacks, external status queries, production activation and deploy",
+    "WhatsApp Cloud and Amazon SNS callback authenticity activation and Evolution secret resolver",
+    "marketing, inbound conversations, chatbot, AI, media, SMS, voice, bulk sends and multi-provider failover",
+    "Phase 07 Integrations and all later phases"
+  ],
+  "risks": [
+    "Evolution linked-device remains non-official and disabled pending separate homologation and activation approval.",
+    "Provider callbacks and external effects remain fail-closed where complete authenticity or secret-channel contracts are not approved.",
+    "Global coverage is above the 85 percent gate by a limited margin and should remain protected by direct behavioral tests."
+  ],
+  "blockers": [],
+  "review": {
+    "status": "approved",
+    "report": "project/reviews/phase-06-review-03.md",
+    "candidate_head": "cf871a561e529aa331479b13c792e6b2fcac6743",
+    "blocking_findings": [],
+    "non_blocking_findings_resolved": ["P06-R09"]
+  },
+  "qa_security": {
+    "status": "go",
+    "report": "project/qa/phase-06-qa-security.md",
+    "blocking_findings": []
+  },
+  "human_approval": {
+    "status": "approved",
+    "evidence": "Human approval recorded on 2026-08-13 America/Sao_Paulo after Review 03 APPROVED and QA/Security GO. Authorization is limited to Phase 06 closure, PR and merge after P06-R09 correction and green CI. Provider real effects, deploy and Phase 07 initiation remain explicitly unauthorized."
+  },
+  "p06_r09": {
+    "status": "resolved",
+    "resolution": "Removed the nonexistent messaging.MessageSourceEventReceipt from the delivered model list. Source-event consumption evidence is persisted by messaging.MessageCommandReceipt.source_event_id; no unnecessary model was created."
+  }
+}

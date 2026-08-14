@@ -46,6 +46,7 @@
         <a href="{% url 'orders:list' %}">Pedidos</a>
         <a href="{% url 'fulfillment:list' %}">Fulfillment</a>
         <a href="{% url 'payments:list' %}">Pagamentos</a>
+        <a href="{% url 'messaging:list' %}">Mensagens</a>
       </nav>
       <form class="inline" method="post" action="{% url 'logout' %}">
         {% csrf_token %}

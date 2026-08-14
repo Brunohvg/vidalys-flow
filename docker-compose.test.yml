@@ -21,6 +21,8 @@ services:
         .venv/bin/python manage.py migrate fulfillment --noinput &&
         .venv/bin/python manage.py migrate payments zero --noinput &&
         .venv/bin/python manage.py migrate payments --noinput &&
+        .venv/bin/python manage.py migrate messaging zero --noinput &&
+        .venv/bin/python manage.py migrate messaging --noinput &&
         .venv/bin/ruff check . &&
         .venv/bin/python manage.py check &&
         .venv/bin/python manage.py makemigrations --check --dry-run &&

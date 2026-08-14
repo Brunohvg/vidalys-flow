@@ -39,7 +39,13 @@ def test_valid_state_and_all_artifacts(repository):
     assert state["approved_phase_head"] == "3558ca30a5652be320feb3f28ab46a350ae9cad7"
     assert state["baseline_branch"] == "main"
     assert state["next_phase"] == 6
-    assert state["active_candidate"] is None
+    assert state["active_candidate"] == {
+        "phase": 6,
+        "branch": "phase/06-messaging",
+        "base_ref": "main",
+        "actual_base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
+        "dependency_head": "3558ca30a5652be320feb3f28ab46a350ae9cad7",
+    }
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):

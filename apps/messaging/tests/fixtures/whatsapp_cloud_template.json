@@ -1,0 +1,26 @@
+{
+  "contract": "WhatsApp Business Platform Cloud API utility template send",
+  "source": "https://www.postman.com/meta/whatsapp-business-platform/folder/o48mro7/messages",
+  "verified_on": "2026-08-12",
+  "request": {
+    "destination": "+5511999998888",
+    "body": "Olá",
+    "body_html": "",
+    "template_reference": "order_confirmation",
+    "provider_correlation_tag": "vf:correlation",
+    "channel_kind": "whatsapp",
+    "provider": "whatsapp_cloud",
+    "locale": "pt-BR",
+    "template_parameters": ["Ana", "PED-000001"]
+  },
+  "expected_payload": {
+    "messaging_product": "whatsapp",
+    "to": "5511999998888",
+    "type": "template",
+    "template": {
+      "name": "order_confirmation",
+      "language": {"code": "pt_BR"},
+      "components": [{"type": "body", "parameters": [{"type": "text", "text": "Ana"}, {"type": "text", "text": "PED-000001"}]}]
+    }
+  }
+}

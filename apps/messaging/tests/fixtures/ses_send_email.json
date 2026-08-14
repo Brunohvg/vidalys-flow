@@ -1,0 +1,24 @@
+{
+  "contract": "Amazon SES SendEmail transaction",
+  "source": "https://docs.aws.amazon.com/ses/latest/dg/send-email-concepts-process.html",
+  "verified_on": "2026-08-12",
+  "request": {
+    "destination": "cliente@example.com",
+    "body": "Olá",
+    "body_html": "<p>Olá</p>",
+    "template_reference": "",
+    "provider_correlation_tag": "vf:correlation",
+    "channel_kind": "email",
+    "provider": "ses",
+    "locale": "pt-BR",
+    "template_parameters": []
+  },
+  "expected_payload": {
+    "Destination": {"ToAddresses": ["cliente@example.com"]},
+    "Message": {
+      "Subject": {"Data": "Vidalys Flow"},
+      "Body": {"Text": {"Data": "Olá"}, "Html": {"Data": "<p>Olá</p>"}}
+    },
+    "ConfigurationSetName": "vidalys-flow-delivery"
+  }
+}

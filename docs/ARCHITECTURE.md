@@ -16,6 +16,8 @@ A Vidalys Flow é um monólito modular Django. A fundação possui somente:
   logístico.
 - `payments`: intents financeiros canônicos, tentativas de checkout hospedado,
   callbacks verificados e reconciliação.
+- `messaging`: candidato transacional outbound, templates fechados,
+  permissões, canais e dispatch assíncrono com providers bloqueados.
 
 O grafo permitido é:
 
@@ -40,7 +42,7 @@ Payments depende de Orders em uma única direção. Orders e Fulfillment não
 importam Payments; Payments não importa Fulfillment, Messaging ou
 Integrations. O scanner de independência executa essas fronteiras.
 
-## Candidato da Fase 5
+## Módulo aprovado da Fase 5
 
 Payments implementa `PaymentIntent`, `PaymentAttempt`, configuração não
 secreta de provider, histórico imutável, receipts de comandos e callbacks. O
@@ -52,6 +54,25 @@ contratos locais, mas herdam o bloqueio de efeitos externos. Testes usam fakes
 com `external = False`; produção, sandbox, credenciais e registro público de
 callback não estão habilitados. O callback Pagar.me é bloqueado inclusive por
 constraint de banco até confirmação de autenticidade em fase posterior.
+
+## Candidato implementado da Fase 6
+
+Messaging depende em uma única direção dos contratos aprovados de
+Customers, Orders, Fulfillment e Payments, além de core, users, organizations,
+audit e platform. Nenhum desses domínios importará Messaging.
+
+```text
+messaging → core, users, organizations, customers, orders,
+            fulfillment, payments, audit, platform
+```
+
+O plano limita o módulo a mensagens transacionais, templates fechados,
+permissão/supressão, dispatch assíncrono e callbacks de status. Evolution API
+v2.3.7 linked-device, WhatsApp Cloud API direta e Amazon SES ficam atrás de
+adapters e uma matriz de capabilities, com efeitos externos desligados.
+Evolution é não oficial, possui conexões e canais/instâncias separados e não
+compartilha secrets com a Meta Cloud. O plano foi aprovado; o candidato ainda
+depende de Review, QA/Security e aprovação humana final.
 
 ## Módulo aprovado da Fase 4
 
