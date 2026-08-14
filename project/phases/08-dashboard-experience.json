@@ -9,8 +9,8 @@
   "status": "candidate",
   "plan_status": "approved",
   "implementation_status": "complete",
-  "review_status": "complete",
-  "qa_status": "pending",
+  "review_status": "pending",
+  "qa_status": "blocked",
   "human_approval_status": "pending",
   "initiation_authorization": {
     "status": "authorized",
@@ -19,7 +19,7 @@
   "plan_approval": {
     "status": "approved",
     "date": "2026-08-14",
-    "evidence": "After receiving the Phase 08 plan, human explicitly authorized implementation. This authorizes the planned dashboard/complete-experience implementation only and does not authorize PR, merge, deploy, real providers, sandbox, credentials, public callbacks, Phase 09 or release. Human subsequently authorized the narrow rework for QA blocker P08-QA-SEC-001."
+    "evidence": "Human authorized the Phase 08 implementation and subsequently authorized the narrow reworks for QA blockers P08-QA-SEC-001 and P08-QA-SEC-002. These authorizations do not authorize PR, merge, deploy, real providers, sandbox, credentials, public callbacks, Phase 09 or release."
   },
   "final_approval": {
     "status": "pending",
@@ -69,8 +69,8 @@
   "authorization": [
     "Organization derives from active Membership and session, never from an arbitrary request Organization id.",
     "Any active Organization member may view the operational dashboard; actions remain governed by the owning domain policies.",
-    "Selectors receive an Organization object and apply Organization filters at every domain boundary.",
-    "Cross-Organization visibility requires direct negative tests."
+    "Selectors receive an Organization object and apply Organization filters at every domain boundary and every traversed relation used in composition/rendering.",
+    "Cross-Organization visibility requires direct negative tests, including malformed related-object cases."
   ],
   "migrations": {
     "new_only": true,
@@ -86,6 +86,7 @@
       "active Membership and cross-Organization isolation",
       "dashboard KPI and attention-queue correctness for canonical domain states",
       "consolidated order workspace cannot cross Organization boundaries",
+      "malformed cross-Organization related objects are rejected at every rendered/read boundary",
       "read-only GET behavior and no dashboard persistence model",
       "empty-state and navigation rendering",
       "query-count/N+1 regression for bounded dashboard lists",
