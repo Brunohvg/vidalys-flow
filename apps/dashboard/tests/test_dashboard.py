@@ -182,6 +182,45 @@ def test_order_workspace_composes_only_active_organization(
 
 
 @pytest.mark.django_db
+def test_order_workspace_rejects_cross_organization_related_records(
+    organization,
+    other_organization,
+    user,
+    operator_membership,
+):
+    customer = _customer(organization=organization, name="Cliente A")
+    order = _confirmed_order(
+        organization=organization,
+        customer=customer,
+        user=user,
+        number=3,
+        name="Cliente A",
+    )
+    PaymentIntent.objects.create(
+        organization=other_organization,
+        order=order,
+        status=PaymentIntent.Status.PENDING,
+        amount=Decimal("10.00"),
+        order_number_snapshot=order.display_number,
+        customer_name_snapshot="Cliente A",
+        created_by=user,
+    )
+    Fulfillment.objects.create(
+        organization=other_organization,
+        order=order,
+        sequence=1,
+        method=Fulfillment.Method.DELIVERY,
+        created_by=user,
+    )
+
+    workspace = order_workspace_for_organization(organization=organization, order_id=order.id)
+
+    assert workspace["order"] == order
+    assert workspace["payment"] is None
+    assert list(workspace["fulfillments"]) == []
+
+
+@pytest.mark.django_db
 def test_dashboard_views_are_read_only_and_cross_org_workspace_is_404(
     client,
     organization,
