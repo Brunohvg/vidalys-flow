@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/06-messaging",
   "base_sha": "3e4fcfb064fbee350d3df131b2946974c8557098",
-  "head_sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
+  "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
   "commits": [
     {
       "sha": "8c1ace99a0c59b3f65d18d84e03f4e895555964b",
@@ -26,6 +26,10 @@
     {
       "sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
       "subject": "fix(messaging): remediate independent review findings"
+    },
+    {
+      "sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
+      "subject": "fix(messaging): close event and template contracts"
     }
   ],
   "delivered_scope": [
@@ -58,18 +62,18 @@
     "apps/messaging/migrations/0002_immutable_snapshots.py"
   ],
   "tests": {
-    "count": 396,
+    "count": 413,
     "skipped": 5,
-    "ci_passed": 401,
+    "ci_passed": 418,
     "skip_reason": "The five governance-baseline tests require .git metadata, which is intentionally absent from the test image; they run in GitHub Actions with the repository checkout.",
-    "coverage_percent": 85.29830464604633,
+    "coverage_percent": 85.3952772073922,
     "database": "PostgreSQL 17.10",
     "result": "passed",
     "empty_database_migration": "passed",
     "technical_rollback": "passed",
     "concurrency": "passed",
     "cross_organization": "passed",
-    "messaging_direct_tests": 124,
+    "messaging_direct_tests": 138,
     "provider_network_blocking": "passed",
     "callback_replay_and_rate_limit": "passed",
     "dispatch_lease_and_ambiguity": "passed",
@@ -77,7 +81,11 @@
     "dispatch_authorization_races": "passed",
     "database_snapshot_immutability": "passed",
     "configuration_version_concurrency": "passed",
-    "transient_source_event_retry": "passed"
+    "transient_source_event_retry": "passed",
+    "source_event_contract_versions": "passed",
+    "closed_transactional_template_catalog": "passed",
+    "all_six_automatic_sources": "passed",
+    "event_specific_source_states": "passed"
   },
   "scans": {
     "secret_scan": "passed",
@@ -91,9 +99,9 @@
     "celery_runtime_topology": "passed"
   },
   "ci": {
-    "workflow_id": 31758178500,
-    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31758178500",
-    "head_sha": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
+    "workflow_id": 31761251578,
+    "url": "https://github.com/Brunohvg/vidalys-flow/actions/runs/31761251578",
+    "head_sha": "cf871a561e529aa331479b13c792e6b2fcac6743",
     "run_attempt": 1,
     "conclusion": "success"
   },
@@ -126,25 +134,24 @@
   "risks": [
     "Evolution linked-device is non-official and operationally less stable than WhatsApp Cloud; the adapter remains isolated and disabled until homologation evidence and a separate activation approval exist.",
     "Callback authenticity is intentionally unavailable rather than approximated where a complete approved provider contract is absent.",
-    "Coverage is above the 85% gate; the remediated candidate still requires a new independent Review of dispatch linearization, database immutability, configuration concurrency, transient-event recovery, permission evidence, callback replay, tenant isolation, and external-effect blocking."
+    "Coverage is above the 85% gate; the second remediated candidate still requires a new independent Review of event-contract versioning, the closed transactional template catalog, the six-source matrix, dispatch linearization, permission evidence, callback replay, tenant isolation, and external-effect blocking."
   ],
-  "blockers": [
-    "P06-R06",
-    "P06-R07",
-    "P06-R08"
-  ],
+  "blockers": [],
   "remediation": {
     "status": "candidate_pending_independent_review",
-    "material_head": "a98e69b7f0d530956a095bc4757a9b4848c1083b",
-    "material_ci_run": 31758178500,
+    "material_head": "cf871a561e529aa331479b13c792e6b2fcac6743",
+    "material_ci_run": 31761251578,
     "findings_addressed": [
       "P06-R01",
       "P06-R02",
       "P06-R03",
       "P06-R04",
-      "P06-R05"
+      "P06-R05",
+      "P06-R06",
+      "P06-R07",
+      "P06-R08"
     ],
-    "evidence": "Final dispatch authorization is linearized under PostgreSQL locks; used templates and Message snapshots have ORM and database guards; automation rules use complete idempotency hashes, expected_version, monotonic versions, and concurrency locks; transient event-consumer failures remain retryable; direct PostgreSQL regressions cover every Review 01 finding. Independent Review has not yet accepted these claims."
+    "evidence": "Review 02 confirmed P06-R01 through P06-R05 resolved. The second remediation adds an explicit positive event_contract_version to the outbox envelope, requires canonical event/rule version and event-specific current source state, closes template key/purpose/channel/locale/body/schema against a server-side transactional catalog at creation, manual send, automation, and dispatch, and directly covers all six automatic sources plus missing/unknown versions, divergent rules, incompatible source states, and promotional content. Independent Review has not yet accepted P06-R06 through P06-R08 as resolved."
   },
   "review": {
     "status": "changes_requested",
@@ -193,6 +200,6 @@
   },
   "human_approval": {
     "status": "pending",
-    "evidence": "Remediated implementation candidate only; a new independent Review, QA/Security, and final human approval have not occurred."
+    "evidence": "Second remediated implementation candidate only; a new independent Review, QA/Security, and final human approval have not occurred."
   }
 }
