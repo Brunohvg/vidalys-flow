@@ -33,18 +33,12 @@ def repository(governance_root):
 def test_valid_state_and_all_artifacts(repository):
     state = repository.validate_state()
     repository.validate_all()
-    assert state["approved_phase"] == 7
-    assert state["approved_phase_head"] == "cba7d6cbebbcf672bb313472d5e1d7e431e48df5"
+    assert state["approved_phase"] == 8
+    assert state["approved_phase_head"] == "8ec559ab69b88fbd781144b1ad9dc00d465193c2"
     assert state["baseline_branch"] == "main"
-    assert state["next_phase"] == 8
-    assert state["next_phase_name"] == "Dashboard and complete experience"
-    assert state["active_candidate"] == {
-        "phase": 8,
-        "branch": "phase/08-dashboard-experience",
-        "base_ref": "main",
-        "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
-        "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
-    }
+    assert state["next_phase"] == 9
+    assert state["next_phase_name"] == "Infrastructure and homologation"
+    assert state["active_candidate"] is None
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):
@@ -100,7 +94,40 @@ def test_phase_branch_must_match_explicit_roadmap_identifier(governance_root):
         GovernanceRepository(governance_root).validate_phase(8)
 
 
+def prepare_phase_08_as_active_candidate(governance_root):
+    state_path = governance_root / "project/state.json"
+    state = load_json(state_path)
+    state["approved_phase"] = 7
+    state["approved_phase_name"] = "Integrations"
+    state["approved_phase_head"] = "cba7d6cbebbcf672bb313472d5e1d7e431e48df5"
+    state["next_phase"] = 8
+    state["next_phase_name"] = "Dashboard and complete experience"
+    state["active_candidate"] = {
+        "phase": 8,
+        "branch": "phase/08-dashboard-experience",
+        "base_ref": "main",
+        "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
+        "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+    }
+    write_json(state_path, state)
+
+    roadmap_path = governance_root / "project/roadmap.json"
+    roadmap = load_json(roadmap_path)
+    roadmap["phases"][8]["status"] = "planned"
+    roadmap["phases"][8]["approved_sha"] = None
+    roadmap["phases"][8]["handoff"] = None
+    roadmap["phases"][8]["human_approval_status"] = "pending"
+    write_json(roadmap_path, roadmap)
+
+    phase_path = governance_root / "project/phases/08-dashboard-experience.json"
+    phase = load_json(phase_path)
+    phase["status"] = "candidate"
+    phase["human_approval_status"] = "pending"
+    write_json(phase_path, phase)
+
+
 def test_active_candidate_dependency_must_match_its_manifest(governance_root):
+    prepare_phase_08_as_active_candidate(governance_root)
     state_path = governance_root / "project/state.json"
     state = load_json(state_path)
     state["active_candidate"]["dependency_head"] = "0" * 40
@@ -110,6 +137,7 @@ def test_active_candidate_dependency_must_match_its_manifest(governance_root):
 
 
 def test_active_candidate_branch_must_match_manifest(governance_root):
+    prepare_phase_08_as_active_candidate(governance_root)
     state_path = governance_root / "project/state.json"
     state = load_json(state_path)
     state["active_candidate"]["branch"] = "phase/08-other"
@@ -156,6 +184,7 @@ def test_implementation_requires_approved_plan(governance_root):
 
 
 def test_agent_cannot_self_approve_phase(governance_root):
+    prepare_phase_08_as_active_candidate(governance_root)
     path = governance_root / "project/phases/08-dashboard-experience.json"
     phase = load_json(path)
     phase["status"] = "planned"
