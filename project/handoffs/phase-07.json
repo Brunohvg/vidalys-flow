@@ -86,11 +86,24 @@
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
-    "report": null,
+    "status": "complete",
+    "report": "project/reviews/phase-07-review-report.json",
     "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+    "review_date": "2026-08-14T10:30:00Z",
+    "review_role": "Independent Review Agent",
     "blocking_findings": [],
-    "non_blocking_findings_resolved": []
+    "non_blocking_findings": [
+      {
+        "finding_id": "NBF-001",
+        "category": "governance_metadata",
+        "title": "Commits after candidate marker (informational)"
+      },
+      {
+        "finding_id": "NBF-002",
+        "category": "test_coverage",
+        "title": "Low direct line coverage in tasks.py (acceptable per manifesto)"
+      }
+    ]
   },
   "qa_security": {
     "status": "blocked",
