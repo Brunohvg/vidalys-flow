@@ -14,6 +14,7 @@ from ..selectors import (
     dashboard_search_for_organization,
     dashboard_summary,
     order_workspace_for_organization,
+    recent_orders_for_organization,
 )
 
 
@@ -108,6 +109,28 @@ def test_dashboard_summary_and_search_are_organization_scoped(
     }
     assert list(dashboard_search_for_organization(organization=organization, query="101")) == [order]
     assert list(dashboard_search_for_organization(organization=organization, query="Cliente B")) == []
+
+
+@pytest.mark.django_db
+def test_recent_orders_keeps_customer_reads_in_one_query(
+    django_assert_num_queries,
+    organization,
+    user,
+    operator_membership,
+):
+    customer = _customer(organization=organization, name="Cliente A")
+    for number in range(1, 6):
+        _confirmed_order(
+            organization=organization,
+            customer=customer,
+            user=user,
+            number=number,
+            name="Cliente A",
+        )
+
+    with django_assert_num_queries(1):
+        rows = list(recent_orders_for_organization(organization=organization))
+        assert [row.customer.display_name for row in rows] == ["Cliente A"] * 5
 
 
 @pytest.mark.django_db
