@@ -22,9 +22,9 @@
     "evidence": "Human authorized the Phase 08 implementation and subsequently authorized the narrow reworks for QA blockers P08-QA-SEC-001 and P08-QA-SEC-002. These authorizations do not authorize PR, merge, deploy, real providers, sandbox, credentials, public callbacks, Phase 09 or release."
   },
   "final_approval": {
-    "status": "pending",
-    "date": null,
-    "evidence": "not_recorded"
+    "status": "approved",
+    "date": "2026-08-14",
+    "evidence": "Human explicitly approved Phase 08 after Independent Review completed and QA/Security emitted GO on material candidate f6b003971342eb43eac3a9653290dafdd45c3275. This closes the human product gate only. Until a separately authorized PR/merge and official state/roadmap closeout, the pre-merge canonical status fields remain candidate/pending as required by governance. PR, merge, release, deploy, real providers, sandbox, credentials, public callbacks and Phase 09 remain separately unauthorized."
   },
   "allowed_status_values": {
     "status": ["planned", "in_progress", "candidate", "approved", "rejected"],
