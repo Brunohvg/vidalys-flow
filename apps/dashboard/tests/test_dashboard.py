@@ -8,7 +8,7 @@ from django.utils import timezone
 from apps.customers.models import ContactPoint, Customer
 from apps.fulfillment.models import Fulfillment
 from apps.integrations.models import IntegrationConnection, IntegrationDelivery, IntegrationEndpoint
-from apps.messaging.models import Message, MessagingChannel, MessagingProviderConnection, MessageTemplate
+from apps.messaging.models import Message, MessageTemplate, MessagingChannel, MessagingProviderConnection
 from apps.orders.models import Order
 from apps.payments.models import PaymentIntent
 
