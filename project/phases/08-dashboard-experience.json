@@ -9,8 +9,8 @@
   "status": "candidate",
   "plan_status": "approved",
   "implementation_status": "complete",
-  "review_status": "complete",
-  "qa_status": "pending",
+  "review_status": "pending",
+  "qa_status": "blocked",
   "human_approval_status": "pending",
   "initiation_authorization": {
     "status": "authorized",
@@ -19,7 +19,7 @@
   "plan_approval": {
     "status": "approved",
     "date": "2026-08-14",
-    "evidence": "After receiving the Phase 08 plan, human explicitly authorized implementation. This authorizes the planned dashboard/complete-experience implementation only and does not authorize PR, merge, deploy, real providers, sandbox, credentials, public callbacks, Phase 09 or release."
+    "evidence": "After receiving the Phase 08 plan, human explicitly authorized implementation. This authorizes the planned dashboard/complete-experience implementation only and does not authorize PR, merge, deploy, real providers, sandbox, credentials, public callbacks, Phase 09 or release. Human subsequently authorized the narrow rework for QA blocker P08-QA-SEC-001."
   },
   "final_approval": {
     "status": "pending",
