@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ order.display_number }} · Vidalys Flow{% endblock %}
+{% block content %}
+<div class="section-heading"><div><p class="muted"><a href="{% url 'dashboard:home' %}">Dashboard</a> / Pedido</p><h1>{{ order.display_number }}</h1></div><a href="{% url 'orders:detail' order.id %}">Abrir pedido completo</a></div>
+<p>{{ order.customer_name_snapshot|default:order.customer.display_name }} · <span class="badge">{{ order.get_status_display }}</span> · R$ {{ order.total }}</p>
+
+<div class="grid">
+<section class="card"><h2>Cliente</h2><p>{{ order.customer_name_snapshot|default:order.customer.display_name }}</p><p class="muted">Os dados detalhados permanecem no domínio de Clientes/Pedidos.</p></section>
+<section class="card"><h2>Pagamento</h2>{% if payment %}<p><span class="badge">{{ payment.get_status_display }}</span></p><p>R$ {{ payment.amount }}</p><a href="{% url 'payments:list' %}">Abrir pagamentos</a>{% else %}<p class="muted">Nenhum PaymentIntent associado.</p>{% endif %}</section>
+<section class="card"><h2>Fulfillment</h2>{% if fulfillments %}<ul class="clean-list">{% for item in fulfillments %}<li>{{ item.display_number }} · {{ item.get_status_display }}</li>{% endfor %}</ul><a href="{% url 'fulfillment:list' %}">Abrir fulfillment</a>{% else %}<p class="muted">Nenhum fulfillment associado.</p>{% endif %}</section>
+<section class="card"><h2>Mensagens do pedido</h2>{% if messages %}<ul class="clean-list">{% for item in messages %}<li>{{ item.purpose }} · {{ item.get_status_display }} · {{ item.channel.display_name }}</li>{% endfor %}</ul><a href="{% url 'messaging:list' %}">Abrir mensagens</a>{% else %}<p class="muted">Nenhuma mensagem diretamente vinculada ao pedido.</p>{% endif %}</section>
+</div>
+{% endblock %}

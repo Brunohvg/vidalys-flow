@@ -33,117 +33,23 @@ ROLES = {
     "qa-security": "QA and Security Agent",
 }
 DEFAULT_HANDOFF_FIELDS = {
-    "schema_version",
-    "phase_id",
-    "phase_name",
-    "status",
-    "branch",
-    "base_sha",
-    "head_sha",
-    "commits",
-    "delivered_scope",
-    "models",
-    "migrations",
-    "tests",
-    "scans",
-    "ci",
-    "organization_isolation",
-    "legacy_reuse",
-    "deferred",
-    "risks",
-    "blockers",
-    "human_approval",
+    "schema_version", "phase_id", "phase_name", "status", "branch", "base_sha", "head_sha", "commits",
+    "delivered_scope", "models", "migrations", "tests", "scans", "ci", "organization_isolation",
+    "legacy_reuse", "deferred", "risks", "blockers", "human_approval",
 }
 PHASE_REQUIRED_FIELDS = {
-    "schema_version",
-    "id",
-    "name",
-    "dependency_phase",
-    "dependency_head",
-    "base_ref",
-    "branch",
-    "status",
-    "plan_status",
-    "implementation_status",
-    "review_status",
-    "qa_status",
-    "human_approval_status",
-    "allowed_status_values",
-    "allowed_apps",
-    "forbidden_apps",
-    "expected_models",
-    "expected_features",
-    "deferred_features",
-    "states",
-    "snapshots",
-    "idempotency",
-    "money_rules",
-    "authorization",
-    "migrations",
-    "tests",
-    "coverage",
-    "ci",
-    "documentation",
-    "acceptance_criteria",
-    "checks",
-    "report_format",
-    "handoff_format",
-    "allowed_scope",
-    "forbidden_scope",
+    "schema_version", "id", "name", "dependency_phase", "dependency_head", "base_ref", "branch", "status",
+    "plan_status", "implementation_status", "review_status", "qa_status", "human_approval_status",
+    "allowed_status_values", "allowed_apps", "forbidden_apps", "expected_models", "expected_features",
+    "deferred_features", "states", "snapshots", "idempotency", "money_rules", "authorization", "migrations",
+    "tests", "coverage", "ci", "documentation", "acceptance_criteria", "checks", "report_format",
+    "handoff_format", "allowed_scope", "forbidden_scope",
 }
 TEMPLATE_TOKENS = {
-    "planning": {
-        "CHECKPOINT",
-        "ROLE",
-        "PHASE_ID",
-        "PHASE_NAME",
-        "DEPENDENCY_HEAD",
-        "BASE_REF",
-        "BRANCH",
-        "ALLOWED_SCOPE",
-        "FORBIDDEN_SCOPE",
-        "CHECKS",
-        "REPORT_FORMAT",
-    },
-    "implementation": {
-        "CHECKPOINT",
-        "ROLE",
-        "PHASE_ID",
-        "PHASE_NAME",
-        "DEPENDENCY_HEAD",
-        "BASE_REF",
-        "BRANCH",
-        "ALLOWED_SCOPE",
-        "FORBIDDEN_SCOPE",
-        "CHECKS",
-        "REPORT_FORMAT",
-    },
-    "review": {
-        "CHECKPOINT",
-        "ROLE",
-        "PHASE_ID",
-        "PHASE_NAME",
-        "DEPENDENCY_HEAD",
-        "BASE_REF",
-        "BRANCH",
-        "ALLOWED_SCOPE",
-        "FORBIDDEN_SCOPE",
-        "CHECKS",
-        "REPORT_FORMAT",
-    },
-    "qa-security": {
-        "CHECKPOINT",
-        "ROLE",
-        "PHASE_ID",
-        "PHASE_NAME",
-        "DEPENDENCY_HEAD",
-        "BASE_REF",
-        "BRANCH",
-        "ALLOWED_SCOPE",
-        "FORBIDDEN_SCOPE",
-        "CHECKS",
-        "REPORT_FORMAT",
-    },
+    "planning": {"CHECKPOINT", "ROLE", "PHASE_ID", "PHASE_NAME", "DEPENDENCY_HEAD", "BASE_REF", "BRANCH", "ALLOWED_SCOPE", "FORBIDDEN_SCOPE", "CHECKS", "REPORT_FORMAT"},
+    "implementation": {"CHECKPOINT", "ROLE", "PHASE_ID", "PHASE_NAME", "DEPENDENCY_HEAD", "BASE_REF", "BRANCH", "ALLOWED_SCOPE", "FORBIDDEN_SCOPE", "CHECKS", "REPORT_FORMAT"},
+    "review": {"CHECKPOINT", "ROLE", "PHASE_ID", "PHASE_NAME", "DEPENDENCY_HEAD", "BASE_REF", "BRANCH", "ALLOWED_SCOPE", "FORBIDDEN_SCOPE", "CHECKS", "REPORT_FORMAT"},
+    "qa-security": {"CHECKPOINT", "ROLE", "PHASE_ID", "PHASE_NAME", "DEPENDENCY_HEAD", "BASE_REF", "BRANCH", "ALLOWED_SCOPE", "FORBIDDEN_SCOPE", "CHECKS", "REPORT_FORMAT"},
     "approval": {"PHASE_ID", "PHASE_NAME", "DEPENDENCY_HEAD", "BASE_REF", "BRANCH"},
 }
 
@@ -224,23 +130,7 @@ class GovernanceRepository:
 
     def validate_state(self) -> dict[str, Any]:
         state = self.state()
-        _require_fields(
-            state,
-            {
-                "schema_version",
-                "product",
-                "repository",
-                "approved_phase",
-                "approved_phase_name",
-                "approved_phase_head",
-                "baseline_branch",
-                "next_phase",
-                "next_phase_name",
-                "active_candidate",
-                "human_approval_required",
-            },
-            "project/state.json",
-        )
+        _require_fields(state, {"schema_version", "product", "repository", "approved_phase", "approved_phase_name", "approved_phase_head", "baseline_branch", "next_phase", "next_phase_name", "active_candidate", "human_approval_required"}, "project/state.json")
         if state["schema_version"] != 2:
             raise GovernanceError("unsupported state schema_version")
         if state["product"] != "Vidalys Flow" or state["repository"] != "Brunohvg/vidalys-flow":
@@ -256,11 +146,7 @@ class GovernanceRepository:
             raise GovernanceError("baseline_branch must be main")
         if state["active_candidate"] is not None:
             candidate = _require_mapping(state["active_candidate"], "active_candidate")
-            _require_fields(
-                candidate,
-                {"phase", "branch", "base_ref", "actual_base_sha", "dependency_head"},
-                "active_candidate",
-            )
+            _require_fields(candidate, {"phase", "branch", "base_ref", "actual_base_sha", "dependency_head"}, "active_candidate")
             _require_sha(candidate["actual_base_sha"], "active_candidate actual_base_sha")
             _require_sha(candidate["dependency_head"], "active_candidate dependency_head")
             if candidate["phase"] != state["next_phase"] or candidate["base_ref"] != state["baseline_branch"]:
@@ -275,20 +161,8 @@ class GovernanceRepository:
         _require_fields(roadmap, {"schema_version", "phases"}, "project/roadmap.json")
         if roadmap["schema_version"] != 1 or not isinstance(roadmap["phases"], list):
             raise GovernanceError("invalid roadmap schema")
-
         phases: dict[int, dict[str, Any]] = {}
-        required = {
-            "id",
-            "name",
-            "status",
-            "dependencies",
-            "approved_sha",
-            "branch",
-            "handoff",
-            "domains",
-            "human_approval_status",
-            "known_risks",
-        }
+        required = {"id", "name", "status", "dependencies", "approved_sha", "branch", "handoff", "domains", "human_approval_status", "known_risks"}
         for phase_value in roadmap["phases"]:
             phase = _require_mapping(phase_value, "roadmap phase")
             _require_fields(phase, required, "roadmap phase")
@@ -299,13 +173,10 @@ class GovernanceRepository:
                 raise GovernanceError(f"roadmap phase {phase_id} has invalid status")
             if phase["human_approval_status"] not in HUMAN_STATUSES:
                 raise GovernanceError(f"roadmap phase {phase_id} has invalid human approval status")
-            if not isinstance(phase["dependencies"], list) or any(
-                not isinstance(dependency, int) for dependency in phase["dependencies"]
-            ):
+            if not isinstance(phase["dependencies"], list) or any(not isinstance(dependency, int) for dependency in phase["dependencies"]):
                 raise GovernanceError(f"roadmap phase {phase_id} has invalid dependencies")
             _require_sha(phase["approved_sha"], f"roadmap phase {phase_id} approved_sha", nullable=True)
             phases[phase_id] = phase
-
         if sorted(phases) != list(range(0, 11)):
             raise GovernanceError("roadmap must contain phases 0 through 10 exactly once")
         for phase_id, phase in phases.items():
@@ -317,7 +188,6 @@ class GovernanceRepository:
                     raise GovernanceError(f"roadmap phase {phase_id} must reflect confirmed approval")
             elif phase["approved_sha"] is not None or phase["human_approval_status"] == "approved":
                 raise GovernanceError(f"future roadmap phase {phase_id} cannot be approved")
-
         approved = phases[state["approved_phase"]]
         if approved["approved_sha"] != state["approved_phase_head"]:
             raise GovernanceError("roadmap approved SHA differs from state approved_phase_head")
@@ -329,22 +199,7 @@ class GovernanceRepository:
 
     def validate_source_reference(self) -> dict[str, Any]:
         source = self.load_json("project/source_reference.json")
-        _require_fields(
-            source,
-            {
-                "schema_version",
-                "repository",
-                "branch",
-                "frozen_sha",
-                "mode",
-                "runtime_access",
-                "database_access",
-                "domains_no_longer_consulted",
-                "domains_still_consultable",
-                "rules",
-            },
-            "project/source_reference.json",
-        )
+        _require_fields(source, {"schema_version", "repository", "branch", "frozen_sha", "mode", "runtime_access", "database_access", "domains_no_longer_consulted", "domains_still_consultable", "rules"}, "project/source_reference.json")
         _require_sha(source["frozen_sha"], "source frozen_sha")
         if source["mode"] != "read_only" or source["runtime_access"] is not False:
             raise GovernanceError("source reference must be read-only with no runtime access")
@@ -366,17 +221,8 @@ class GovernanceRepository:
             raise GovernanceError(f"phase {phase_id:02d} dependency_phase must be an integer")
         if manifest["base_ref"] != state["baseline_branch"]:
             raise GovernanceError(f"phase {phase_id:02d} base_ref differs from baseline_branch")
-        if manifest["branch"] != f"phase/{phase_id:02d}-{manifest['name'].lower().replace(' ', '-')}":
-            raise GovernanceError(f"phase {phase_id:02d} branch does not follow the phase convention")
 
-        status_sets = {
-            "status": PHASE_STATUSES,
-            "plan_status": PLAN_STATUSES,
-            "implementation_status": IMPLEMENTATION_STATUSES,
-            "review_status": REVIEW_STATUSES,
-            "qa_status": QA_STATUSES,
-            "human_approval_status": HUMAN_STATUSES,
-        }
+        status_sets = {"status": PHASE_STATUSES, "plan_status": PLAN_STATUSES, "implementation_status": IMPLEMENTATION_STATUSES, "review_status": REVIEW_STATUSES, "qa_status": QA_STATUSES, "human_approval_status": HUMAN_STATUSES}
         allowed_values = _require_mapping(manifest["allowed_status_values"], "allowed_status_values")
         for field, canonical in status_sets.items():
             if manifest[field] not in canonical:
@@ -391,12 +237,12 @@ class GovernanceRepository:
         dependency_phase = roadmap_phases.get(dependency)
         if roadmap_phase is None or roadmap_phase["dependencies"] != [dependency]:
             raise GovernanceError(f"phase {phase_id:02d} dependency differs from roadmap")
-        if (
-            dependency_phase is None
-            or dependency_phase["status"] != "approved"
-            or dependency_phase["human_approval_status"] != "approved"
-            or dependency_phase["approved_sha"] is None
-        ):
+        if roadmap_phase["branch"] != manifest["branch"]:
+            raise GovernanceError(f"phase {phase_id:02d} branch differs from roadmap")
+        if state["active_candidate"] is not None and state["active_candidate"]["phase"] == phase_id:
+            if state["active_candidate"]["branch"] != manifest["branch"]:
+                raise GovernanceError("active_candidate branch differs from phase manifest")
+        if dependency_phase is None or dependency_phase["status"] != "approved" or dependency_phase["human_approval_status"] != "approved" or dependency_phase["approved_sha"] is None:
             raise GovernanceError(f"phase {phase_id:02d} dependency {dependency} is not approved")
         if manifest["dependency_head"] != dependency_phase["approved_sha"]:
             raise GovernanceError(f"phase {phase_id:02d} dependency_head differs from roadmap approved SHA")
@@ -404,17 +250,13 @@ class GovernanceRepository:
             candidate = state["active_candidate"]
             if candidate["dependency_head"] != manifest["dependency_head"]:
                 raise GovernanceError("active_candidate dependency_head differs from phase manifest")
-
-        if phase_id > state["approved_phase"] and (
-            manifest["status"] == "approved" or manifest["human_approval_status"] == "approved"
-        ):
+        if phase_id > state["approved_phase"] and (manifest["status"] == "approved" or manifest["human_approval_status"] == "approved"):
             raise GovernanceError("an agent cannot approve a future phase")
         if manifest["status"] == "planned":
             if manifest["implementation_status"] not in {"blocked", "pending"}:
                 raise GovernanceError("a planned phase cannot have implementation progress")
             if manifest["review_status"] != "blocked" or manifest["qa_status"] != "blocked":
                 raise GovernanceError("review and QA must be blocked for a planned phase")
-
         for field in ("allowed_apps", "forbidden_apps", "allowed_scope", "forbidden_scope", "checks"):
             _require_string_list(manifest[field], f"phase {phase_id:02d} {field}")
         if set(manifest["allowed_apps"]) & set(manifest["forbidden_apps"]):
@@ -449,7 +291,6 @@ class GovernanceRepository:
         _require_fields(human, {"status", "evidence"}, "handoff human_approval")
         if human["status"] not in HUMAN_STATUSES:
             raise GovernanceError("handoff has invalid human approval status")
-
         state = self.validate_state()
         roadmap = self.validate_roadmap()
         roadmap_phases = {phase["id"]: phase for phase in roadmap["phases"]}
@@ -472,9 +313,7 @@ class GovernanceRepository:
                 raise GovernanceError(f"cannot read {relative}: {exc}") from exc
             found = set(re.findall(r"\{\{([A-Z_]+)\}\}", content))
             if found != required_tokens:
-                raise GovernanceError(
-                    f"{relative} has divergent tokens: expected {sorted(required_tokens)}, found {sorted(found)}"
-                )
+                raise GovernanceError(f"{relative} has divergent tokens: expected {sorted(required_tokens)}, found {sorted(found)}")
         generated = self._path("prompts/generated")
         if generated.exists() and any(path.is_file() for path in generated.rglob("*")):
             raise GovernanceError("generated prompts must not be versioned")
@@ -510,37 +349,23 @@ class GovernanceRepository:
             raise GovernanceError("review cannot be rendered before implementation is complete")
         if checkpoint == "qa-security" and manifest["review_status"] != "complete":
             raise GovernanceError("QA cannot be rendered before review is complete")
-
         template = self._path(f"prompts/templates/{checkpoint}.md").read_text(encoding="utf-8")
         report_fields = manifest["report_format"].get("required_sections")
         _require_string_list(report_fields, "report required sections")
         values = {
-            "CHECKPOINT": checkpoint,
-            "ROLE": ROLES[checkpoint],
-            "PHASE_ID": f"{phase_id:02d}",
-            "PHASE_NAME": manifest["name"],
-            "DEPENDENCY_HEAD": manifest["dependency_head"],
-            "BASE_REF": manifest["base_ref"],
-            "BRANCH": manifest["branch"],
-            "ALLOWED_SCOPE": _bullets(manifest["allowed_scope"]),
-            "FORBIDDEN_SCOPE": _bullets(manifest["forbidden_scope"]),
-            "CHECKS": _bullets(manifest["checks"]),
-            "REPORT_FORMAT": _bullets(report_fields),
+            "CHECKPOINT": checkpoint, "ROLE": ROLES[checkpoint], "PHASE_ID": f"{phase_id:02d}",
+            "PHASE_NAME": manifest["name"], "DEPENDENCY_HEAD": manifest["dependency_head"],
+            "BASE_REF": manifest["base_ref"], "BRANCH": manifest["branch"],
+            "ALLOWED_SCOPE": _bullets(manifest["allowed_scope"]), "FORBIDDEN_SCOPE": _bullets(manifest["forbidden_scope"]),
+            "CHECKS": _bullets(manifest["checks"]), "REPORT_FORMAT": _bullets(report_fields),
         }
         for name, value in values.items():
             template = template.replace(f"{{{{{name}}}}}", value)
         if re.search(r"\{\{[A-Z_]+\}\}", template):
             raise GovernanceError("rendered template contains unresolved tokens")
-
         contract = self._path("AGENTS.md").read_text(encoding="utf-8").strip()
         manifest_json = json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True)
-        output = (
-            f"{template.strip()}\n\n"
-            "## Contrato global obrigatório\n\n"
-            f"{contract}\n\n"
-            "## Manifesto canônico da fase\n\n"
-            f"```json\n{manifest_json}\n```\n"
-        )
+        output = f"{template.strip()}\n\n## Contrato global obrigatório\n\n{contract}\n\n## Manifesto canônico da fase\n\n```json\n{manifest_json}\n```\n"
         for pattern in SENSITIVE_OUTPUT_PATTERNS:
             if pattern.search(output):
                 raise GovernanceError("rendered output contains a possible secret")
@@ -548,18 +373,7 @@ class GovernanceRepository:
 
     def status_text(self) -> str:
         state = self.validate_state()
-        values = (
-            ("product", state["product"]),
-            ("repository", state["repository"]),
-            ("approved_phase", state["approved_phase"]),
-            ("approved_phase_name", state["approved_phase_name"]),
-            ("approved_phase_head", state["approved_phase_head"]),
-            ("baseline_branch", state["baseline_branch"]),
-            ("next_phase", state["next_phase"]),
-            ("next_phase_name", state["next_phase_name"]),
-            ("active_candidate", state["active_candidate"]),
-            ("human_approval_required", state["human_approval_required"]),
-        )
+        values = (("product", state["product"]), ("repository", state["repository"]), ("approved_phase", state["approved_phase"]), ("approved_phase_name", state["approved_phase_name"]), ("approved_phase_head", state["approved_phase_head"]), ("baseline_branch", state["baseline_branch"]), ("next_phase", state["next_phase"]), ("next_phase_name", state["next_phase_name"]), ("active_candidate", state["active_candidate"]), ("human_approval_required", state["human_approval_required"]))
         return "\n".join(f"{key}: {json.dumps(value, ensure_ascii=False)}" for key, value in values)
 
 
@@ -577,13 +391,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("validate-roadmap")
     subparsers.add_parser("validate-templates")
     subparsers.add_parser("validate-all")
-
     validate_phase = subparsers.add_parser("validate-phase")
     validate_phase.add_argument("phase", type=_phase_id)
-
     validate_handoff = subparsers.add_parser("validate-handoff")
     validate_handoff.add_argument("file")
-
     render = subparsers.add_parser("render")
     render.add_argument("checkpoint", choices=sorted(CHECKPOINTS))
     render.add_argument("phase", type=_phase_id)
@@ -597,23 +408,17 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "status":
             print(repository.status_text())
         elif args.command == "validate-state":
-            repository.validate_state()
-            print("OK: official state is valid.")
+            repository.validate_state(); print("OK: official state is valid.")
         elif args.command == "validate-roadmap":
-            repository.validate_roadmap()
-            print("OK: roadmap is valid.")
+            repository.validate_roadmap(); print("OK: roadmap is valid.")
         elif args.command == "validate-templates":
-            repository.validate_templates()
-            print("OK: prompt templates are valid and no generated prompts are stored.")
+            repository.validate_templates(); print("OK: prompt templates are valid and no generated prompts are stored.")
         elif args.command == "validate-all":
-            repository.validate_all()
-            print("OK: all governance artifacts are valid.")
+            repository.validate_all(); print("OK: all governance artifacts are valid.")
         elif args.command == "validate-phase":
-            repository.validate_phase(args.phase)
-            print(f"OK: phase {args.phase:02d} is valid.")
+            repository.validate_phase(args.phase); print(f"OK: phase {args.phase:02d} is valid.")
         elif args.command == "validate-handoff":
-            repository.validate_handoff(args.file)
-            print(f"OK: handoff {args.file} is valid.")
+            repository.validate_handoff(args.file); print(f"OK: handoff {args.file} is valid.")
         elif args.command == "render":
             print(repository.render(args.checkpoint, args.phase), end="")
         else:

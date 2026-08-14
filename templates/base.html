@@ -6,27 +6,44 @@
   <title>{% block title %}Vidalys Flow{% endblock %}</title>
   <style>
     :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
     body { margin: 0; background: #f6f7f9; color: #18202a; }
-    header, main { width: min(68rem, calc(100% - 2rem)); margin-inline: auto; }
-    header { display: flex; align-items: center; justify-content: space-between; padding-block: 1rem; }
-    main { background: white; border: 1px solid #dfe3e8; border-radius: .75rem; padding: 1.25rem; }
+    header, main { width: min(76rem, calc(100% - 2rem)); margin-inline: auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1rem; }
+    main { background: white; border: 1px solid #dfe3e8; border-radius: .75rem; padding: 1.25rem; margin-bottom: 2rem; }
     a { color: #155eef; }
     label { display: block; margin-top: 1rem; font-weight: 600; }
-    input, select, textarea { width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .25rem; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .25rem; border: 1px solid #cbd2da; border-radius: .4rem; }
     button { padding: .7rem 1rem; border: 0; border-radius: .4rem; background: #155eef; color: white; cursor: pointer; }
     .message, .errorlist { padding: .75rem; border-radius: .4rem; background: #fff1f0; color: #9c1c13; }
     .muted { color: #5f6b7a; }
     .inline { display: inline; }
-    nav { display: flex; flex-wrap: wrap; gap: .75rem; }
+    nav { display: flex; flex-wrap: wrap; gap: .35rem .75rem; align-items: center; }
+    nav a { padding: .35rem .15rem; }
     table { width: 100%; border-collapse: collapse; margin-block: 1rem; }
     th, td { padding: .65rem; border-bottom: 1px solid #dfe3e8; text-align: left; }
-    .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1rem; }
-    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
-    .card { border: 1px solid #dfe3e8; border-radius: .65rem; padding: 1rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin-block: 1rem; }
+    .actions input { flex: 1 1 18rem; margin: 0; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+    .card { border: 1px solid #dfe3e8; border-radius: .65rem; padding: 1rem; min-width: 0; }
     .badge { display: inline-block; padding: .2rem .55rem; border-radius: 999px; background: #e8efff; }
     .danger { background: #b42318; }
+    .metric { display: block; font-size: 2rem; margin-top: .35rem; }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .clean-list { list-style: none; padding: 0; margin: .5rem 0; }
+    .clean-list li { padding: .55rem 0; border-bottom: 1px solid #edf0f3; }
     section { margin-block: 1.5rem; }
+    h1, h2 { margin-top: 0; }
+    @media (max-width: 54rem) {
+      header { align-items: flex-start; flex-direction: column; }
+      header form { align-self: flex-end; }
+      nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: .35rem; }
+      nav a { white-space: nowrap; }
+    }
     @media (max-width: 42rem) {
+      header, main { width: min(100% - 1rem, 76rem); }
+      main { padding: .9rem; }
+      .section-heading { align-items: flex-start; }
       .responsive-table thead { display: none; }
       .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; }
       .responsive-table tr { border: 1px solid #dfe3e8; border-radius: .65rem; margin-block: .75rem; padding: .5rem; }
@@ -40,13 +57,15 @@
     <strong>Vidalys Flow</strong>
     {% if request.user.is_authenticated %}
       <nav aria-label="Navegação principal">
-        <a href="{% url 'organizations:list' %}">Organizações</a>
+        <a href="{% url 'dashboard:home' %}">Dashboard</a>
+        <a href="{% url 'orders:list' %}">Pedidos</a>
         <a href="{% url 'customers:list' %}">Clientes</a>
         <a href="{% url 'products:list' %}">Produtos</a>
-        <a href="{% url 'orders:list' %}">Pedidos</a>
         <a href="{% url 'fulfillment:list' %}">Fulfillment</a>
         <a href="{% url 'payments:list' %}">Pagamentos</a>
         <a href="{% url 'messaging:list' %}">Mensagens</a>
+        <a href="{% url 'integrations:list' %}">Integrações</a>
+        <a href="{% url 'organizations:list' %}">Organizações</a>
       </nav>
       <form class="inline" method="post" action="{% url 'logout' %}">
         {% csrf_token %}
