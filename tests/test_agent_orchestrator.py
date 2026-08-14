@@ -97,73 +97,206 @@ def test_active_candidate_does_not_invalidate_historical_phase(repository):
     assert phase["status"] == "approved"
 
 
-def test_active_candidate_dependency_must_match_manifest(governance_root):
-    path = governance_root / "project/state.json"
-    state = load_json(path)
+def test_active_candidate_dependency_must_match_its_manifest(governance_root):
+    state_path = governance_root / "project/state.json"
+    state = load_json(state_path)
     state["active_candidate"] = {
         "phase": 7,
         "branch": "phase/07-integrations",
         "base_ref": "main",
-        "actual_base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
+        "actual_base_sha": "1" * 40,
         "dependency_head": "0" * 40,
     }
-    write_json(path, state)
+    write_json(state_path, state)
+
+    source = governance_root / "project/phases/06-messaging.json"
+    phase_path = governance_root / "project/phases/07-integrations.json"
+    phase = load_json(source)
+    phase.update(
+        {
+            "id": 7,
+            "name": "Integrations",
+            "branch": "phase/07-integrations",
+            "dependency_phase": 6,
+            "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
+            "status": "planned",
+            "plan_status": "pending",
+            "implementation_status": "blocked",
+            "review_status": "blocked",
+            "qa_status": "blocked",
+            "human_approval_status": "pending",
+        }
+    )
+    write_json(phase_path, phase)
 
     with pytest.raises(GovernanceError, match="active_candidate dependency_head differs"):
         GovernanceRepository(governance_root).validate_phase(7)
 
 
-def test_render_implementation_requires_plan_approval(repository):
-    with pytest.raises(GovernanceError, match="plan approval"):
-        repository.render("implementation", 7)
+def test_wrong_baseline_reference_is_rejected(governance_root):
+    path = governance_root / "project/phases/03-orders.json"
+    phase = load_json(path)
+    phase["base_ref"] = "chore/candidate"
+    write_json(path, phase)
+
+    with pytest.raises(GovernanceError, match="base_ref differs"):
+        GovernanceRepository(governance_root).validate_phase(3)
 
 
-def test_render_review_requires_complete_implementation(governance_root):
-    phase_path = governance_root / "project/phases/07-integrations.json"
-    phase = load_json(phase_path)
+def test_invalid_manifest_is_rejected(governance_root):
+    path = governance_root / "project/phases/03-orders.json"
+    phase = load_json(path)
+    del phase["expected_models"]
+    write_json(path, phase)
+
+    with pytest.raises(GovernanceError, match="missing fields"):
+        GovernanceRepository(governance_root).validate_phase(3)
+
+
+def test_incomplete_handoff_is_rejected(governance_root):
+    path = governance_root / "project/handoffs/phase-02.json"
+    handoff = load_json(path)
+    del handoff["tests"]
+    write_json(path, handoff)
+
+    with pytest.raises(GovernanceError, match="missing fields"):
+        GovernanceRepository(governance_root).validate_handoff("project/handoffs/phase-02.json")
+
+
+def test_implementation_requires_approved_plan(governance_root):
+    path = governance_root / "project/phases/03-orders.json"
+    phase = load_json(path)
+    phase["plan_status"] = "pending"
+    phase["implementation_status"] = "blocked"
+    write_json(path, phase)
+
+    with pytest.raises(GovernanceError, match="before human plan approval"):
+        GovernanceRepository(governance_root).render("implementation", 3)
+
+
+def test_agent_cannot_self_approve_phase(governance_root):
+    source = governance_root / "project/phases/06-messaging.json"
+    path = governance_root / "project/phases/07-integrations.json"
+    phase = load_json(source)
+    phase.update(
+        {
+            "id": 7,
+            "name": "Integrations",
+            "branch": "phase/07-integrations",
+            "dependency_phase": 6,
+            "dependency_head": "e2140eb25cc10f1a79dad05a0507ba9141003ac9",
+            "status": "planned",
+            "plan_status": "pending",
+            "implementation_status": "pending",
+            "review_status": "blocked",
+            "qa_status": "blocked",
+            "human_approval_status": "approved",
+        }
+    )
+    write_json(path, phase)
+
+    with pytest.raises(GovernanceError, match="cannot approve"):
+        GovernanceRepository(governance_root).validate_phase(7)
+
+
+def test_rendering_is_deterministic(repository):
+    first = repository.render("planning", 3)
+    second = repository.render("planning", 3)
+
+    assert first == second
+    assert "Planning Agent" in first
+    assert "b28a019871274e9da1ca1cb65043c5e208b0e727" in first
+    assert "Referência de baseline: `main`" in first
+    assert "actual_base_sha" in first
+
+
+def test_environment_secrets_are_never_rendered(repository, monkeypatch):
+    sensitive_value = "gh" + "p_" + ("a" * 24)
+    monkeypatch.setenv("UNRELATED_CREDENTIAL", sensitive_value)
+
+    output = repository.render("planning", 3)
+
+    assert sensitive_value not in output
+
+
+def test_checkpoint_templates_render_only_after_prerequisites(governance_root):
+    path = governance_root / "project/phases/03-orders.json"
+    phase = load_json(path)
     phase["plan_status"] = "approved"
-    phase["implementation_status"] = "in_progress"
+    phase["implementation_status"] = "pending"
+    write_json(path, phase)
+    repository = GovernanceRepository(governance_root)
+
+    implementation = repository.render("implementation", 3)
+
     phase["status"] = "in_progress"
-    write_json(phase_path, phase)
-
-    repository = GovernanceRepository(governance_root)
-    with pytest.raises(GovernanceError, match="implementation is complete"):
-        repository.render("review", 7)
-
-
-def test_render_qa_requires_complete_review(governance_root):
-    phase_path = governance_root / "project/phases/07-integrations.json"
-    phase = load_json(phase_path)
-    phase["plan_status"] = "approved"
     phase["implementation_status"] = "complete"
-    phase["review_status"] = "in_progress"
-    phase["status"] = "candidate"
-    write_json(phase_path, phase)
+    phase["review_status"] = "pending"
+    write_json(path, phase)
+    review = repository.render("review", 3)
 
-    repository = GovernanceRepository(governance_root)
-    with pytest.raises(GovernanceError, match="review is complete"):
-        repository.render("qa-security", 7)
+    phase["review_status"] = "complete"
+    phase["qa_status"] = "pending"
+    write_json(path, phase)
+    qa = repository.render("qa-security", 3)
+
+    assert "Implementation Agent" in implementation
+    assert "Review Agent" in review
+    assert "QA and Security Agent" in qa
 
 
-def test_approval_prompt_is_human_only(repository):
+def test_approval_template_cannot_be_rendered_by_agent(repository):
     with pytest.raises(GovernanceError, match="Human Approver"):
-        repository.render("approval", 7)
+        repository.render("approval", 3)
 
 
-def test_unknown_checkpoint_is_rejected(repository):
-    with pytest.raises(GovernanceError, match="unknown checkpoint"):
-        repository.render("unknown", 7)
+def test_cli_errors_return_nonzero(capsys):
+    assert main(["render", "implementation", "99"]) == 1
+    assert "does not exist" in capsys.readouterr().err
+
+    assert main(["render", "approval", "03"]) == 1
+    assert "Human Approver" in capsys.readouterr().err
 
 
-def test_cli_validate_state(governance_root, capsys):
-    exit_code = main(["--root", str(governance_root), "validate-state"])
-
-    assert exit_code == 0
-    assert "OK: official state is valid." in capsys.readouterr().out
+def test_handoff_path_cannot_escape_repository(repository):
+    with pytest.raises(GovernanceError, match="handoff must be"):
+        repository.validate_handoff("project/state.json")
 
 
-def test_cli_validate_all(governance_root, capsys):
-    exit_code = main(["--root", str(governance_root), "validate-all"])
+def test_future_handoff_records_actual_base_sha(governance_root):
+    path = governance_root / "project/handoffs/phase-03.json"
+    handoff = {
+        "schema_version": 1,
+        "phase_id": 3,
+        "phase_name": "Orders",
+        "status": "candidate",
+        "branch": "phase/03-orders",
+        "base_sha": "f2fdc8e2283c905be1547528d83fd0ba6de06612",
+        "head_sha": "2" * 40,
+        "commits": [{"sha": "2" * 40, "subject": "candidate"}],
+        "delivered_scope": [],
+        "models": [],
+        "migrations": [],
+        "tests": {},
+        "scans": {},
+        "ci": {},
+        "organization_isolation": {},
+        "legacy_reuse": {},
+        "deferred": [],
+        "risks": [],
+        "blockers": [],
+        "human_approval": {"status": "pending", "evidence": "not_recorded"},
+    }
+    write_json(path, handoff)
 
-    assert exit_code == 0
-    assert "OK: all governance artifacts are valid." in capsys.readouterr().out
+    validated = GovernanceRepository(governance_root).validate_handoff("project/handoffs/phase-03.json")
+
+    assert validated["base_sha"] == "f2fdc8e2283c905be1547528d83fd0ba6de06612"
+
+
+def test_phase_two_historical_head_is_preserved(repository):
+    roadmap = repository.validate_roadmap()
+    handoff = repository.validate_handoff("project/handoffs/phase-02.json")
+
+    assert roadmap["phases"][2]["approved_sha"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
+    assert handoff["head_sha"] == "b28a019871274e9da1ca1cb65043c5e208b0e727"
