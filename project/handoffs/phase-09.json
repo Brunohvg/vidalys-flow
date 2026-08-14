@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/09-infrastructure-homologation",
   "base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
-  "head_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
+  "head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
   "commits": [
     {"sha": "069ea4d6ff4e17f61249e97ee8a75dc5509bf00b", "subject": "chore(governance): define Phase 09 infrastructure and homologation"},
     {"sha": "d1ef19fd4371e1b38ac8db0fc83e082eaba08165", "subject": "feat(infra): add Coolify homologation stack"},
@@ -17,7 +17,8 @@
     {"sha": "5ba7ef294f92f11f4f54a8a200148062bb641ca4", "subject": "chore(governance): mark Phase 09 in progress"},
     {"sha": "e309e3db77c3eb41a5f2a7d150a4d3a3891fbc92", "subject": "docs(infra): add Phase 09 implementation handoff"},
     {"sha": "7ec3b5f3020fa3d2d4c5758e4f08596aa77984df", "subject": "test(governance): advance active candidate fixture to Phase 09"},
-    {"sha": "e41cacfeab38d9da35e6f344c2009ef53d960165", "subject": "docs(infra): refresh Phase 09 handoff after governance test fix"}
+    {"sha": "e41cacfeab38d9da35e6f344c2009ef53d960165", "subject": "docs(infra): refresh Phase 09 handoff after governance test fix"},
+    {"sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab", "subject": "docs(infra): add homologation incident response procedure"}
   ],
   "delivered_scope": [
     "Phase 09 canonical manifest and active candidate based on main SHA 12b519c3e8237e1ebe43c1a0253b0747e0680e07.",
@@ -27,7 +28,8 @@
     "Explicit one-shot release migration service.",
     "Production settings used in homologation with external effects fail-closed by default.",
     "Environment-variable contract with placeholders only; no real credentials.",
-    "Operational runbook for Coolify topology, migrations, health, backup/restore, rollback, observability and provider subgates.",
+    "Operational runbook for Coolify topology, migrations, health, backup/restore, rollback, observability, incident response and provider subgates.",
+    "Incident response procedure covers severity classification, containment, evidence preservation, recovery/rollback decision, controlled recovery, post-incident validation, escalation and governance impact.",
     "Foundation CI renders and validates docker-compose.homologation.yml in addition to local/test Compose definitions.",
     "Governance orchestrator fixture updated for the active Phase 09 candidate."
   ],
@@ -41,34 +43,35 @@
     "coverage_percent": 86,
     "coverage_gate_minimum_percent": 85,
     "database": "PostgreSQL 17.11",
-    "result": "passed_on_material_candidate_carrier",
-    "homologation_compose_validation": "passed",
+    "result": "previous_material_candidate_green; replacement_ci_pending_for_P09_IR_001_rework",
+    "homologation_compose_validation": "previously_passed; replacement_ci_pending",
     "external_network": "not authorized",
-    "previous_ci": "Foundation CI #204 failed only because the orchestrator test still expected active_candidate to be null; the fixture was corrected without product changes."
+    "previous_ci": "Foundation CI #206 / run 31840509618 passed on e41cacfeab38d9da35e6f344c2009ef53d960165. P09-IR-001 rework changes only docs/HOMOLOGATION.md plus governance carriers; a replacement CI is required on the new material candidate fac5e9c0d86b2137c8542d7ef4101e1746a38fab."
   },
   "scans": {
-    "secret_scan": "passed on Foundation CI #206 / run 31840509618",
-    "independence_scan": "passed on Foundation CI #206 / run 31840509618",
-    "ruff": "passed on Foundation CI #206 / run 31840509618",
-    "django_check": "passed on Foundation CI #206 / run 31840509618",
-    "migration_consistency": "passed on Foundation CI #206 / run 31840509618",
-    "governance_validation": "passed on Foundation CI #206 / run 31840509618",
-    "approved_phase_ancestry_and_baseline": "passed on Foundation CI #206 / run 31840509618",
-    "docker_build": "passed on Foundation CI #206 / run 31840509618",
-    "compose_validation": "local, test and homologation Compose passed on Foundation CI #206 / run 31840509618",
-    "celery_runtime_topology": "passed for queues default and integrations on Foundation CI #206 / run 31840509618"
+    "secret_scan": "replacement CI pending",
+    "independence_scan": "replacement CI pending",
+    "ruff": "replacement CI pending",
+    "django_check": "replacement CI pending",
+    "migration_consistency": "replacement CI pending",
+    "governance_validation": "replacement CI pending",
+    "approved_phase_ancestry_and_baseline": "replacement CI pending",
+    "docker_build": "replacement CI pending",
+    "compose_validation": "replacement CI pending",
+    "celery_runtime_topology": "replacement CI pending"
   },
   "ci": {
-    "workflow_id": 31840509618,
-    "run_number": 206,
-    "head_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
-    "run_attempt": 1,
-    "conclusion": "success",
-    "context": "Foundation CI completed green on the Phase 09 implementation candidate after the narrow governance fixture correction."
+    "status": "replacement_run_pending",
+    "previous_workflow_id": 31840509618,
+    "previous_run_number": 206,
+    "previous_head_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
+    "previous_conclusion": "success",
+    "candidate_head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "context": "Independent Review returned CHANGES_REQUESTED only for P09-IR-001. The material rework adds the required incident response procedure; replacement CI must be green before re-review."
   },
   "organization_isolation": {
-    "status": "regression_passed",
-    "evidence": "Phase 09 introduces no new operational entity or authorization path. The full 454-test regression suite, including approved cross-Organization tests, passed on PostgreSQL 17.11."
+    "status": "unchanged_from_green_candidate",
+    "evidence": "P09-IR-001 rework is documentation-only and introduces no operational entity or authorization path; cross-Organization regression remains mandatory in replacement CI."
   },
   "legacy_reuse": {
     "code": false,
@@ -77,6 +80,15 @@
     "runtime": false,
     "infrastructure": false,
     "flowlog_reference": "No Flowlog runtime, database, Redis, secrets or infrastructure may be reused."
+  },
+  "independent_review": {
+    "status": "changes_requested",
+    "reviewed_material_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
+    "reviewed_documentary_head": "86f74800f2c799214770226d09731748c7821b01",
+    "blocking_finding": "P09-IR-001",
+    "finding": "docs/HOMOLOGATION.md lacked an operational incident response procedure covering classification, containment, evidence preservation, rollback/recovery decision, post-incident validation and escalation.",
+    "rework_status": "implemented_pending_ci_and_independent_revalidation",
+    "rework_material_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab"
   },
   "deferred": [
     "real Coolify resource provisioning and runtime acceptance evidence until an external homologation environment is explicitly executed/recorded",
@@ -89,13 +101,14 @@
   "risks": [
     "The external PostgreSQL resource must be reachable privately from the Coolify application stack without exposing port 5432 publicly.",
     "Backup must be proven by restore, not only configuration, before final Phase 09 approval.",
-    "Production SECURE_SSL_REDIRECT requires internal healthchecks to represent the proxy HTTPS scheme; the homologation Compose now supplies X-Forwarded-Proto=https.",
+    "Production SECURE_SSL_REDIRECT requires internal healthchecks to represent the proxy HTTPS scheme; the homologation Compose supplies X-Forwarded-Proto=https.",
     "Redis is intentionally ephemeral for the initial homologation stack; durable canonical state remains in PostgreSQL.",
+    "Real incident-response execution can only be evidenced after an authorized homologation environment exists; the required operational procedure is now documented.",
     "GitHub Actions still emits the known non-blocking Node.js 20 deprecation warning while actions are forced onto Node.js 24."
   ],
   "blockers": [],
   "human_approval": {
     "status": "pending",
-    "evidence": "Human approved the Phase 09 plan and explicitly authorized implementation. Independent Review, QA/Security, final Phase 09 approval, real provider activation, production release/go-live and Phase 10 remain pending."
+    "evidence": "Human approved the Phase 09 plan and implementation. Independent Review revalidation, QA/Security, final Phase 09 approval, real provider activation, production release/go-live and Phase 10 remain pending."
   }
 }
