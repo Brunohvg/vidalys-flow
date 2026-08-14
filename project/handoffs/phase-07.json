@@ -1,116 +1,36 @@
 {
-  "schema_version": 1,
-  "phase_id": 7,
-  "phase_name": "Integrations",
-  "status": "candidate",
-  "branch": "phase/07-integrations",
-  "base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
-  "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
-  "commits": [
-    {"sha": "7859b70de3fdb80c76720c6fab5948e0c9275bd0", "subject": "feat(integrations): implement provider-neutral phase 07 core"},
-    {"sha": "75d7528f3e3ae804bc1dde0bc6be2eac99517994", "subject": "feat(integrations): register django and celery integration core"},
-    {"sha": "ac1f2955b21ceebd1118cbbe6b4e9dc446139689", "subject": "fix(integrations): harden replay retry and degraded behavior"},
-    {"sha": "e1558a3ed8b258490a4511af82da19ec80d3e68e", "subject": "fix(integrations): keep config validation migration-neutral"},
-    {"sha": "7978fcc78c3b29c9f06fff8e1cb8a6eb9e896377", "subject": "test(integrations): close sanitization isolation and concurrency gaps"},
-    {"sha": "b44d3f7525ad77279b7c10ac00a7cdc8c0ae5c9f", "subject": "fix(integrations): register Celery tasks"},
-    {"sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e", "subject": "chore(integrations): mark implementation candidate"}
+  "schema_version":1,
+  "phase_id":7,
+  "phase_name":"Integrations",
+  "status":"approved",
+  "branch":"phase/07-integrations",
+  "base_sha":"09d73050f1df9d52b13e61ae87a26db4b26f365c",
+  "head_sha":"cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+  "material_candidate_sha":"a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
+  "product_pr":17,
+  "product_merge_sha":"cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+  "commits":[
+    {"sha":"7859b70de3fdb80c76720c6fab5948e0c9275bd0","subject":"feat(integrations): implement provider-neutral phase 07 core"},
+    {"sha":"75d7528f3e3ae804bc1dde0bc6be2eac99517994","subject":"feat(integrations): register django and celery integration core"},
+    {"sha":"ac1f2955b21ceebd1118cbbe6b4e9dc446139689","subject":"fix(integrations): harden replay retry and degraded behavior"},
+    {"sha":"e1558a3ed8b258490a4511af82da19ec80d3e68e","subject":"fix(integrations): keep config validation migration-neutral"},
+    {"sha":"7978fcc78c3b29c9f06fff8e1cb8a6eb9e896377","subject":"test(integrations): close sanitization isolation and concurrency gaps"},
+    {"sha":"b44d3f7525ad77279b7c10ac00a7cdc8c0ae5c9f","subject":"fix(integrations): register Celery tasks"},
+    {"sha":"a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e","subject":"chore(integrations): mark implementation candidate"},
+    {"sha":"cba7d6cbebbcf672bb313472d5e1d7e431e48df5","subject":"Merge Phase 07 — Integrations"}
   ],
-  "delivered_scope": [
-    "Provider-neutral Organization-scoped Integrations domain with connections and versioned endpoints.",
-    "Reliable outbound delivery through transactional outbox, Celery integrations queue, leases, bounded retry/backoff and explicit uncertain state.",
-    "Authenticated inbound webhook receipt contract with replay protection, deduplication, minimized payload and exact contract version.",
-    "Reconciliation and per-connection degraded state without blind retry after ambiguous acceptance.",
-    "Offline reference adapter and deterministic fakes only; no concrete commercial provider or external network effect."
-  ],
-  "models": [
-    "integrations.IntegrationConnection",
-    "integrations.IntegrationEndpoint",
-    "integrations.IntegrationDelivery",
-    "integrations.IntegrationDeliveryAttempt",
-    "integrations.IntegrationWebhookReceipt",
-    "integrations.IntegrationReconciliationRun"
-  ],
-  "migrations": ["apps/integrations/migrations/0001_initial.py"],
-  "tests": {
-    "count": 440,
-    "skipped": 0,
-    "ci_passed": 440,
-    "coverage_percent": 86,
-    "database": "PostgreSQL 17.11",
-    "result": "passed",
-    "integrations_direct_tests": 19,
-    "critical_concurrency_security_and_contract_regressions": "passed"
-  },
-  "scans": {
-    "secret_scan": "passed",
-    "independence_scan": "passed",
-    "ruff": "passed",
-    "django_check": "passed",
-    "migration_consistency": "passed",
-    "governance_validation": "passed",
-    "docker_build": "passed",
-    "compose_validation": "passed",
-    "celery_runtime_topology": "passed"
-  },
-  "ci": {
-    "workflow_id": 31802605600,
-    "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
-    "run_attempt": 1,
-    "conclusion": "success"
-  },
-  "organization_isolation": {
-    "status": "passed",
-    "evidence": "Operational records are Organization-scoped; human access derives from active Membership; ingress tenant derives from authenticated connection/endpoint rather than payload tenant fields; direct cross-Organization visibility and concurrency tests pass fail-closed."
-  },
-  "legacy_reuse": {
-    "code": false,
-    "data": false,
-    "migrations": false,
-    "runtime": false,
-    "infrastructure": false,
-    "flowlog_reference": "No Flowlog runtime/data/code/infrastructure reuse or linkage."
-  },
-  "deferred": [
-    "concrete commercial connectors and provider-specific adapters until separately approved",
-    "real provider calls, credentials, sandbox calls, public webhook registration and production activation",
-    "generic arbitrary HTTP callbacks or user code execution",
-    "ERP, fiscal, accounting, tax, inventory and marketing connectors",
-    "Phase 08 dashboard and Phases 09-10 infrastructure/deploy"
-  ],
-  "risks": [
-    "Reference adapter validates architecture offline but does not constitute homologation of any concrete external provider.",
-    "Integrations task module has low direct line coverage because behavior is exercised primarily through services and runtime topology; critical service paths and registration are covered by direct tests/CI.",
-    "Inbound WhatsApp sales conversations remain outside this generic Integrations tranche and require explicit future domain scope."
-  ],
-  "blockers": [],
-  "review": {
-    "status": "complete",
-    "report": "project/reviews/phase-07-review-report.json",
-    "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
-    "review_date": "2026-08-14T13:30:00Z",
-    "review_date_correction": "project/reviews/phase-07-review-date-correction.json",
-    "review_role": "Independent Review Agent",
-    "blocking_findings": [],
-    "non_blocking_findings": [
-      {"finding_id": "NBF-001", "category": "governance_metadata", "title": "Commits after candidate marker (informational)"},
-      {"finding_id": "NBF-002", "category": "test_coverage", "title": "Low direct line coverage in tasks.py (acceptable per manifesto)"}
-    ]
-  },
-  "qa_security": {
-    "status": "go",
-    "report": "project/qa/phase-07-qa-security.md",
-    "candidate_head": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
-    "carrier_head": "5c47acfa3ece7e0a8a906636513d32a8bc436aae",
-    "ci_run": 31807750781,
-    "blocking_findings": [],
-    "residual_risks": [
-      "tasks.py direct line coverage is 35 percent but service behavior and Celery topology are covered",
-      "provider authentication remains an offline contract only until a separately approved concrete provider/callback checkpoint"
-    ]
-  },
-  "human_approval": {
-    "status": "approved",
-    "date": "2026-08-14",
-    "evidence": "Human explicitly approved Phase 07 after independent Review and QA/Security GO, then separately authorized PR and merge. The handoff remains candidate until official state/roadmap closeout after merge, per governance validation. Release, deploy, concrete providers, sandbox, public callbacks, credentials and Phase 08 remain unauthorized."
-  }
+  "delivered_scope":["Provider-neutral Organization-scoped Integrations domain with connections and versioned endpoints.","Reliable outbound delivery through transactional outbox, Celery integrations queue, leases, bounded retry/backoff and explicit uncertain state.","Authenticated inbound webhook receipt contract with replay protection, deduplication, minimized payload and exact contract version.","Reconciliation and per-connection degraded state without blind retry after ambiguous acceptance.","Offline reference adapter and deterministic fakes only; no concrete commercial provider or external network effect."],
+  "models":["integrations.IntegrationConnection","integrations.IntegrationEndpoint","integrations.IntegrationDelivery","integrations.IntegrationDeliveryAttempt","integrations.IntegrationWebhookReceipt","integrations.IntegrationReconciliationRun"],
+  "migrations":["apps/integrations/migrations/0001_initial.py"],
+  "tests":{"count":440,"skipped":0,"ci_passed":440,"coverage_percent":86,"database":"PostgreSQL 17.11","result":"passed","integrations_direct_tests":19,"critical_concurrency_security_and_contract_regressions":"passed"},
+  "scans":{"secret_scan":"passed","independence_scan":"passed","ruff":"passed","django_check":"passed","migration_consistency":"passed","governance_validation":"passed","docker_build":"passed","compose_validation":"passed","celery_runtime_topology":"passed"},
+  "ci":{"workflow_id":31809179961,"head_sha":"79c7a4ce77df97166b4803d530e33e797a113545","run_attempt":1,"conclusion":"success","context":"PR #17 Foundation CI before product merge"},
+  "organization_isolation":{"status":"passed","evidence":"Operational records are Organization-scoped; human access derives from active Membership; ingress tenant derives from authenticated connection/endpoint rather than payload tenant fields; direct cross-Organization visibility and concurrency tests pass fail-closed."},
+  "legacy_reuse":{"code":false,"data":false,"migrations":false,"runtime":false,"infrastructure":false,"flowlog_reference":"No Flowlog runtime/data/code/infrastructure reuse or linkage."},
+  "deferred":["concrete commercial connectors and provider-specific adapters until separately approved","real provider calls, credentials, sandbox calls, public webhook registration and production activation","generic arbitrary HTTP callbacks or user code execution","ERP, fiscal, accounting, tax, inventory and marketing connectors","Phase 08 dashboard and Phases 09-10 infrastructure/deploy"],
+  "risks":["Reference adapter validates architecture offline but does not constitute homologation of any concrete external provider.","Integrations task module has low direct line coverage because behavior is exercised primarily through services and runtime topology; critical service paths and registration are covered by direct tests/CI.","Inbound WhatsApp sales conversations remain outside this generic Integrations tranche and require explicit future domain scope."],
+  "blockers":[],
+  "review":{"status":"complete","report":"project/reviews/phase-07-review-report.json","candidate_head":"a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e","review_date":"2026-08-14T13:30:00Z","review_date_correction":"project/reviews/phase-07-review-date-correction.json","review_role":"Independent Review Agent","blocking_findings":[],"non_blocking_findings":[{"finding_id":"NBF-001","category":"governance_metadata","title":"Commits after candidate marker (informational)"},{"finding_id":"NBF-002","category":"test_coverage","title":"Low direct line coverage in tasks.py (acceptable per manifesto)"}]},
+  "qa_security":{"status":"go","report":"project/qa/phase-07-qa-security.md","candidate_head":"a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e","carrier_head":"5c47acfa3ece7e0a8a906636513d32a8bc436aae","ci_run":31807750781,"blocking_findings":[],"residual_risks":["tasks.py direct line coverage is 35 percent but service behavior and Celery topology are covered","provider authentication remains an offline contract only until a separately approved concrete provider/callback checkpoint"]},
+  "human_approval":{"status":"approved","date":"2026-08-14","evidence":"Human explicitly approved Phase 07 after independent Review and QA/Security GO, then separately authorized PR and merge. Product PR #17 merged at cba7d6cbebbcf672bb313472d5e1d7e431e48df5. Release, deploy, concrete providers, sandbox, public callbacks, credentials and Phase 08 remain unauthorized."}
 }
