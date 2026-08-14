@@ -8,6 +8,12 @@
   "baseline_branch": "main",
   "next_phase": 8,
   "next_phase_name": "Dashboard and complete experience",
-  "active_candidate": null,
+  "active_candidate": {
+    "phase": 8,
+    "branch": "phase/08-dashboard-experience",
+    "base_ref": "main",
+    "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
+    "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5"
+  },
   "human_approval_required": true
 }
