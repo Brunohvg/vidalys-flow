@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Atualizado em 12 de agosto de 2026. Este documento é um índice operacional; em
+Atualizado em 13 de agosto de 2026. Este documento é um índice operacional; em
 caso de divergência prevalecem `project/state.json`, o manifesto da fase,
 `project/constraints.json` e `AGENTS.md`.
 
@@ -52,11 +52,12 @@ separados.
 - `actual_base_sha`: `3e4fcfb064fbee350d3df131b2946974c8557098`;
 - dependência funcional: Payments aprovada em
   `3558ca30a5652be320feb3f28ab46a350ae9cad7`;
-- plano: proposto, pendente de aprovação humana;
-- implementação, Review e QA/Security: bloqueados;
+- plano: aprovado por decisão humana;
+- implementação: candidata concluída; Review independente está pendente e
+  QA/Security continua bloqueado até esse parecer;
 - efeitos externos, sandbox, PR, merge e deploy: não autorizados.
 
-O plano propõe mensagens exclusivamente transacionais, com núcleo canônico
+O candidato implementa mensagens exclusivamente transacionais, com núcleo canônico
 independente de provider, Evolution API v2.3.7 linked-device primeiro,
 WhatsApp Cloud API direta como alternativa oficial e Amazon SES depois.
 Templates são fechados e versionados, regras automáticas começam desabilitadas
@@ -64,10 +65,10 @@ por Organization, permissão por finalidade falha fechado e links de pagamento
 são revalidados imediatamente antes do envio. Marketing, inbound, chatbot, IA,
 SMS e anexos ficam adiados.
 
-O contrato completo e as decisões humanas necessárias estão em
-`project/phases/06-messaging.json` e
-`docs/domains/MESSAGING_VISION.md`. Não existe código de Messaging nesta
-branch enquanto o plano não for aprovado.
+O contrato aprovado está em `project/phases/06-messaging.json`, a visão em
+`docs/domains/MESSAGING_VISION.md` e o contrato candidato em
+`docs/domains/MESSAGING.md`. Nenhum provider, secret, sandbox, callback público
+ou efeito externo foi ativado.
 
 ## Independência do Flowlog
 

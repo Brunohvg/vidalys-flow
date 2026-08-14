@@ -98,7 +98,7 @@ estoque, pagamentos, transportadoras, mensagens e integrações não participam.
 - OPERATOR recebe documento, contato e endereço mascarados;
 - a permissão é sempre organizacional e nunca global no User.
 
-## Plano da Fase 6 — ainda não aprovado
+## Candidato da Fase 6 — plano aprovado
 
 ```text
 evento aprovado ou comando manual allowlisted
@@ -110,11 +110,11 @@ evento aprovado ou comando manual allowlisted
   → sent / delivered / failed / uncertain
 ```
 
-O plano de Messaging não aceita texto livre, marketing ou contato sem
+A implementação de Messaging não aceita texto livre, marketing ou contato sem
 permissão vigente. Regras automáticas começam desabilitadas por Organization.
 Antes de enviar checkout, o worker relê a tentativa exata de Payments; links
 expirados, cancelados, substituídos ou em atenção não são enviados. Essa seção
-descreve uma proposta e não autoriza código nem provider.
+descreve o candidato local e não autoriza provider, sandbox ou deploy.
 
 ## Fluxo-alvo do produto completo
 
@@ -135,7 +135,7 @@ Payment link ──→ provider externo ──→ webhook verificado
 ```
 
 O núcleo de Payments está aprovado, mas nenhum provider ou deploy está ativo.
-Messaging está em planejamento; Integrations, Dashboard e ambientes externos
+Messaging está em implementação; Integrations, Dashboard e ambientes externos
 continuam futuros. Cada seta externa só é liberada por contrato, testes,
 Review, QA/Segurança e aprovação humana.
 

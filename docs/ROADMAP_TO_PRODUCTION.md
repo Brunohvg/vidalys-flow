@@ -8,7 +8,7 @@ caminho seguro e não pode ser interpretada como aprovação antecipada.
 As Fases 03 — Orders, 04 — Fulfillment e 05 — Payments foram aprovadas e
 integradas. Payments concluiu Review 05, QA/Security final, aprovação humana,
 PR e merge; seus providers continuam desligados. A Fase 06 — Messaging está
-somente em planejamento, sem código. Não há autorização de sandbox, provider,
+em implementação, antes de Review. Não há autorização de sandbox, provider,
 callback público ou deploy.
 
 ## Sequência de produto
@@ -20,7 +20,7 @@ callback público ou deploy.
 3. **Payments (Fase 05, concluída).** Núcleo canônico provider-neutral,
    Mercado Pago Checkout Pro como primeiro rollout, Pagar.me v5 Payment Links
    como segundo e Appmax posterior, todos ainda sem efeito externo.
-4. **Messaging (Fase 06, planejamento).** Enviar comunicações exclusivamente
+4. **Messaging (Fase 06, implementação).** Enviar comunicações exclusivamente
    transacionais a partir de fontes aprovadas, com templates versionados,
    permissão por finalidade, supressão e rastreabilidade. O plano propõe
    Evolution API linked-device primeiro, WhatsApp Cloud API direta como opção
@@ -53,9 +53,10 @@ do Flowlog antigo.
 O contrato aprovado de Payments define contratos canônicos, estados, idempotência,
 webhooks, reconciliação, permissões, privacidade, ordem de rollout e critérios
 de sandbox em `project/phases/05-payments.json`. Essas decisões estão
-aprovadas. O plano proposto de Messaging está em
-`project/phases/06-messaging.json` e depende de aprovação humana antes de
-qualquer implementação. Sandbox, providers, release e deploy continuam
+aprovadas. O plano aprovado de Messaging está em
+`project/phases/06-messaging.json` e o contrato candidato em
+`docs/domains/MESSAGING.md`. Review, QA/Security, aprovação final, sandbox,
+providers, release e deploy continuam
 dependendo de gates e decisões humanas posteriores.
 
 ## Gate repetido em cada fase

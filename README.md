@@ -8,8 +8,8 @@ Plataforma independente de operação de vendas e pós-venda.
 
 Este repositório contém a fundação greenfield e os domínios nativos e
 aprovados de Customers, Products, Orders, Fulfillment e Payments. A Fase 06 —
-Messaging está no checkpoint de planejamento; integrações gerais e dashboard
-permanecem em fases posteriores.
+Messaging possui um candidato em implementação, ainda sem Review, QA/Security
+ou aprovação final; integrações gerais e dashboard permanecem posteriores.
 
 Após selecionar uma organização permitida por Membership, as interfaces
 estão disponíveis em:
@@ -18,13 +18,15 @@ estão disponíveis em:
 - `/products/`;
 - `/orders/`;
 - `/fulfillment/`;
-- `/payments/` (aprovado, sem provider externo ativado).
+- `/payments/` (aprovado, sem provider externo ativado);
+- `/messaging/` (candidato da Fase 06, providers bloqueados).
 
 Consulte [Customers](docs/domains/CUSTOMERS.md),
 [Products](docs/domains/PRODUCTS.md), [Orders](docs/domains/ORDERS.md),
 [Fulfillment](docs/domains/FULFILLMENT.md),
 [Payments](docs/domains/PAYMENTS.md), o
-[plano proposto de Messaging](docs/domains/MESSAGING_VISION.md) e o
+[contrato candidato de Messaging](docs/domains/MESSAGING.md), o
+[plano aprovado de Messaging](docs/domains/MESSAGING_VISION.md) e o
 [relatório da referência histórica de
 Messaging](docs/domains/MESSAGING_FLOWLOG_REFERENCE_AUDIT.md), além do
 [estado atual do projeto](docs/PROJECT_STATUS.md) para regras, evidências e

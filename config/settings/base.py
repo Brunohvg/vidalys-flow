@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.orders",
     "apps.fulfillment",
     "apps.payments",
+    "apps.messaging",
 ]
 
 MIDDLEWARE = [
@@ -135,6 +136,8 @@ CELERY_TASK_ROUTES = {
     "apps.payments.tasks.consume_order_cancellations": {"queue": "default"},
     "apps.payments.tasks.dispatch_checkout_requests": {"queue": "integrations"},
     "apps.payments.tasks.dispatch_checkout_cancellations": {"queue": "integrations"},
+    "apps.messaging.tasks.consume_source_events": {"queue": "default"},
+    "apps.messaging.tasks.dispatch_messages": {"queue": "integrations"},
 }
 CELERY_BEAT_SCHEDULE = {
     "platform-outbox-publisher": {
@@ -159,6 +162,14 @@ CELERY_BEAT_SCHEDULE = {
     },
     "payments-checkout-cancellations": {
         "task": "apps.payments.tasks.dispatch_checkout_cancellations",
+        "schedule": 10.0,
+    },
+    "messaging-source-events": {
+        "task": "apps.messaging.tasks.consume_source_events",
+        "schedule": 10.0,
+    },
+    "messaging-dispatch": {
+        "task": "apps.messaging.tasks.dispatch_messages",
         "schedule": 10.0,
     },
 }

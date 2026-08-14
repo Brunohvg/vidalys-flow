@@ -16,6 +16,8 @@ A Vidalys Flow é um monólito modular Django. A fundação possui somente:
   logístico.
 - `payments`: intents financeiros canônicos, tentativas de checkout hospedado,
   callbacks verificados e reconciliação.
+- `messaging`: candidato transacional outbound, templates fechados,
+  permissões, canais e dispatch assíncrono com providers bloqueados.
 
 O grafo permitido é:
 
@@ -53,9 +55,9 @@ com `external = False`; produção, sandbox, credenciais e registro público de
 callback não estão habilitados. O callback Pagar.me é bloqueado inclusive por
 constraint de banco até confirmação de autenticidade em fase posterior.
 
-## Plano proposto da Fase 6
+## Candidato implementado da Fase 6
 
-Messaging deverá depender em uma única direção dos contratos aprovados de
+Messaging depende em uma única direção dos contratos aprovados de
 Customers, Orders, Fulfillment e Payments, além de core, users, organizations,
 audit e platform. Nenhum desses domínios importará Messaging.
 
@@ -69,8 +71,8 @@ permissão/supressão, dispatch assíncrono e callbacks de status. Evolution API
 v2.3.7 linked-device, WhatsApp Cloud API direta e Amazon SES ficam atrás de
 adapters e uma matriz de capabilities, com efeitos externos desligados.
 Evolution é não oficial, possui conexões e canais/instâncias separados e não
-compartilha secrets com a Meta Cloud. Esse grafo só se torna contrato de
-implementação após aprovação humana do plano.
+compartilha secrets com a Meta Cloud. O plano foi aprovado; o candidato ainda
+depende de Review, QA/Security e aprovação humana final.
 
 ## Módulo aprovado da Fase 4
 

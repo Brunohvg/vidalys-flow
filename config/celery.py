@@ -18,5 +18,6 @@ app.autodiscover_tasks(
         "apps.orders",
         "apps.fulfillment",
         "apps.payments",
+        "apps.messaging",
     ]
 )

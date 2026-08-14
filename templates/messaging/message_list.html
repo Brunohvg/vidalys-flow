@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Mensagens · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Mensagens</h1>
+<p class="muted">{{ organization.name }}</p>
+<div class="actions"><a href="{% url 'messaging:send' %}">Nova mensagem transacional</a></div>
+<form method="get">{{ filter_form.as_p }}<button type="submit">Filtrar</button></form>
+<table class="responsive-table">
+  <thead><tr><th>Finalidade</th><th>Cliente</th><th>Canal</th><th>Estado</th><th>Criado</th></tr></thead>
+  <tbody>
+  {% for message in messages %}
+    <tr>
+      <td data-label="Finalidade"><a href="{% url 'messaging:detail' message.id %}">{{ message.purpose }}</a></td>
+      <td data-label="Cliente">{{ message.customer_display_name }}</td>
+      <td data-label="Canal">{{ message.get_channel_kind_display }}</td>
+      <td data-label="Estado"><span class="badge">{{ message.get_status_display }}</span></td>
+      <td data-label="Criado">{{ message.created_at }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="5">Nenhuma mensagem.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

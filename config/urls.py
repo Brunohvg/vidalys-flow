@@ -31,5 +31,6 @@ urlpatterns = [
     path("orders/", include("apps.orders.urls")),
     path("fulfillment/", include("apps.fulfillment.urls")),
     path("payments/", include("apps.payments.urls")),
+    path("messaging/", include("apps.messaging.urls")),
     path(settings.ADMIN_PATH, admin.site.urls),
 ]

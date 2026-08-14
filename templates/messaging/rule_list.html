@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Automações · Vidalys Flow{% endblock %}
+{% block content %}
+<h1>Regras de automação</h1>
+<p class="muted">{{ organization.name }}</p>
+<table class="responsive-table">
+  <thead><tr><th>Evento</th><th>Template</th><th>Canal</th><th>Habilitado</th></tr></thead>
+  <tbody>
+  {% for rule in rules %}
+    <tr>
+      <td data-label="Evento">{{ rule.event_type }}</td>
+      <td data-label="Template">{{ rule.template.semantic_key }}</td>
+      <td data-label="Canal">{{ rule.channel.display_name }}</td>
+      <td data-label="Habilitado">{{ rule.is_enabled }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="4">Nenhuma regra.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<section><h2>Nova regra</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Salvar</button></form></section>
+{% endblock %}
