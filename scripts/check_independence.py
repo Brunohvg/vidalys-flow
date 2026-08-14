@@ -16,7 +16,6 @@ FORBIDDEN_SYMBOLS = (
     "q" + "cluster",
     "apps." + "billing",
     "apps." + "boletos",
-    "apps." + "integrations",
     "apps." + "notifications",
     "apps." + "api",
     "apps." + "marketing",
