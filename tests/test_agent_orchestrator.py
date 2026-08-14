@@ -97,7 +97,7 @@ def test_active_candidate_dependency_must_match_its_manifest(governance_root):
     state = load_json(state_path)
     state["active_candidate"] = {
         "phase": 8,
-        "branch": "phase/08-dashboard-experience",
+        "branch": "phase/08-dashboard-and-complete-experience",
         "base_ref": "main",
         "actual_base_sha": "1" * 40,
         "dependency_head": "0" * 40,
@@ -111,7 +111,7 @@ def test_active_candidate_dependency_must_match_its_manifest(governance_root):
         {
             "id": 8,
             "name": "Dashboard and complete experience",
-            "branch": "phase/08-dashboard-experience",
+            "branch": "phase/08-dashboard-and-complete-experience",
             "dependency_phase": 7,
             "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
             "status": "planned",
@@ -177,7 +177,7 @@ def test_agent_cannot_self_approve_phase(governance_root):
         {
             "id": 8,
             "name": "Dashboard and complete experience",
-            "branch": "phase/08-dashboard-experience",
+            "branch": "phase/08-dashboard-and-complete-experience",
             "dependency_phase": 7,
             "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
             "status": "planned",
