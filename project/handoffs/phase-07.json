@@ -2,7 +2,7 @@
   "schema_version": 1,
   "phase_id": 7,
   "phase_name": "Integrations",
-  "status": "approved",
+  "status": "candidate",
   "branch": "phase/07-integrations",
   "base_sha": "09d73050f1df9d52b13e61ae87a26db4b26f365c",
   "head_sha": "a2c1b1d90e9c331eb4f9bb1812a5e341d9e1a90e",
@@ -111,6 +111,6 @@
   "human_approval": {
     "status": "approved",
     "date": "2026-08-14",
-    "evidence": "Human explicitly approved Phase 07 after independent Review and QA/Security GO. This final product approval does not authorize PR, merge, release, deploy, concrete providers, sandbox, public callbacks, credentials or Phase 08."
+    "evidence": "Human explicitly approved Phase 07 after independent Review and QA/Security GO, then separately authorized PR and merge. The handoff remains candidate until official state/roadmap closeout after merge, per governance validation. Release, deploy, concrete providers, sandbox, public callbacks, credentials and Phase 08 remain unauthorized."
   }
 }
