@@ -2,18 +2,12 @@
   "schema_version": 2,
   "product": "Vidalys Flow",
   "repository": "Brunohvg/vidalys-flow",
-  "approved_phase": 7,
-  "approved_phase_name": "Integrations",
-  "approved_phase_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5",
+  "approved_phase": 8,
+  "approved_phase_name": "Dashboard and complete experience",
+  "approved_phase_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
   "baseline_branch": "main",
-  "next_phase": 8,
-  "next_phase_name": "Dashboard and complete experience",
-  "active_candidate": {
-    "phase": 8,
-    "branch": "phase/08-dashboard-experience",
-    "base_ref": "main",
-    "actual_base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
-    "dependency_head": "cba7d6cbebbcf672bb313472d5e1d7e431e48df5"
-  },
+  "next_phase": 9,
+  "next_phase_name": "Infrastructure and homologation",
+  "active_candidate": null,
   "human_approval_required": true
 }
