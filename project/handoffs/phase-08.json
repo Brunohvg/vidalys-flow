@@ -5,7 +5,7 @@
   "status": "candidate",
   "branch": "phase/08-dashboard-experience",
   "base_sha": "005e11c1c7c14440562806fe0301f3a0ad4763b5",
-  "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+  "head_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
   "commits": [
     {"sha": "db368a21aa1f64e68b17e7799fb492a86b517ede", "subject": "feat(dashboard): register dashboard application"},
     {"sha": "a8913b5afe30becf224b26177302bf45c6c426ec", "subject": "fix(dashboard): enforce read-only HTTP contract"},
@@ -16,7 +16,11 @@
     {"sha": "156ae0dc54e3ede26f81cf8f567639bc843209de", "subject": "chore(dashboard): mark phase 08 implementation candidate"},
     {"sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4", "subject": "test(dashboard): guard bounded order list against N plus one"},
     {"sha": "68fc86e950460ffae271965927ddd840b210173a", "subject": "fix(dashboard): enforce tenant boundary in order workspace"},
-    {"sha": "b533ba4efde2e87467ea4975c14b4705805b2eb3", "subject": "test(dashboard): cover cross-tenant workspace relations"}
+    {"sha": "b533ba4efde2e87467ea4975c14b4705805b2eb3", "subject": "test(dashboard): cover cross-tenant workspace relations"},
+    {"sha": "a7472a64ee7dd748287cd130838188f2b890b22d", "subject": "chore(governance): reopen phase 08 review after QA blocker fix"},
+    {"sha": "63c1968de241ef22a7dcc22023b43740a193f04b", "subject": "docs(dashboard): reopen handoff after QA isolation blocker"},
+    {"sha": "df7a4ada03bab3ef3166883ab6af6685e77e053e", "subject": "chore(dashboard): mark phase 08 QA rework candidate"},
+    {"sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1", "subject": "chore(dashboard): finalize phase 08 QA rework candidate"}
   ],
   "delivered_scope": [
     "Organization-scoped read-only operational dashboard composed from canonical Customers, Orders, Fulfillment, Payments, Messaging and Integrations data.",
@@ -29,39 +33,41 @@
   "models": [],
   "migrations": [],
   "tests": {
-    "count": 449,
+    "count": 450,
     "skipped": 0,
-    "ci_passed": 449,
+    "ci_passed": 450,
     "coverage_percent": 86,
-    "database": "PostgreSQL 17.11",
-    "result": "previous_candidate_passed; rework_candidate_pending_ci",
+    "coverage_gate_minimum_percent": 85,
+    "database": "PostgreSQL 17",
+    "result": "passed_on_material_candidate",
     "dashboard_direct_tests": 6,
-    "organization_isolation": "rework_added; pending full CI",
-    "read_only_http_contract": "passed on previous candidate",
-    "bounded_query_n_plus_one_regression": "passed on previous candidate"
+    "organization_isolation": "passed, including adversarial cross-tenant PaymentIntent and Fulfillment relation test",
+    "read_only_http_contract": "passed on material candidate",
+    "bounded_query_n_plus_one_regression": "passed on material candidate"
   },
   "scans": {
-    "secret_scan": "pending rework candidate CI",
-    "independence_scan": "pending rework candidate CI",
-    "ruff": "pending rework candidate CI",
-    "django_check": "pending rework candidate CI",
-    "migration_consistency": "pending rework candidate CI",
-    "governance_validation": "pending rework candidate CI",
-    "approved_phase_ancestry_and_baseline": "pending rework candidate CI",
-    "docker_build": "pending rework candidate CI",
-    "compose_validation": "pending rework candidate CI",
-    "celery_runtime_topology": "pending rework candidate CI"
+    "secret_scan": "passed on Foundation CI #173 / run 31820928561",
+    "independence_scan": "passed on Foundation CI #173 / run 31820928561",
+    "ruff": "passed on Foundation CI #173 / run 31820928561",
+    "django_check": "passed on Foundation CI #173 / run 31820928561",
+    "migration_consistency": "passed on Foundation CI #173 / run 31820928561",
+    "governance_validation": "passed on Foundation CI #173 / run 31820928561",
+    "approved_phase_ancestry_and_baseline": "passed on Foundation CI #173 / run 31820928561",
+    "docker_build": "passed on Foundation CI #173 / run 31820928561",
+    "compose_validation": "passed on Foundation CI #173 / run 31820928561",
+    "celery_runtime_topology": "passed on Foundation CI #173 / run 31820928561"
   },
   "ci": {
-    "workflow_id": 31816297653,
-    "head_sha": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
+    "workflow_id": 31820928561,
+    "run_number": 173,
+    "head_sha": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
     "run_attempt": 1,
     "conclusion": "success",
-    "context": "Previous material candidate; replacement candidate pending CI after P08-QA-SEC-001 rework"
+    "context": "Foundation CI completed green on the replacement material candidate after P08-QA-SEC-001 rework"
   },
   "organization_isolation": {
-    "status": "reworked_pending_revalidation",
-    "evidence": "P08-QA-SEC-001 identified that PaymentIntent and Fulfillment workspace relations were not independently Organization-filtered. Rework now queries each relation by both organization and order and adds a direct adversarial test with inconsistent cross-Organization children."
+    "status": "revalidated_passed",
+    "evidence": "P08-QA-SEC-001 is corrected. order_workspace_for_organization first scopes Order by organization and id, then scopes PaymentIntent and Fulfillment independently by both organization and order. test_order_workspace_rejects_cross_organization_related_records constructs cross-Organization children that still reference the active Organization Order and confirms they are excluded. Existing cross-Organization Order 404 coverage remains intact."
   },
   "legacy_reuse": {
     "code": false,
@@ -80,21 +86,22 @@
   ],
   "risks": [
     "Dashboard is a synchronous derived read model; future data volume may require dedicated projection/cache work, which is intentionally outside Phase 08.",
+    "Order workspace isolation now uses fixed explicit queries for PaymentIntent and Fulfillment instead of implicit related-object loading; this adds bounded query overhead but avoids cross-tenant relation leakage and does not introduce N+1 behavior.",
     "Attention queues intentionally mirror canonical domain states and must not accumulate independent business rules in future changes.",
     "Phase 08 does not add an inbound WhatsApp sales conversation lifecycle; Messaging remains the canonical boundary for existing message records."
   ],
   "blockers": [],
   "review": {
-    "status": "pending",
-    "report": null,
-    "candidate_head": "52ee5050a8538c4e44392cadaa6d496f0adc2db4",
-    "blocking_findings": null,
-    "non_blocking_findings": null
+    "status": "complete",
+    "report": "project/reviews/phase-08-review-report.json",
+    "candidate_head": "b8eac30feafa8a41249e3f0af5e68e3c9159b4c1",
+    "blocking_findings": [],
+    "non_blocking_findings": ["P08-IR-REVAL-INFO-001", "P08-IR-REVAL-INFO-002"]
   },
   "qa_security": {
-    "status": "blocked",
+    "status": "pending",
     "report": null,
-    "evidence": "Previous QA/Security issued NO-GO on P08-QA-SEC-001. Material rework is implemented and requires a new candidate, Independent Review revalidation, then fresh QA/Security."
+    "evidence": "Independent Review revalidation completed READY_FOR_QA_AND_SECURITY on material candidate b8eac30feafa8a41249e3f0af5e68e3c9159b4c1. Fresh QA/Security remains required; no QA/Security checkpoint was executed in this review session."
   },
   "human_approval": {
     "status": "pending",
