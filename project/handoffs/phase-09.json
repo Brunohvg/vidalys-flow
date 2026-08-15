@@ -2,10 +2,10 @@
   "schema_version": 1,
   "phase_id": 9,
   "phase_name": "Infrastructure and homologation",
-  "status": "candidate",
+  "status": "approved",
   "branch": "phase/09-infrastructure-homologation",
   "base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
-  "head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+  "head_sha": "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095",
   "commits": [
     {"sha": "069ea4d6ff4e17f61249e97ee8a75dc5509bf00b", "subject": "chore(governance): define Phase 09 infrastructure and homologation"},
     {"sha": "d1ef19fd4371e1b38ac8db0fc83e082eaba08165", "subject": "feat(infra): add Coolify homologation stack"},
@@ -105,8 +105,15 @@
     "candidate_head": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
     "evidence": "Independent QA/Security issued technical GO on material SHA fac5e9c0d86b2137c8542d7ef4101e1746a38fab. Foundation CI #209 / run 31849693025 passed with 454 tests, 0 skipped, 86% coverage and PostgreSQL 17.11. P09-IR-001 remains resolved. Real restore proof, private PostgreSQL networking and actual Coolify runtime behavior remain explicitly environment-dependent and are not claimed as proven."
   },
+  "product_merge": {
+    "pr_number": 21,
+    "merge_sha": "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095",
+    "pr_ci_run_number": 220,
+    "pr_ci_run": 31856570671,
+    "pr_ci_conclusion": "success"
+  },
   "deferred": [
-    "real Coolify resource provisioning and runtime acceptance evidence until an external homologation environment is explicitly executed/recorded",
+    "real Coolify resource provisioning and runtime acceptance evidence until separately authorized",
     "provider sandbox activation and credentials until provider-specific authorization",
     "public callbacks until provider-specific authorization",
     "production go-live and cutover",
@@ -115,16 +122,16 @@
   ],
   "risks": [
     "The external PostgreSQL resource must be reachable privately from the Coolify application stack without exposing port 5432 publicly.",
-    "Backup must be proven by restore, not only configuration, before final Phase 09 approval.",
+    "Backup/restore must be proven in the real homologation environment before production/cutover authorization.",
     "Production SECURE_SSL_REDIRECT requires internal healthchecks to represent the proxy HTTPS scheme; the homologation Compose supplies X-Forwarded-Proto=https.",
     "Redis is intentionally ephemeral for the initial homologation stack; durable canonical state remains in PostgreSQL.",
-    "Real incident-response execution can only be evidenced after an authorized homologation environment exists; the required operational procedure is now documented.",
+    "Real incident-response execution can only be evidenced after an authorized homologation environment exists; the required operational procedure is documented.",
     "GitHub Actions still emits the known non-blocking Node.js 20 deprecation warning while actions are forced onto Node.js 24."
   ],
   "blockers": [],
   "human_approval": {
     "status": "approved",
     "date": "2026-08-14",
-    "evidence": "Human explicitly approved Phase 09 after Independent Review READY_FOR_QA_AND_SECURITY and QA/Security GO, and explicitly authorized governance closeout plus PR/merge. The approval does not authorize real Coolify deployment, provider activation, production, go-live or Phase 10."
+    "evidence": "Human explicitly approved Phase 09 after Independent Review READY_FOR_QA_AND_SECURITY and QA/Security GO, and explicitly authorized governance closeout plus PR/merge. Product PR #21 was merged to main. The approval does not authorize real Coolify deployment, provider activation, production, go-live or Phase 10."
   }
 }

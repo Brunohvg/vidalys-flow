@@ -2,18 +2,12 @@
   "schema_version": 2,
   "product": "Vidalys Flow",
   "repository": "Brunohvg/vidalys-flow",
-  "approved_phase": 8,
-  "approved_phase_name": "Dashboard and complete experience",
-  "approved_phase_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
+  "approved_phase": 9,
+  "approved_phase_name": "Infrastructure and homologation",
+  "approved_phase_head": "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095",
   "baseline_branch": "main",
-  "next_phase": 9,
-  "next_phase_name": "Infrastructure and homologation",
-  "active_candidate": {
-    "phase": 9,
-    "branch": "phase/09-infrastructure-homologation",
-    "base_ref": "main",
-    "actual_base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
-    "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2"
-  },
+  "next_phase": 10,
+  "next_phase_name": "Cutover and Flowlog operational closure",
+  "active_candidate": null,
   "human_approval_required": true
 }
