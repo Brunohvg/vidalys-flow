@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Novo pedido — Vidalys Flow{% endblock %}
+{% block content %}
+<style>
+  .quick-order-shell { max-width: 58rem; margin: 0 auto; }
+  .quick-order-header { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; margin-bottom:1.5rem; }
+  .quick-order-header h1 { font-size: clamp(1.7rem, 3vw, 2.35rem); letter-spacing:-.035em; margin-bottom:.35rem; }
+  .quick-card { border:1px solid #e5e7eb; border-radius:1rem; padding:1.2rem; margin-bottom:1rem; background:#fff; box-shadow:0 10px 30px rgba(30,27,75,.045); }
+  .quick-card h2 { font-size:1rem; margin:0 0 .25rem; color:#27234d; }
+  .quick-card .hint { margin:.15rem 0 .75rem; color:#74708b; font-size:.9rem; }
+  .field-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem 1rem; }
+  .field-grid .full { grid-column:1/-1; }
+  .field label { margin-top:0; font-size:.86rem; color:#45415d; }
+  .field input,.field select { border-radius:.7rem; border-color:#dddbea; background:#fbfbfe; }
+  .field input:focus,.field select:focus { outline:3px solid rgba(109,40,217,.12); border-color:#7c3aed; }
+  .mode-switch { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; margin:.8rem 0; }
+  .mode-option { border:1px solid #dddbea; border-radius:.8rem; padding:.8rem; background:#fbfbfe; }
+  .mode-option label { margin:0; display:flex; align-items:center; gap:.5rem; cursor:pointer; }
+  .mode-option input { width:auto; margin:0; }
+  .total-input input { font-size:1.5rem; font-weight:750; letter-spacing:-.02em; }
+  .submit-row { display:flex; justify-content:flex-end; gap:.75rem; align-items:center; margin-top:1.2rem; }
+  .submit-row a { color:#5f5a77; text-decoration:none; padding:.75rem 1rem; }
+  .submit-row button { background:linear-gradient(135deg,#7c3aed,#5b21b6); border-radius:.75rem; font-weight:750; padding:.85rem 1.25rem; box-shadow:0 8px 24px rgba(109,40,217,.22); }
+  .or-divider { display:flex; align-items:center; gap:.75rem; color:#8a869b; font-size:.8rem; margin:.8rem 0; }
+  .or-divider:before,.or-divider:after { content:""; height:1px; background:#eceaf2; flex:1; }
+  .errorlist { margin:.35rem 0 0; font-size:.85rem; }
+  @media(max-width:42rem){ .field-grid,.mode-switch{grid-template-columns:1fr}.quick-order-header{display:block}.submit-row{flex-direction:column-reverse;align-items:stretch}.submit-row a{text-align:center}.submit-row button{width:100%} }
+</style>
+<div class="quick-order-shell">
+  <div class="quick-order-header">
+    <div>
+      <p class="muted" style="margin:0 0 .25rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; font-size:.72rem;">{{ organization.name }}</p>
+      <h1>Novo pedido</h1>
+      <p class="muted" style="margin:0;">Registre uma venda em poucos campos. Produtos podem ser adicionados depois.</p>
+    </div>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.idempotency_key }}
+    {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+
+    <section class="quick-card">
+      <h2>Cliente</h2>
+      <p class="hint">Use um cadastro existente ou informe os dados mínimos de um novo cliente.</p>
+      <div class="field full">
+        {{ form.customer.label_tag }}
+        {{ form.customer }}
+        {{ form.customer.errors }}
+      </div>
+      <div class="or-divider">ou cadastre junto com o pedido</div>
+      <div class="field-grid">
+        <div class="field full">{{ form.customer_name.label_tag }}{{ form.customer_name }}{{ form.customer_name.errors }}</div>
+        <div class="field">{{ form.customer_phone.label_tag }}{{ form.customer_phone }}{{ form.customer_phone.errors }}</div>
+        <div class="field">{{ form.customer_document.label_tag }}{{ form.customer_document }}{{ form.customer_document.errors }}</div>
+        <div class="field full">{{ form.customer_email.label_tag }}{{ form.customer_email }}{{ form.customer_email.errors }}</div>
+      </div>
+    </section>
+
+    <section class="quick-card">
+      <h2>Valor da venda</h2>
+      <p class="hint">Para uma venda simples, informe apenas o total. Se quiser detalhar produtos, escolha “Por itens”.</p>
+      <div class="mode-switch">
+        {% for value,label in form.pricing_mode.field.choices %}
+          <div class="mode-option">
+            <label><input type="radio" name="pricing_mode" value="{{ value }}" {% if form.pricing_mode.value == value %}checked{% endif %}> <span>{{ label }}</span></label>
+          </div>
+        {% endfor %}
+      </div>
+      {{ form.pricing_mode.errors }}
+      <div class="field total-input" id="manual-total-field">
+        {{ form.manual_total.label_tag }}
+        {{ form.manual_total }}
+        {{ form.manual_total.errors }}
+      </div>
+      <p class="hint" id="itemized-hint" hidden>O pedido será criado em rascunho com total zero. Você poderá adicionar produtos/itens no detalhe antes de confirmar.</p>
+    </section>
+
+    <section class="quick-card">
+      <h2>Informação opcional</h2>
+      <div class="field">{{ form.channel.label_tag }}{{ form.channel }}{{ form.channel.errors }}</div>
+    </section>
+
+    <div class="submit-row">
+      <a href="{% url 'orders:list' %}">Cancelar</a>
+      <button type="submit">Criar pedido</button>
+    </div>
+  </form>
+</div>
+<script>
+(function(){
+  const radios = document.querySelectorAll('input[name="pricing_mode"]');
+  const manual = document.getElementById('manual-total-field');
+  const itemizedHint = document.getElementById('itemized-hint');
+  function sync(){
+    const selected = document.querySelector('input[name="pricing_mode"]:checked');
+    const isManual = !selected || selected.value === 'manual';
+    manual.hidden = !isManual;
+    itemizedHint.hidden = isManual;
+  }
+  radios.forEach(r => r.addEventListener('change', sync));
+  sync();
+})();
+</script>
+{% endblock %}
