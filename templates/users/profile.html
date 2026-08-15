@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Meu perfil · Vidalys Flow{% endblock %}
+{% block content %}
+  <h1>Meu perfil</h1>
+  <div class="grid">
+    <section class="card">
+      <h2>Dados pessoais</h2>
+      <p><strong>E-mail:</strong> {{ request.user.email }}</p>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar perfil</button>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Acesso atual</h2>
+      {% if organization and membership %}
+        <p><strong>Organização:</strong> {{ organization.name }}</p>
+        <p><strong>Papel:</strong> {{ membership.get_role_display }}</p>
+      {% else %}
+        <p class="muted">Nenhuma organização ativa selecionada.</p>
+      {% endif %}
+      <p><a href="{% url 'password_change' %}">Alterar senha</a></p>
+    </section>
+  </div>
+{% endblock %}
