@@ -8,40 +8,74 @@
     :root {
       color-scheme: light;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --ink: #17152b; --muted: #706d86; --surface: #fff; --canvas: #f6f5fb; --line: #e7e4f0;
+      --ink: #17152b; --muted: #706d86; --surface: #fff; --canvas: #f7f6fb; --line: #e8e5f0;
       --violet: #6d4aff; --violet-deep: #271b57; --violet-soft: #eeeaff; --danger: #b42318;
-      --shadow: 0 16px 40px rgba(39, 27, 87, .08);
+      --nav-bg: #18112f; --nav-bg-strong: #211747; --nav-text: #d9d3f2; --nav-muted: #8f86b5;
+      --shadow: 0 18px 48px rgba(39, 27, 87, .08);
     }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; background: var(--canvas); color: var(--ink); }
-    a { color: #5a3ee8; text-decoration: none; font-weight: 600; }
+    a { color: #5a3ee8; text-decoration: none; font-weight: 650; }
     a:hover { text-decoration: underline; }
-    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 17.5rem minmax(0, 1fr); }
     .sidebar {
-      position: sticky; top: 0; height: 100vh; padding: 1.4rem 1rem;
-      background: linear-gradient(180deg, #211747 0%, #17122f 100%); color: white;
-      display: flex; flex-direction: column; gap: 1.25rem;
+      position: sticky; top: 0; height: 100vh; padding: 1.2rem .9rem;
+      background: linear-gradient(180deg, var(--nav-bg-strong) 0%, var(--nav-bg) 48%, #130e27 100%); color: white;
+      display: flex; flex-direction: column; gap: .9rem; overflow-y: auto;
     }
-    .brand { display: flex; align-items: center; gap: .75rem; padding: .35rem .45rem 1rem; }
+    .brand { display: flex; align-items: center; gap: .8rem; padding: .35rem .55rem 1rem; }
     .brand-mark {
-      width: 2.25rem; height: 2.25rem; border-radius: .75rem; display: grid; place-items: center;
-      background: linear-gradient(135deg, #8a6cff, #5d3df2); box-shadow: 0 10px 24px rgba(109,74,255,.35);
-      font-weight: 900; letter-spacing: -.08em;
+      position: relative; width: 2.45rem; height: 2.45rem; border-radius: .82rem; display: grid; place-items: center;
+      background: linear-gradient(145deg, #9278ff 0%, #6d4aff 54%, #4d2bd1 100%);
+      box-shadow: 0 12px 26px rgba(109,74,255,.36); font-weight: 950; font-size: 1.12rem; letter-spacing: -.11em;
     }
-    .brand strong { font-size: 1.05rem; letter-spacing: -.02em; }
-    .brand small { display: block; color: #bdb5df; font-weight: 500; margin-top: .1rem; }
-    .sidebar nav { display: grid; gap: .3rem; }
-    .sidebar nav a { color: #d9d3f2; padding: .72rem .8rem; border-radius: .65rem; font-weight: 650; }
-    .sidebar nav a:hover { background: rgba(255,255,255,.08); color: white; text-decoration: none; }
-    .sidebar-footer { margin-top: auto; display: grid; gap: .75rem; }
-    .sidebar-footer a { color: #d9d3f2; padding-inline: .5rem; }
-    .logout button { width: 100%; background: rgba(255,255,255,.1); }
+    .brand-mark::after {
+      content: ""; position: absolute; inset: .28rem; border: 1px solid rgba(255,255,255,.22); border-radius: .62rem;
+    }
+    .brand-copy { min-width: 0; }
+    .brand strong { display: block; font-size: 1.08rem; letter-spacing: -.035em; }
+    .brand small { display: block; color: #bdb5df; font-weight: 550; margin-top: .12rem; }
+    .sidebar nav { display: grid; gap: .8rem; }
+    .nav-group { display: grid; gap: .18rem; }
+    .nav-label {
+      padding: 0 .68rem .15rem; color: var(--nav-muted); font-size: .69rem; line-height: 1.4;
+      font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    }
+    .sidebar nav a {
+      position: relative; color: var(--nav-text); padding: .64rem .7rem; border-radius: .68rem;
+      font-weight: 680; transition: background .15s ease, color .15s ease, transform .15s ease;
+    }
+    .sidebar nav a:hover { background: rgba(255,255,255,.075); color: white; text-decoration: none; }
+    .sidebar nav a[aria-current="page"] {
+      background: linear-gradient(90deg, rgba(124,91,255,.25), rgba(124,91,255,.10)); color: white;
+      box-shadow: inset 0 0 0 1px rgba(160,139,255,.14);
+    }
+    .sidebar nav a[aria-current="page"]::before {
+      content: ""; position: absolute; left: -.12rem; top: .58rem; bottom: .58rem; width: .18rem;
+      border-radius: 999px; background: #a58fff;
+    }
+    .sidebar-footer { margin-top: auto; display: grid; gap: .3rem; padding-top: .7rem; border-top: 1px solid rgba(255,255,255,.08); }
+    .sidebar-footer a { color: var(--nav-text); padding: .56rem .7rem; border-radius: .65rem; }
+    .sidebar-footer a:hover { color: white; background: rgba(255,255,255,.06); text-decoration: none; }
+    .logout { padding-top: .25rem; }
+    .logout button { width: 100%; background: rgba(255,255,255,.09); box-shadow: none; }
     .workspace { min-width: 0; }
-    .topbar { min-height: 4.4rem; padding: .9rem clamp(1rem, 3vw, 2.25rem); display: flex; justify-content: flex-end; align-items: center; }
-    main { width: min(78rem, calc(100% - 2rem)); margin: 0 auto 2.5rem; }
+    .topbar {
+      min-height: 4.5rem; padding: .85rem clamp(1rem, 3vw, 2.25rem); display: flex; justify-content: flex-end; align-items: center;
+      border-bottom: 1px solid rgba(231,228,240,.7); background: rgba(247,246,251,.88); backdrop-filter: blur(10px);
+    }
+    .user-chip {
+      display: inline-flex; align-items: center; gap: .55rem; padding: .4rem .62rem; border: 1px solid var(--line);
+      border-radius: 999px; background: rgba(255,255,255,.78); color: #5e5874; font-size: .9rem; font-weight: 650;
+    }
+    .user-dot { width: .48rem; height: .48rem; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft); }
+    main { width: min(78rem, calc(100% - 2rem)); margin: 1rem auto 2.75rem; }
     .public-main { padding-top: clamp(2rem, 8vh, 6rem); max-width: 34rem; }
-    .page-surface { background: var(--surface); border: 1px solid var(--line); border-radius: 1.15rem; padding: clamp(1rem, 2.5vw, 1.75rem); box-shadow: var(--shadow); }
-    label { display: block; margin-top: 1rem; font-weight: 700; font-size: .92rem; }
+    .page-surface {
+      background: var(--surface); border: 1px solid var(--line); border-radius: 1.15rem;
+      padding: clamp(1rem, 2.5vw, 1.75rem); box-shadow: var(--shadow);
+    }
+    label { display: block; margin-top: 1rem; font-weight: 720; font-size: .92rem; }
     input, select, textarea {
       width: 100%; padding: .76rem .82rem; margin-top: .3rem; border: 1px solid #d9d5e6; border-radius: .65rem;
       background: white; color: var(--ink); font: inherit; outline: none;
@@ -49,7 +83,7 @@
     input:focus, select:focus, textarea:focus { border-color: #8b73f5; box-shadow: 0 0 0 3px rgba(109,74,255,.11); }
     button {
       padding: .74rem 1rem; border: 0; border-radius: .65rem; background: linear-gradient(135deg, #7252ff, #5939df);
-      color: white; cursor: pointer; font: inherit; font-weight: 750; box-shadow: 0 8px 20px rgba(89,57,223,.16);
+      color: white; cursor: pointer; font: inherit; font-weight: 760; box-shadow: 0 8px 20px rgba(89,57,223,.16);
     }
     button:hover { filter: brightness(.98); }
     .message, .errorlist { padding: .8rem 1rem; border-radius: .65rem; background: #fff0ef; color: #9c1c13; border: 1px solid #ffd6d2; }
@@ -61,39 +95,43 @@
     .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin-block: 1rem; }
     .actions input { flex: 1 1 18rem; margin: 0; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
-    .card { border: 1px solid var(--line); border-radius: .9rem; padding: 1rem; min-width: 0; background: #fff; box-shadow: 0 6px 18px rgba(39,27,87,.035); }
-    .badge { display: inline-block; padding: .24rem .58rem; border-radius: 999px; background: var(--violet-soft); color: #5134d5; font-weight: 750; font-size: .85rem; }
+    .card { border: 1px solid var(--line); border-radius: .92rem; padding: 1rem; min-width: 0; background: #fff; box-shadow: 0 6px 18px rgba(39,27,87,.035); }
+    .badge { display: inline-block; padding: .24rem .58rem; border-radius: 999px; background: var(--violet-soft); color: #5134d5; font-weight: 760; font-size: .85rem; }
     .danger { background: var(--danger); box-shadow: none; }
-    .metric { display: block; font-size: 2rem; margin-top: .35rem; letter-spacing: -.04em; }
+    .metric { display: block; font-size: 2rem; margin-top: .35rem; letter-spacing: -.045em; }
     .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
     .clean-list { list-style: none; padding: 0; margin: .5rem 0; }
     .clean-list li { padding: .6rem 0; border-bottom: 1px solid #efedf5; }
     section { margin-block: 1.5rem; }
-    h1 { font-size: clamp(1.65rem, 3vw, 2.15rem); letter-spacing: -.04em; }
+    h1 { font-size: clamp(1.7rem, 3vw, 2.2rem); letter-spacing: -.045em; }
     h2 { font-size: 1.2rem; letter-spacing: -.025em; }
     h1, h2 { margin-top: 0; }
     code { background: #f2effb; padding: .12rem .32rem; border-radius: .35rem; overflow-wrap: anywhere; }
     @media (max-width: 62rem) {
       .app-shell { display: block; }
-      .sidebar { position: static; height: auto; padding: .75rem 1rem; flex-direction: row; align-items: center; gap: .6rem; }
-      .brand { padding: 0; }
+      .sidebar { position: static; height: auto; padding: .7rem 1rem; overflow: visible; }
+      .brand { padding: 0 0 .65rem; }
       .brand small { display: none; }
-      .sidebar nav { display: flex; overflow-x: auto; margin-left: auto; }
+      .sidebar nav { display: flex; gap: .25rem; overflow-x: auto; padding-bottom: .25rem; }
+      .nav-group { display: flex; gap: .2rem; }
+      .nav-label { display: none; }
       .sidebar nav a { white-space: nowrap; padding: .55rem .65rem; }
-      .sidebar-footer { margin: 0; display: flex; align-items: center; }
+      .sidebar nav a[aria-current="page"]::before { display: none; }
+      .sidebar-footer { margin: 0; display: flex; align-items: center; border: 0; padding: .35rem 0 0; }
       .sidebar-footer > a { display: none; }
+      .logout { margin-left: auto; padding: 0; }
       .logout button { width: auto; padding: .55rem .7rem; }
       .topbar { display: none; }
       main { margin-top: 1rem; }
     }
     @media (max-width: 44rem) {
       .sidebar { display: block; }
-      .brand { margin-bottom: .6rem; }
-      .sidebar nav { width: 100%; margin: 0; }
+      .brand { margin-bottom: .2rem; }
+      .sidebar nav { width: 100%; }
       .sidebar-footer { display: none; }
       main { width: min(100% - 1rem, 78rem); }
       .page-surface { padding: .9rem; border-radius: .9rem; }
-      .section-heading { align-items: flex-start; }
+      .section-heading { align-items: flex-start; flex-wrap: wrap; }
       .responsive-table thead { display: none; }
       .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; }
       .responsive-table tr { border: 1px solid var(--line); border-radius: .75rem; margin-block: .75rem; padding: .5rem; }
@@ -104,23 +142,39 @@
 </head>
 <body>
 {% if request.user.is_authenticated %}
+  {% with app=request.resolver_match.app_name url_name=request.resolver_match.url_name %}
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand-mark">V</span>
-        <span><strong>Vidalys Flow</strong><small>Operação de vendas</small></span>
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span class="brand-copy"><strong>Vidalys Flow</strong><small>Operação de vendas</small></span>
       </div>
       <nav aria-label="Navegação principal">
-        <a href="{% url 'dashboard:home' %}">Dashboard</a>
-        <a href="{% url 'orders:list' %}">Pedidos</a>
-        <a href="{% url 'customers:list' %}">Clientes</a>
-        <a href="{% url 'products:list' %}">Produtos</a>
-        <a href="{% url 'dashboard:pickups' %}">Retiradas</a>
-        <a href="{% url 'fulfillment:list' %}">Fulfillment</a>
-        <a href="{% url 'payments:list' %}">Pagamentos</a>
-        <a href="{% url 'messaging:list' %}">Mensagens</a>
-        <a href="{% url 'dashboard:order-report' %}">Relatórios</a>
-        <a href="{% url 'integrations:list' %}">Integrações</a>
+        <div class="nav-group">
+          <span class="nav-label">Visão geral</span>
+          <a href="{% url 'dashboard:home' %}"{% if app == 'dashboard' and url_name == 'home' %} aria-current="page"{% endif %}>Dashboard</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">Operação</span>
+          <a href="{% url 'orders:list' %}"{% if app == 'orders' %} aria-current="page"{% endif %}>Pedidos</a>
+          <a href="{% url 'dashboard:pickups' %}"{% if app == 'dashboard' and url_name == 'pickups' %} aria-current="page"{% endif %}>Retiradas</a>
+          <a href="{% url 'fulfillment:list' %}"{% if app == 'fulfillment' %} aria-current="page"{% endif %}>Fulfillment</a>
+          <a href="{% url 'payments:list' %}"{% if app == 'payments' %} aria-current="page"{% endif %}>Pagamentos</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">Cadastros</span>
+          <a href="{% url 'customers:list' %}"{% if app == 'customers' %} aria-current="page"{% endif %}>Clientes</a>
+          <a href="{% url 'products:list' %}"{% if app == 'products' %} aria-current="page"{% endif %}>Produtos</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">Comunicação</span>
+          <a href="{% url 'messaging:list' %}"{% if app == 'messaging' %} aria-current="page"{% endif %}>Mensagens</a>
+          <a href="{% url 'integrations:list' %}"{% if app == 'integrations' %} aria-current="page"{% endif %}>Integrações</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">Análise</span>
+          <a href="{% url 'dashboard:order-report' %}"{% if app == 'dashboard' and url_name == 'order-report' %} aria-current="page"{% endif %}>Relatórios</a>
+        </div>
       </nav>
       <div class="sidebar-footer">
         <a href="{% url 'users:profile' %}">Meu perfil</a>
@@ -132,7 +186,10 @@
       </div>
     </aside>
     <div class="workspace">
-      <div class="topbar"><span class="muted">{{ request.user.get_short_name }}</span></div>
+      <div class="topbar">
+        <span class="user-chip"><span class="user-dot" aria-hidden="true"></span>{{ request.user.get_short_name|default:request.user.email }}</span>
+      </div>
+  {% endwith %}
 {% endif %}
       <main{% if not request.user.is_authenticated %} class="public-main"{% endif %}>
         <div class="page-surface">
