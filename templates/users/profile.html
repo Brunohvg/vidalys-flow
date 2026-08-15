@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Meu perfil · Vidalys Flow{% endblock %}
 {% block content %}
-  <h1>Meu perfil</h1>
+  <div class="section-heading">
+    <div><p class="muted" style="margin:0">CONTA</p><h1>Meu perfil</h1></div>
+    {% if organization and membership %}<a href="{% url 'users:settings' %}">Configurações</a>{% endif %}
+  </div>
   <div class="grid">
     <section class="card">
       <h2>Dados pessoais</h2>
@@ -17,6 +20,7 @@
       {% if organization and membership %}
         <p><strong>Organização:</strong> {{ organization.name }}</p>
         <p><strong>Papel:</strong> {{ membership.get_role_display }}</p>
+        <p><a href="{% url 'users:settings' %}">Abrir central de configurações</a></p>
       {% else %}
         <p class="muted">Nenhuma organização ativa selecionada.</p>
       {% endif %}
