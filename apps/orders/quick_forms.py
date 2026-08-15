@@ -80,7 +80,11 @@ class QuickOrderCreateForm(forms.Form):
             for field in ("delivery_postal_code", "delivery_street", "delivery_city", "delivery_state"):
                 if not (cleaned.get(field) or "").strip():
                     self.add_error(field, "Campo obrigatório para endereço de entrega.")
-            postal_code = "".join(character for character in (cleaned.get("delivery_postal_code") or "") if character.isdigit())
+            postal_code = "".join(
+                character
+                for character in (cleaned.get("delivery_postal_code") or "")
+                if character.isdigit()
+            )
             if postal_code and len(postal_code) != 8:
                 self.add_error("delivery_postal_code", "CEP deve conter 8 dígitos.")
             else:
