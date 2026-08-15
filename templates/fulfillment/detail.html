@@ -24,6 +24,27 @@
     {% endif %}
   </section>
 
+  {% if fulfillment.method == "delivery" %}
+  <section>
+    <h2>Rastreio</h2>
+    {% if fulfillment.tracking_code or fulfillment.tracking_url %}
+      <div class="card">
+        {% if fulfillment.tracking_code %}<p>Código: <strong id="tracking-code-value">{{ fulfillment.tracking_code }}</strong> <button type="button" data-copy-target="tracking-code-value">Copiar código</button></p>{% endif %}
+        {% if fulfillment.tracking_url %}<p><a id="tracking-url-value" href="{{ fulfillment.tracking_url }}" rel="noopener noreferrer">Abrir rastreio</a> <button type="button" data-copy-value="{{ fulfillment.tracking_url }}">Copiar link</button></p>{% endif %}
+      </div>
+    {% else %}
+      <p class="muted">Nenhum rastreio configurado.</p>
+    {% endif %}
+    {% if fulfillment.status == "ready" or fulfillment.status == "in_transit" %}
+      <form method="post" action="{% url 'fulfillment:tracking' fulfillment.id %}">
+        {% csrf_token %}
+        {{ tracking_form.as_p }}
+        <button type="submit">Salvar rastreio</button>
+      </form>
+    {% endif %}
+  </section>
+  {% endif %}
+
   <section>
     <h2>Itens alocados</h2>
     <table class="responsive-table">
@@ -91,4 +112,21 @@
       {% endfor %}
     </ol>
   </section>
+  <script>
+  (function(){
+    document.querySelectorAll('[data-copy-target],[data-copy-value]').forEach(function(button){
+      button.addEventListener('click', async function(){
+        const target = button.dataset.copyTarget ? document.getElementById(button.dataset.copyTarget) : null;
+        const value = button.dataset.copyValue || (target ? target.textContent.trim() : '');
+        if (!value) return;
+        try {
+          await navigator.clipboard.writeText(value);
+          button.textContent = 'Copiado';
+        } catch (_) {
+          button.textContent = 'Não foi possível copiar';
+        }
+      });
+    });
+  })();
+  </script>
 {% endblock %}
