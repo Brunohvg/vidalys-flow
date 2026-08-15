@@ -24,6 +24,8 @@
   .or-divider { display:flex; align-items:center; gap:.75rem; color:#8a869b; font-size:.8rem; margin:.8rem 0; }
   .or-divider:before,.or-divider:after { content:""; height:1px; background:#eceaf2; flex:1; }
   .errorlist { margin:.35rem 0 0; font-size:.85rem; }
+  details.quick-card summary { cursor:pointer; font-weight:750; color:#27234d; }
+  details.quick-card[open] summary { margin-bottom:.8rem; }
   @media(max-width:42rem){ .field-grid,.mode-switch{grid-template-columns:1fr}.quick-order-header{display:block}.submit-row{flex-direction:column-reverse;align-items:stretch}.submit-row a{text-align:center}.submit-row button{width:100%} }
 </style>
 <div class="quick-order-shell">
@@ -78,6 +80,20 @@
       </div>
       <p class="hint" id="itemized-hint" hidden>O pedido será criado em rascunho com total zero. Você poderá adicionar produtos/itens no detalhe antes de confirmar.</p>
     </section>
+
+    <details class="quick-card" {% if form.delivery_postal_code.errors or form.delivery_street.errors or form.delivery_city.errors or form.delivery_state.errors %}open{% endif %}>
+      <summary>Endereço de entrega (opcional)</summary>
+      <p class="hint">Preencha apenas se esta venda precisar de entrega. A consulta automática de CEP ainda não está habilitada; o preenchimento manual continua disponível.</p>
+      <div class="field-grid">
+        <div class="field">{{ form.delivery_postal_code.label_tag }}{{ form.delivery_postal_code }}{{ form.delivery_postal_code.errors }}</div>
+        <div class="field">{{ form.delivery_state.label_tag }}{{ form.delivery_state }}{{ form.delivery_state.errors }}</div>
+        <div class="field full">{{ form.delivery_street.label_tag }}{{ form.delivery_street }}{{ form.delivery_street.errors }}</div>
+        <div class="field">{{ form.delivery_number.label_tag }}{{ form.delivery_number }}{{ form.delivery_number.errors }}</div>
+        <div class="field">{{ form.delivery_complement.label_tag }}{{ form.delivery_complement }}{{ form.delivery_complement.errors }}</div>
+        <div class="field">{{ form.delivery_district.label_tag }}{{ form.delivery_district }}{{ form.delivery_district.errors }}</div>
+        <div class="field">{{ form.delivery_city.label_tag }}{{ form.delivery_city }}{{ form.delivery_city.errors }}</div>
+      </div>
+    </details>
 
     <section class="quick-card">
       <h2>Informação opcional</h2>
