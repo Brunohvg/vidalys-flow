@@ -117,6 +117,22 @@ def test_customer_import_rejects_missing_file_bad_header_and_row_limit(
     assert "excede o limite de 1 linhas" in too_many.content.decode()
 
 
+def test_customer_import_rejects_oversized_file(
+    client,
+    user,
+    operator_membership,
+    monkeypatch,
+):
+    client.force_login(user)
+    monkeypatch.setattr(transfer_views, "MAX_IMPORT_BYTES", 16)
+    response = client.post(
+        reverse("customers:import-csv"),
+        {"file": _csv("individual,Arquivo grande,,,,,")},
+    )
+    assert response.status_code == 200
+    assert "excede o limite" in response.content.decode()
+
+
 def test_customer_import_rejects_non_utf8_file(client, user, operator_membership):
     client.force_login(user)
     uploaded = SimpleUploadedFile("clientes.csv", b"\xff\xfe\xff", content_type="text/csv")
