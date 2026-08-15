@@ -99,6 +99,7 @@ def test_order_workspace_renders_pix_and_active_checkout_actions(
         beneficiary_name="Loja Exemplo",
         bank_name="Banco Exemplo",
         is_active=True,
+        updated_by=manager,
     )
     hosted_url = "https://checkout.example.test/pay/workspace"
     PaymentAttempt.objects.create(
