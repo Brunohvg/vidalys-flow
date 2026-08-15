@@ -6,12 +6,12 @@
   "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
   "base_ref": "main",
   "branch": "phase/09-infrastructure-homologation",
-  "status": "candidate",
+  "status": "approved",
   "plan_status": "approved",
   "implementation_status": "complete",
   "review_status": "complete",
   "qa_status": "go",
-  "human_approval_status": "pending",
+  "human_approval_status": "approved",
   "initiation_authorization": {
     "status": "authorized",
     "evidence": "Human explicitly authorized implementation of Phase 09 on 2026-08-14 after approving the Coolify topology with PostgreSQL separate and the remaining runtime in one application stack."
@@ -19,7 +19,7 @@
   "final_approval": {
     "status": "approved",
     "date": "2026-08-14",
-    "evidence": "Human explicitly approved Phase 09 after Independent Review completed and QA/Security emitted GO on material candidate fac5e9c0d86b2137c8542d7ef4101e1746a38fab, and separately authorized governance closeout plus PR/merge. The pre-merge canonical status fields remain candidate/pending until official state/roadmap closeout. Real Coolify deployment, providers, production, go-live and Phase 10 remain unauthorized."
+    "evidence": "Human explicitly approved Phase 09 after Independent Review completed and QA/Security emitted GO on material candidate fac5e9c0d86b2137c8542d7ef4101e1746a38fab, and separately authorized governance closeout plus PR/merge. Product PR #21 was merged to main as ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095 after green Foundation CI #220. Real Coolify deployment, providers, production, go-live and Phase 10 remain unauthorized."
   },
   "allowed_status_values": {
     "status": ["planned", "in_progress", "candidate", "approved", "rejected"],
