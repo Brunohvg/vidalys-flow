@@ -5,6 +5,7 @@ import pytest
 
 from apps.customers.models import Customer
 from apps.orders.models import Order
+from apps.orders.quick_forms import QuickOrderCreateForm
 from apps.orders.quick_services import create_quick_order
 
 
@@ -98,3 +99,80 @@ def test_itemized_quick_order_starts_without_manual_source(
     assert order.pricing_mode == Order.PricingMode.ITEMIZED
     assert order.manual_total is None
     assert order.total == Decimal("0.00")
+
+
+@pytest.mark.django_db
+def test_quick_order_can_add_default_shipping_address_atomically(
+    organization,
+    user,
+    operator_membership,
+):
+    key = str(uuid.uuid4())
+    kwargs = {
+        "organization": organization,
+        "actor": user,
+        "idempotency_key": key,
+        "customer_name": "Cliente entrega",
+        "pricing_mode": Order.PricingMode.MANUAL,
+        "manual_total": Decimal("125.00"),
+        "has_delivery_address": True,
+        "delivery_postal_code": "30130110",
+        "delivery_street": "Rua da Bahia",
+        "delivery_number": "100",
+        "delivery_complement": "Sala 2",
+        "delivery_district": "Centro",
+        "delivery_city": "Belo Horizonte",
+        "delivery_state": "MG",
+    }
+
+    first = create_quick_order(**kwargs)
+    repeated = create_quick_order(**kwargs)
+    address = first.customer.addresses.get()
+
+    assert repeated.id == first.id
+    assert first.customer.addresses.count() == 1
+    assert address.is_default_shipping is True
+    assert address.postal_code == "30130110"
+    assert address.city == "Belo Horizonte"
+    assert address.state == "MG"
+
+
+@pytest.mark.django_db
+def test_quick_order_form_rejects_partial_delivery_address(organization):
+    form = QuickOrderCreateForm(
+        data={
+            "customer_name": "Cliente entrega incompleta",
+            "pricing_mode": Order.PricingMode.MANUAL,
+            "manual_total": "50.00",
+            "delivery_postal_code": "30130-110",
+            "delivery_street": "Rua da Bahia",
+            "idempotency_key": str(uuid.uuid4()),
+        },
+        organization=organization,
+    )
+
+    assert not form.is_valid()
+    assert "delivery_city" in form.errors
+    assert "delivery_state" in form.errors
+
+
+@pytest.mark.django_db
+def test_quick_order_form_normalizes_manual_delivery_cep_and_state(organization):
+    form = QuickOrderCreateForm(
+        data={
+            "customer_name": "Cliente entrega completa",
+            "pricing_mode": Order.PricingMode.MANUAL,
+            "manual_total": "50.00",
+            "delivery_postal_code": "30130-110",
+            "delivery_street": "Rua da Bahia",
+            "delivery_city": "Belo Horizonte",
+            "delivery_state": "mg",
+            "idempotency_key": str(uuid.uuid4()),
+        },
+        organization=organization,
+    )
+
+    assert form.is_valid()
+    assert form.cleaned_data["has_delivery_address"] is True
+    assert form.cleaned_data["delivery_postal_code"] == "30130110"
+    assert form.cleaned_data["delivery_state"] == "MG"
