@@ -3,8 +3,9 @@ import json
 
 from django.db import IntegrityError, transaction
 
-from apps.messaging.exceptions import IdempotencyConflict
+from apps.messaging.exceptions import IdempotencyConflict, MessagingPermissionDenied
 from apps.messaging.models import MessageCommandReceipt
+from apps.payments import policies as payment_policies
 
 
 def payload_hash(payload):
@@ -12,7 +13,24 @@ def payload_hash(payload):
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _enforce_command_authorization(*, organization, operation, payload, actor):
+    if operation != "create_message_from_command":
+        return
+    purpose = (payload or {}).get("purpose")
+    if purpose == "checkout_link" and not payment_policies.can_operate_payments(
+        user=actor,
+        organization=organization,
+    ):
+        raise MessagingPermissionDenied("Compartilhar checkout exige permissão operacional de Payments.")
+
+
 def claim_command(*, organization, operation, idempotency_key, payload, actor=None, source_event_id=None):
+    _enforce_command_authorization(
+        organization=organization,
+        operation=operation,
+        payload=payload,
+        actor=actor,
+    )
     key = str(idempotency_key).strip()
     if not key or len(key) > 64:
         raise IdempotencyConflict("Chave de idempotência inválida.")
