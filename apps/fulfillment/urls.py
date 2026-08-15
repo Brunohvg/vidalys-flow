@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.fulfillment import views
+from apps.fulfillment import pickup_views, views
 
 app_name = "fulfillment"
 
@@ -14,5 +14,6 @@ urlpatterns = [
         views.fulfillment_transition,
         name="transition",
     ),
+    path("<uuid:fulfillment_id>/pickup/complete/", pickup_views.complete_pickup, name="complete_pickup"),
     path("<uuid:fulfillment_id>/cancel/", views.fulfillment_cancel, name="cancel"),
 ]
