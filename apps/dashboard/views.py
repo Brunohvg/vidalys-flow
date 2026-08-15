@@ -5,6 +5,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
 
 from apps.dashboard.global_search import global_search_for_organization
+from apps.dashboard.pickups import ready_pickups_for_organization
 from apps.organizations.selectors import active_organization_for_user
 
 from .selectors import (
@@ -51,6 +52,25 @@ def dashboard_home(request):
                 organization=organization,
                 query=search_query,
             ),
+        },
+    )
+
+
+@login_required
+@require_GET
+def pickup_center(request):
+    organization, response = _active_organization_or_redirect(request)
+    if response:
+        return response
+    query = request.GET.get("q", "").strip()
+    pickups = ready_pickups_for_organization(organization=organization, query=query)
+    return render(
+        request,
+        "dashboard/pickups.html",
+        {
+            "organization": organization,
+            "query": query,
+            "pickups": pickups,
         },
     )
 
