@@ -33,18 +33,12 @@ def repository(governance_root):
 def test_valid_state_and_all_artifacts(repository):
     state = repository.validate_state()
     repository.validate_all()
-    assert state["approved_phase"] == 8
-    assert state["approved_phase_head"] == "8ec559ab69b88fbd781144b1ad9dc00d465193c2"
+    assert state["approved_phase"] == 9
+    assert state["approved_phase_head"] == "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095"
     assert state["baseline_branch"] == "main"
-    assert state["next_phase"] == 9
-    assert state["next_phase_name"] == "Infrastructure and homologation"
-    assert state["active_candidate"] == {
-        "phase": 9,
-        "branch": "phase/09-infrastructure-homologation",
-        "base_ref": "main",
-        "actual_base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
-        "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
-    }
+    assert state["next_phase"] == 10
+    assert state["next_phase_name"] == "Cutover and Flowlog operational closure"
+    assert state["active_candidate"] is None
 
 
 def test_invalid_approved_sha_is_rejected(governance_root):
@@ -123,6 +117,9 @@ def prepare_phase_08_as_active_candidate(governance_root):
     roadmap["phases"][8]["approved_sha"] = None
     roadmap["phases"][8]["handoff"] = None
     roadmap["phases"][8]["human_approval_status"] = "pending"
+    roadmap["phases"][9]["status"] = "planned"
+    roadmap["phases"][9]["approved_sha"] = None
+    roadmap["phases"][9]["human_approval_status"] = "pending"
     write_json(roadmap_path, roadmap)
 
     phase_path = governance_root / "project/phases/08-dashboard-experience.json"
