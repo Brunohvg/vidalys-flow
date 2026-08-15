@@ -69,6 +69,26 @@
       <a href="{% url 'fulfillment:create' order.id %}">Criar entrega ou retirada</a>
     {% endif %}
 
+  {% elif action.kind == "pickup_validation" %}
+    {% if action.pickup_code %}
+      <div class="card">
+        <strong>Código para comunicar ao cliente</strong>
+        <p class="metric" id="pickup-code-{{ action.fulfillment.id }}">{{ action.pickup_code }}</p>
+        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('pickup-code-{{ action.fulfillment.id }}').textContent.trim())">Copiar código</button>
+        <p class="muted">Somente gerência visualiza este código. Ele não é persistido nem registrado em auditoria.</p>
+      </div>
+    {% endif %}
+    {% if action.can_operate %}
+      <form method="post" action="{% url 'fulfillment:complete_pickup' action.fulfillment.id %}">
+        {% csrf_token %}
+        <label for="pickup-code-input-{{ action.fulfillment.id }}">Código informado pelo cliente</label>
+        <input id="pickup-code-input-{{ action.fulfillment.id }}" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+        <input type="hidden" name="expected_version" value="{{ action.fulfillment.version }}">
+        <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+        <button type="submit">Confirmar retirada</button>
+      </form>
+    {% endif %}
+
   {% elif action.kind == "fulfillment_transition" %}
     {% if action.can_operate and action.target_status %}
       <form method="post" action="{% url 'fulfillment:transition' action.fulfillment.id action.target_status %}">
