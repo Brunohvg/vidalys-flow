@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
+from apps.customers.exceptions import CustomerDomainError
 from apps.orders.exceptions import OrderDomainError
 from apps.orders.quick_forms import QuickOrderCreateForm
 from apps.orders.quick_services import create_quick_order
@@ -23,7 +24,7 @@ def order_create(request):
                 actor=request.user,
                 **form.cleaned_data,
             )
-        except (OrderDomainError, ValueError) as exc:
+        except (OrderDomainError, CustomerDomainError, ValueError) as exc:
             form.add_error(None, str(exc))
         else:
             messages.success(request, f"{order.display_number} criado.")
