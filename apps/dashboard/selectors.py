@@ -7,6 +7,7 @@ from apps.orders.models import Order
 from apps.payments.models import PaymentIntent
 
 DASHBOARD_LIMIT = 8
+TIMELINE_LIMIT = 30
 
 
 def dashboard_summary(*, organization):
@@ -93,6 +94,69 @@ def recent_orders_for_organization(*, organization, limit=DASHBOARD_LIMIT):
     ).select_related("customer")[:limit]
 
 
+def _status_label(choices, value):
+    if not value:
+        return "início"
+    return dict(choices).get(value, value)
+
+
+def _operational_timeline(*, organization, order, payment, fulfillments, messages):
+    entries = []
+    for row in order.status_history.filter(organization=organization).all():
+        entries.append(
+            {
+                "at": row.created_at,
+                "domain": "Pedido",
+                "detail": (
+                    f"{_status_label(Order.Status.choices, row.from_status)} → "
+                    f"{_status_label(Order.Status.choices, row.to_status)}"
+                ),
+            }
+        )
+
+    if payment is not None:
+        for row in payment.status_history.filter(organization=organization).all():
+            entries.append(
+                {
+                    "at": row.created_at,
+                    "domain": "Pagamento",
+                    "detail": (
+                        f"{_status_label(PaymentIntent.Status.choices, row.from_status)} → "
+                        f"{_status_label(PaymentIntent.Status.choices, row.to_status)}"
+                    ),
+                }
+            )
+
+    for fulfillment in fulfillments:
+        for row in fulfillment.status_history.filter(organization=organization).all():
+            entries.append(
+                {
+                    "at": row.created_at,
+                    "domain": fulfillment.display_number,
+                    "detail": (
+                        f"{_status_label(Fulfillment.Status.choices, row.from_status)} → "
+                        f"{_status_label(Fulfillment.Status.choices, row.to_status)}"
+                    ),
+                }
+            )
+
+    for message in messages:
+        for row in message.status_history.filter(organization=organization).all():
+            entries.append(
+                {
+                    "at": row.created_at,
+                    "domain": "Mensagem",
+                    "detail": (
+                        f"{_status_label(Message.Status.choices, row.from_status)} → "
+                        f"{_status_label(Message.Status.choices, row.to_status)}"
+                    ),
+                }
+            )
+
+    entries.sort(key=lambda entry: entry["at"], reverse=True)
+    return entries[:TIMELINE_LIMIT]
+
+
 def order_workspace_for_organization(*, organization, order_id):
     order = (
         Order.objects.filter(
@@ -111,23 +175,40 @@ def order_workspace_for_organization(*, organization, order_id):
         order__organization=organization,
         order=order,
     ).first()
-    fulfillments = Fulfillment.objects.filter(
-        organization=organization,
-        order__organization=organization,
-        order=order,
+    fulfillments = list(
+        Fulfillment.objects.filter(
+            organization=organization,
+            order__organization=organization,
+            order=order,
+        )
     )
-    messages = Message.objects.filter(
-        organization=organization,
-        customer__organization=organization,
-        channel__organization=organization,
-        source_type=Message.SourceType.ORDER,
-        source_id=order.id,
-    ).select_related("channel")[:DASHBOARD_LIMIT]
+    source_filter = Q(source_type=Message.SourceType.ORDER, source_id=order.id)
+    if payment is not None:
+        source_filter |= Q(source_type=Message.SourceType.PAYMENT, source_id=payment.id)
+    fulfillment_ids = [fulfillment.id for fulfillment in fulfillments]
+    if fulfillment_ids:
+        source_filter |= Q(source_type=Message.SourceType.FULFILLMENT, source_id__in=fulfillment_ids)
+    related_messages = list(
+        Message.objects.filter(
+            organization=organization,
+            customer__organization=organization,
+            channel__organization=organization,
+        )
+        .filter(source_filter)
+        .select_related("channel")[:DASHBOARD_LIMIT]
+    )
     return {
         "order": order,
         "payment": payment,
         "fulfillments": fulfillments,
-        "messages": messages,
+        "messages": related_messages,
+        "timeline": _operational_timeline(
+            organization=organization,
+            order=order,
+            payment=payment,
+            fulfillments=fulfillments,
+            messages=related_messages,
+        ),
     }
 
 
