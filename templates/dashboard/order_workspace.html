@@ -8,6 +8,20 @@
 <section class="card"><h2>Cliente</h2><p>{{ order.customer_name_snapshot|default:order.customer.display_name }}</p><p class="muted">Os dados detalhados permanecem no domínio de Clientes/Pedidos.</p></section>
 <section class="card"><h2>Pagamento</h2>{% if payment %}<p><span class="badge">{{ payment.get_status_display }}</span></p><p>R$ {{ payment.amount }}</p><a href="{% url 'payments:list' %}">Abrir pagamentos</a>{% else %}<p class="muted">Nenhum PaymentIntent associado.</p>{% endif %}</section>
 <section class="card"><h2>Fulfillment</h2>{% if fulfillments %}<ul class="clean-list">{% for item in fulfillments %}<li>{{ item.display_number }} · {{ item.get_status_display }}</li>{% endfor %}</ul><a href="{% url 'fulfillment:list' %}">Abrir fulfillment</a>{% else %}<p class="muted">Nenhum fulfillment associado.</p>{% endif %}</section>
-<section class="card"><h2>Mensagens do pedido</h2>{% if messages %}<ul class="clean-list">{% for item in messages %}<li>{{ item.purpose }} · {{ item.get_status_display }} · {{ item.channel.display_name }}</li>{% endfor %}</ul><a href="{% url 'messaging:list' %}">Abrir mensagens</a>{% else %}<p class="muted">Nenhuma mensagem diretamente vinculada ao pedido.</p>{% endif %}</section>
+<section class="card"><h2>Mensagens do pedido</h2>{% if messages %}<ul class="clean-list">{% for item in messages %}<li>{{ item.purpose }} · {{ item.get_status_display }} · {{ item.channel.display_name }}</li>{% endfor %}</ul><a href="{% url 'messaging:list' %}">Abrir mensagens</a>{% else %}<p class="muted">Nenhuma mensagem vinculada à operação deste pedido.</p>{% endif %}</section>
 </div>
+
+<section class="card">
+  <h2>Timeline operacional</h2>
+  <p class="muted">Histórico curto derivado dos lifecycles canônicos. Dados sensíveis e payloads de auditoria não são exibidos aqui.</p>
+  {% if timeline %}
+  <ol class="clean-list">
+    {% for event in timeline %}
+    <li><strong>{{ event.domain }}</strong> · {{ event.detail }} <span class="muted">· {{ event.at }}</span></li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted">Nenhum evento operacional registrado.</p>
+  {% endif %}
+</section>
 {% endblock %}
