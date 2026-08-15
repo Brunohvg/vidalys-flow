@@ -6,7 +6,14 @@ from apps.fulfillment.events import FULFILLMENT_UPDATED
 from apps.fulfillment.exceptions import InvalidFulfillment
 from apps.fulfillment.idempotency import claim_command, complete_command
 from apps.fulfillment.models import Fulfillment
-from apps.fulfillment import services
+from apps.fulfillment.services import (
+    _audit,
+    _ensure_version,
+    _existing_result,
+    _lock_order_then_fulfillment,
+    _outbox,
+    _require_permission,
+)
 
 https_validator = URLValidator(schemes=("https",))
 
@@ -22,7 +29,7 @@ def set_tracking(
     expected_version,
     idempotency_key,
 ):
-    services._require_permission(actor=actor, organization=organization)
+    _require_permission(actor=actor, organization=organization)
     code = (tracking_code or "").strip()
     url = (tracking_url or "").strip()
     if len(code) > 120:
@@ -47,13 +54,13 @@ def set_tracking(
         actor=actor,
     )
     if not is_new:
-        return services._existing_result(receipt)
+        return _existing_result(receipt)
 
-    _, fulfillment = services._lock_order_then_fulfillment(
+    _, fulfillment = _lock_order_then_fulfillment(
         organization=organization,
         fulfillment=fulfillment,
     )
-    services._ensure_version(fulfillment=fulfillment, expected_version=expected_version)
+    _ensure_version(fulfillment=fulfillment, expected_version=expected_version)
     if fulfillment.method != Fulfillment.Method.DELIVERY:
         raise InvalidFulfillment("Rastreio só pode ser configurado para entrega.")
     if fulfillment.status not in {Fulfillment.Status.READY, Fulfillment.Status.IN_TRANSIT}:
@@ -69,7 +76,7 @@ def set_tracking(
     if changed_fields:
         fulfillment.version += 1
         fulfillment.save(update_fields=(*changed_fields, "version", "updated_at"))
-        services._audit(
+        _audit(
             fulfillment=fulfillment,
             actor=actor,
             action=FULFILLMENT_UPDATED,
@@ -78,7 +85,7 @@ def set_tracking(
                 "tracking_configured": bool(code or url),
             },
         )
-        services._outbox(
+        _outbox(
             fulfillment=fulfillment,
             event_type=FULFILLMENT_UPDATED,
             command_id=idempotency_key,
