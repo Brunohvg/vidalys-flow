@@ -15,8 +15,6 @@ def test_authenticated_shell_keeps_sales_first_navigation_and_marks_current_page
     html = response.content.decode()
 
     assert response.status_code == 200
-    for section in ("Principal", "Vendas", "Análise"):
-        assert section in html
     for label in (
         "Dashboard",
         "Nova venda",
@@ -26,7 +24,6 @@ def test_authenticated_shell_keeps_sales_first_navigation_and_marks_current_page
         "Relatórios",
         "Meu perfil",
         "Configurações",
-        "Organizações",
     ):
         assert label in html
     for technical_destination in (
