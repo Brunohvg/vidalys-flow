@@ -24,6 +24,7 @@ from apps.platform.import_receipts import (
 from apps.platform.models import DataImportBatchReceipt
 
 MAX_IMPORT_ROWS = 1000
+MAX_IMPORT_BYTES = 2 * 1024 * 1024
 CUSTOMER_HEADERS = (
     "customer_type",
     "display_name",
@@ -111,6 +112,10 @@ def customer_import_csv(request):
             messages.error(request, "Selecione um arquivo CSV.")
         else:
             try:
+                if uploaded.size > MAX_IMPORT_BYTES:
+                    raise ValueError(
+                        f"O arquivo excede o limite de {MAX_IMPORT_BYTES // (1024 * 1024)} MB."
+                    )
                 text = uploaded.read().decode("utf-8-sig")
                 reader = csv.DictReader(io.StringIO(text))
                 if tuple(reader.fieldnames or ()) != CUSTOMER_HEADERS:
@@ -171,5 +176,9 @@ def customer_import_csv(request):
     return render(
         request,
         "customers/import.html",
-        {"organization": organization, "max_rows": MAX_IMPORT_ROWS, "headers": CUSTOMER_HEADERS},
+        {
+            "organization": organization,
+            "max_rows": MAX_IMPORT_ROWS,
+            "headers": CUSTOMER_HEADERS,
+        },
     )
