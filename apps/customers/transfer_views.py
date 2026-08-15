@@ -41,9 +41,11 @@ def customer_export_csv(request):
     if response:
         return response
     rows = []
-    for customer in selectors.customers_for_organization(organization=organization, include_inactive=True).prefetch_related(
-        "contacts"
-    ):
+    customers = selectors.customers_for_organization(
+        organization=organization,
+        include_inactive=True,
+    ).prefetch_related("contacts")
+    for customer in customers:
         email = customer.contacts.filter(kind="email", is_active=True).values_list("value", flat=True).first() or ""
         phone = (
             customer.contacts.filter(kind__in=("phone", "whatsapp"), is_active=True)
