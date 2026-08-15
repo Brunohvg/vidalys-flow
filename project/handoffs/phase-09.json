@@ -81,16 +81,23 @@
     "flowlog_reference": "No Flowlog runtime, database, Redis, secrets or infrastructure may be reused."
   },
   "independent_review": {
-    "status": "pending_revalidation_after_changes_requested",
-    "reviewed_material_sha": "e41cacfeab38d9da35e6f344c2009ef53d960165",
-    "reviewed_documentary_head": "86f74800f2c799214770226d09731748c7821b01",
-    "blocking_finding": "P09-IR-001",
-    "finding": "docs/HOMOLOGATION.md lacked an operational incident response procedure covering classification, containment, evidence preservation, rollback/recovery decision, post-incident validation and escalation.",
-    "rework_status": "implemented_and_ci_green_pending_independent_revalidation",
+    "status": "complete",
+    "result": "READY_FOR_QA_AND_SECURITY",
+    "reviewed_material_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "reviewed_documentary_head": "96a16b0d41ad5d5530700b8b318ff93992321613",
+    "previous_blocking_finding": "P09-IR-001",
+    "finding_status": "resolved",
+    "finding": "docs/HOMOLOGATION.md previously lacked an operational incident response procedure covering classification, containment, evidence preservation, rollback/recovery decision, post-incident validation and escalation.",
+    "resolution": "The rework adds the complete operational incident response procedure to docs/HOMOLOGATION.md and changes no runtime or domain code. Comparison from the prior documentary carrier 86f74800f2c799214770226d09731748c7821b01 to fac5e9c0d86b2137c8542d7ef4101e1746a38fab is one commit changing only docs/HOMOLOGATION.md.",
     "rework_material_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
     "rework_ci_run": 31849693025,
     "rework_ci_run_number": 209,
-    "rework_ci_conclusion": "success"
+    "rework_ci_conclusion": "success",
+    "carrier_ci_run": 31849870288,
+    "carrier_ci_run_number": 211,
+    "carrier_ci_conclusion": "success",
+    "report": "project/reviews/phase-09-review-report.json",
+    "qa_status": "pending"
   },
   "deferred": [
     "real Coolify resource provisioning and runtime acceptance evidence until an external homologation environment is explicitly executed/recorded",
@@ -111,6 +118,6 @@
   "blockers": [],
   "human_approval": {
     "status": "pending",
-    "evidence": "Human approved the Phase 09 plan and implementation. Independent Review revalidation, QA/Security, final Phase 09 approval, real provider activation, production release/go-live and Phase 10 remain pending."
+    "evidence": "Human approved the Phase 09 plan and implementation. Independent Review revalidation is complete with READY_FOR_QA_AND_SECURITY. QA/Security, final Phase 09 approval, real provider activation, production release/go-live and Phase 10 remain pending."
   }
 }
