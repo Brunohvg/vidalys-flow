@@ -6,7 +6,7 @@ aprovação não autoriza merge, deploy ou aprovação da fase concluída.
 ## Implementação aprovada
 
 O domínio está implementado em `apps.fulfillment`, com migrations novas,
-services transacionais, selectors tenant-scoped, policies, recibos
+services transacionais, selectors limitados à Organization, policies, recibos
 idempotentes, histórico imutável, eventos internos, tarefa Celery e interface
 HTML em `/fulfillment/`. O material em `70364bc7` recebeu Review independente
 02 `APPROVED`, QA/Segurança `GO` e ratificação humana final após a auditoria de
@@ -14,7 +14,7 @@ governança. O código está na `main`; release e deploy continuam separados e
 não autorizados.
 
 O Review independente 01 identificou inversão na ordem de locks e lacunas de
-evidência concorrente, cross-organization e de sanitização. A remediação
+evidência concorrente, cross-Organization e de sanitização. A remediação
 padronizou os locks em `Order -> Fulfillment`, registrou a tarefa no Celery e
 ampliou a suíte direta do domínio. PostgreSQL 17, Redis, migrations, rollback
 técnico, 208 testes sem skips e 86% de cobertura foram validados no candidato.
@@ -44,7 +44,8 @@ Organization, a um único Order e a um único método. Seu identificador visual
 
 - `Fulfillment`: raiz, método, estado, versão, sequência por pedido, snapshots
   operacionais e timestamps;
-- `FulfillmentItem`: quantidade positiva alocada de um `OrderItem` confirmado;
+- `FulfillmentItem`: quantidade positiva alocada de um `OrderItem` confirmado,
+  quando o pedido possui itens;
 - `FulfillmentStatusHistory`: trilha imutável de estados do domínio;
 - `FulfillmentCommandReceipt`: idempotência de comandos mutáveis.
 
@@ -62,6 +63,15 @@ ultrapassar a quantidade confirmada. O cálculo e os locks incluem todos os
 lotes concorrentes relevantes. Cancelar libera a alocação; concluir conserva
 o fato histórico. Isso é planejamento de execução, não reserva de estoque.
 
+A Fase 10 adiciona uma exceção controlada para o modo comercial
+`pricing_mode=manual`: quando o Order confirmado não possui nenhum
+`OrderItem`, o Fulfillment pode ser criado sem `FulfillmentItem`. Essa exceção
+existe para permitir retirada ou entrega de vendas registradas apenas por
+valor, sem criar item fictício. Ela não se aplica a pedidos `itemized` nem a
+pedidos manuais que já possuam qualquer `OrderItem`; nesses casos as alocações
+continuam obrigatórias e explícitas. A decisão é validada no service após o
+lock canônico do Order, e não somente no formulário.
+
 ## Métodos e snapshots
 
 `delivery` exige o endereço de entrega fechado no snapshot do Order e o copia
@@ -72,8 +82,9 @@ Customer e não aceita um endereço livre silenciosamente.
 identificador e o nome da unidade. O cadastro atual de unidade não possui
 endereço; inventar esse dado ou ampliar Organizations está fora desta fase.
 
-Os itens usam os snapshots comerciais já congelados em Orders. Fulfillment
-não relê Product, ProductVariant nem Customer e nunca recalcula dinheiro.
+Os itens, quando existentes, usam os snapshots comerciais já congelados em
+Orders. Fulfillment não relê Product, ProductVariant nem Customer e nunca
+recalcula dinheiro.
 
 ## Estados propostos
 
@@ -140,7 +151,9 @@ AuditEvent, OutboxEvent, logs, métricas, receipts ou mensagens de erro.
 A implementação oferece HTML server-rendered para lista,
 filtros, detalhe, criação por pedido, edição de draft e comandos de transição.
 Não haverá API pública. A interface sempre deriva Organization da sessão e
-exibe progresso por quantidades sem inventar um estado novo no Order.
+exibe progresso por quantidades sem inventar um estado novo no Order. Para
+pedidos manuais confirmados sem itens, a interface pode omitir a seção de
+alocações, enquanto o service continua sendo a fonte autoritativa da regra.
 
 ## Fora de escopo
 
@@ -155,6 +168,8 @@ exibe progresso por quantidades sem inventar um estado novo no Order.
 ## Decisão vigente
 
 Múltiplos lotes parciais, métodos `delivery`/`pickup`, os seis estados,
-cancelamento idempotente por evento interno, permissões e itens adiados foram
-aprovados para a Fase 4. Isso não autoriza deploy nem antecipa Payments,
-inventory, providers, Messaging ou Integrations.
+cancelamento idempotente por evento interno, permissões e alocações explícitas
+permanecem canônicos. A Fase 10 apenas amplia o contrato para permitir
+Fulfillment sem alocação quando um Order manual confirmado não possui itens,
+sem criar produto/item fictício e sem alterar o lifecycle de Orders. Isso não
+autoriza deploy, providers, produção ou cutover.
