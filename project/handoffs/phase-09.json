@@ -97,7 +97,13 @@
     "carrier_ci_run_number": 211,
     "carrier_ci_conclusion": "success",
     "report": "project/reviews/phase-09-review-report.json",
-    "qa_status": "pending"
+    "qa_status": "go"
+  },
+  "qa_security": {
+    "status": "go",
+    "report": "project/qa/phase-09-qa-security.md",
+    "candidate_head": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "evidence": "Independent QA/Security issued technical GO on material SHA fac5e9c0d86b2137c8542d7ef4101e1746a38fab. Foundation CI #209 / run 31849693025 passed with 454 tests, 0 skipped, 86% coverage and PostgreSQL 17.11. P09-IR-001 remains resolved. Real restore proof, private PostgreSQL networking and actual Coolify runtime behavior remain explicitly environment-dependent and are not claimed as proven."
   },
   "deferred": [
     "real Coolify resource provisioning and runtime acceptance evidence until an external homologation environment is explicitly executed/recorded",
@@ -118,6 +124,6 @@
   "blockers": [],
   "human_approval": {
     "status": "pending",
-    "evidence": "Human approved the Phase 09 plan and implementation. Independent Review revalidation is complete with READY_FOR_QA_AND_SECURITY. QA/Security, final Phase 09 approval, real provider activation, production release/go-live and Phase 10 remain pending."
+    "evidence": "Human approved the Phase 09 plan and implementation. Independent Review is complete and independent QA/Security issued technical GO. Final human Phase 09 approval, PR/merge, real homologation provisioning, provider activation, production release/go-live and Phase 10 remain pending and separately authorized."
   }
 }
