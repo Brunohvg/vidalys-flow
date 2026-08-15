@@ -113,6 +113,22 @@ def test_product_import_rejects_missing_file_header_limit_and_inconsistent_key(
     assert "excede o limite de 1 linhas" in too_many.content.decode()
 
 
+def test_product_import_rejects_oversized_file(
+    client,
+    user,
+    operator_membership,
+    monkeypatch,
+):
+    client.force_login(user)
+    monkeypatch.setattr(transfer_views, "MAX_IMPORT_BYTES", 16)
+    response = client.post(
+        reverse("products:import-csv"),
+        {"file": _csv("p,Arquivo grande,,un,,,,")},
+    )
+    assert response.status_code == 200
+    assert "excede o limite" in response.content.decode()
+
+
 def test_product_import_rejects_missing_key_name_and_non_utf8(
     client,
     user,
