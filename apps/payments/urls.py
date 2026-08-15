@@ -13,12 +13,24 @@ urlpatterns = [
     path("", views.payment_list, name="list"),
     path("settings/pix/", pix_views.pix_settings, name="pix_settings"),
     path("orders/<uuid:order_id>/new/", views.payment_create, name="create"),
-    path("orders/<uuid:order_id>/workspace/create/", workspace_views.workspace_create_payment, name="workspace_create"),
+    path(
+        "orders/<uuid:order_id>/workspace/create/",
+        workspace_views.workspace_create_payment,
+        name="workspace_create",
+    ),
     path("<uuid:payment_id>/", views.payment_detail, name="detail"),
     path("<uuid:payment_id>/manual/", manual_views.payment_confirm_manual, name="confirm_manual"),
-    path("<uuid:payment_id>/workspace/manual/", workspace_views.workspace_confirm_manual, name="workspace_manual"),
+    path(
+        "<uuid:payment_id>/workspace/manual/",
+        workspace_views.workspace_confirm_manual,
+        name="workspace_manual",
+    ),
     path("<uuid:payment_id>/checkout/", views.payment_request_checkout, name="request_checkout"),
-    path("<uuid:payment_id>/workspace/checkout/", workspace_views.workspace_request_checkout, name="workspace_checkout"),
+    path(
+        "<uuid:payment_id>/workspace/checkout/",
+        workspace_views.workspace_request_checkout,
+        name="workspace_checkout",
+    ),
     path("<uuid:payment_id>/checkout/cancel/", views.payment_cancel_checkout, name="cancel_checkout"),
     path(
         "<uuid:payment_id>/workspace/checkout/cancel/",
