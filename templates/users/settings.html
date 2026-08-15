@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Configurações · Vidalys Flow{% endblock %}
+{% block content %}
+<div class="section-heading">
+  <div>
+    <p class="muted" style="margin:0">ADMINISTRAÇÃO</p>
+    <h1>Configurações</h1>
+    <p class="muted">{{ organization.name }} · {{ membership.get_role_display }}</p>
+  </div>
+</div>
+
+<div class="grid">
+  <article class="card">
+    <h2>Meu perfil</h2>
+    <p class="muted">Nome, identidade de acesso e senha da sua conta.</p>
+    <div class="actions"><a href="{% url 'users:profile' %}">Editar perfil</a><a href="{% url 'password_change' %}">Alterar senha</a></div>
+  </article>
+
+  <article class="card">
+    <h2>Organização</h2>
+    <p class="muted">Selecione a organização ativa e consulte as unidades disponíveis.</p>
+    <a href="{% url 'organizations:list' %}">Abrir organizações</a>
+  </article>
+
+  {% if can_manage_team %}
+  <article class="card">
+    <h2>Equipe e acessos</h2>
+    <p class="muted">Papéis e ativação das Memberships da organização.</p>
+    <a href="{% url 'users:team' %}">Gerenciar equipe</a>
+  </article>
+  {% endif %}
+
+  {% if can_manage_payments %}
+  <article class="card">
+    <h2>PIX</h2>
+    <p class="muted">Configure a instrução PIX da organização. A chave não confirma recebimento.</p>
+    <a href="{% url 'payments:pix_settings' %}">Configurar PIX</a>
+  </article>
+  {% endif %}
+
+  {% if can_view_audit %}
+  <article class="card">
+    <h2>Auditoria</h2>
+    <p class="muted">Consulte eventos imutáveis da organização em modo somente leitura.</p>
+    <a href="{% url 'audit:list' %}">Abrir auditoria</a>
+  </article>
+  {% endif %}
+
+  <article class="card">
+    <h2>Importação e exportação</h2>
+    <p class="muted">Transfira cadastros sem misturar dados entre organizações.</p>
+    <div class="actions"><a href="{% url 'customers:import-csv' %}">Clientes</a><a href="{% url 'products:import-csv' %}">Produtos</a></div>
+  </article>
+</div>
+{% endblock %}
