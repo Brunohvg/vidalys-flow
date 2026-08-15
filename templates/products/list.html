@@ -3,29 +3,35 @@
 {% block title %}Produtos — Vidalys Flow{% endblock %}
 
 {% block content %}
-  <div class="actions">
+  <div class="section-heading">
     <div>
+      <p class="muted" style="margin:0">CATÁLOGO</p>
       <h1>Produtos</h1>
       <p class="muted">{{ organization.name }}</p>
     </div>
-    <a href="{% url 'products:create' %}">Novo produto</a>
+    <div class="actions">
+      <a href="{% url 'products:export-csv' %}">Exportar CSV</a>
+      <a href="{% url 'products:import-csv' %}">Importar</a>
+      <a href="{% url 'products:create' %}">Novo produto</a>
+    </div>
   </div>
 
-  <form method="get" role="search">
-    <label for="product-search">Buscar por nome, SKU, código de barras ou identificador</label>
-    <input id="product-search" type="search" name="q" value="{{ query }}">
+  <form method="get" role="search" class="actions">
+    <label for="product-search" style="flex:1">Buscar por nome, SKU, código de barras ou identificador
+      <input id="product-search" type="search" name="q" value="{{ query }}">
+    </label>
     <button type="submit">Buscar</button>
   </form>
 
-  <table>
+  <table class="responsive-table">
     <thead><tr><th>Nome</th><th>Status</th><th>Unidade</th><th>Ação</th></tr></thead>
     <tbody>
       {% for product in products %}
         <tr>
-          <td>{{ product.name }}</td>
-          <td>{{ product.get_status_display }}</td>
-          <td>{{ product.default_unit }}</td>
-          <td><a href="{% url 'products:detail' product_id=product.id %}">Ver detalhes</a></td>
+          <td data-label="Nome"><strong>{{ product.name }}</strong></td>
+          <td data-label="Status"><span class="badge">{{ product.get_status_display }}</span></td>
+          <td data-label="Unidade">{{ product.default_unit }}</td>
+          <td data-label="Ação"><a href="{% url 'products:detail' product_id=product.id %}">Ver detalhes</a></td>
         </tr>
       {% empty %}
         <tr><td colspan="4">Nenhum produto encontrado nesta organização.</td></tr>
@@ -33,7 +39,7 @@
     </tbody>
   </table>
   {% if products.paginator.num_pages > 1 %}
-    <nav aria-label="Paginação de produtos">
+    <nav class="actions" aria-label="Paginação de produtos">
       {% if products.has_previous %}<a href="?q={{ query|urlencode }}&page={{ products.previous_page_number }}">Anterior</a>{% endif %}
       <span>Página {{ products.number }} de {{ products.paginator.num_pages }}</span>
       {% if products.has_next %}<a href="?q={{ query|urlencode }}&page={{ products.next_page_number }}">Próxima</a>{% endif %}
