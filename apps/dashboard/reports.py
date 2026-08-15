@@ -55,13 +55,18 @@ def _summary(queryset):
     return {"count": count, "value": value, "ticket": ticket.quantize(Decimal("0.01"))}
 
 
-def order_report_for_organization(*, organization, period="month", today=None):
-    period, start, end = report_range(period=period, today=today)
-    queryset = Order.objects.filter(
+def _period_queryset(*, organization, start, end):
+    return Order.objects.filter(
         organization=organization,
+        customer__organization=organization,
         created_at__gte=start,
         created_at__lt=end,
     )
+
+
+def order_report_for_organization(*, organization, period="month", today=None):
+    period, start, end = report_range(period=period, today=today)
+    queryset = _period_queryset(organization=organization, start=start, end=end)
     confirmed = queryset.filter(status=Order.Status.CONFIRMED)
     cancelled = queryset.filter(status=Order.Status.CANCELLED)
     drafts = queryset.filter(status=Order.Status.DRAFT)
@@ -71,6 +76,16 @@ def order_report_for_organization(*, organization, period="month", today=None):
         .annotate(count=Count("id"), value=Sum("total"))
         .order_by("day")
     )
+
+    duration = end - start
+    previous_end = start
+    previous_start = previous_end - duration
+    previous_queryset = _period_queryset(
+        organization=organization,
+        start=previous_start,
+        end=previous_end,
+    )
+
     return {
         "period": period,
         "period_label": REPORT_PERIODS[period],
@@ -81,4 +96,10 @@ def order_report_for_organization(*, organization, period="month", today=None):
         "cancelled": _summary(cancelled),
         "drafts": _summary(drafts),
         "daily": daily,
+        "previous": {
+            "start": previous_start,
+            "end": previous_end,
+            "all": _summary(previous_queryset),
+            "confirmed": _summary(previous_queryset.filter(status=Order.Status.CONFIRMED)),
+        },
     }
