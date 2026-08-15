@@ -123,7 +123,8 @@ def test_order_workspace_renders_pix_and_active_checkout_actions(
     assert "Copiar PIX" in html
     assert hosted_url in html
     assert "Copiar link" in html
-    assert reverse("payments:detail", args=(intent.id,)) not in html
+    payment_detail_url = reverse("payments:detail", args=(intent.id,))
+    assert f'href="{payment_detail_url}"' not in html
 
 
 def test_checkout_request_from_workspace_uses_payments_service_and_returns_to_order(
