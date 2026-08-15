@@ -6,17 +6,33 @@
       <h1>Relatório de pedidos</h1>
       <p class="muted">{{ organization.name }} · dados operacionais, não fiscais.</p>
     </div>
-    <a href="{% url 'dashboard:order-report-csv' %}?period={{ report.period }}">Exportar CSV</a>
+    <a href="{% url 'dashboard:order-report-csv' %}?period={{ report.period }}&start={{ report.start_date|date:'Y-m-d' }}&end={{ report.end_date|date:'Y-m-d' }}">Exportar CSV</a>
   </div>
 
   <nav aria-label="Períodos do relatório">
     {% for value, label in periods.items %}
-      <a href="?period={{ value }}"{% if report.period == value %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% if value != "custom" %}
+        <a href="?period={{ value }}"{% if report.period == value %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% endif %}
     {% endfor %}
   </nav>
 
+  <form method="get" class="actions" aria-label="Período personalizado">
+    <input type="hidden" name="period" value="custom">
+    <label>
+      Data inicial
+      <input type="date" name="start" value="{% if report.period == 'custom' %}{{ report.start_date|date:'Y-m-d' }}{% endif %}" required>
+    </label>
+    <label>
+      Data final
+      <input type="date" name="end" value="{% if report.period == 'custom' %}{{ report.end_date|date:'Y-m-d' }}{% endif %}" required>
+    </label>
+    <button type="submit">Aplicar período</button>
+  </form>
+
   <section>
     <h2>{{ report.period_label }}</h2>
+    <p class="muted">{{ report.start_date|date:"d/m/Y" }} a {{ report.end_date|date:"d/m/Y" }}</p>
     <div class="grid">
       <article class="card"><span class="muted">Pedidos</span><strong class="metric">{{ report.all.count }}</strong><span>R$ {{ report.all.value }}</span></article>
       <article class="card"><span class="muted">Confirmados</span><strong class="metric">{{ report.confirmed.count }}</strong><span>R$ {{ report.confirmed.value }}</span></article>
