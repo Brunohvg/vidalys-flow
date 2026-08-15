@@ -2,14 +2,38 @@ import uuid
 from decimal import Decimal
 
 import pytest
+from django.utils import timezone
 
+from apps.customers.models import Customer
 from apps.dashboard.order_actions import order_next_action
+from apps.orders.models import Order
 from apps.payments.manual_services import confirm_manual_payment
 from apps.payments.models import PixPaymentInstruction
 from apps.payments.pix_services import configure_pix_instruction
 from apps.payments.services import create_payment_intent
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def payable_order(organization, manager, manager_membership):
+    customer = Customer.objects.create(
+        organization=organization,
+        customer_type=Customer.Type.INDIVIDUAL,
+        display_name="Cliente Dashboard",
+    )
+    return Order.objects.create(
+        organization=organization,
+        number=501,
+        customer=customer,
+        status=Order.Status.CONFIRMED,
+        currency="BRL",
+        subtotal=Decimal("125.40"),
+        total=Decimal("125.40"),
+        customer_name_snapshot=customer.display_name,
+        created_by=manager,
+        confirmed_at=timezone.now(),
+    )
 
 
 def test_confirmed_order_without_payment_recommends_payment(
