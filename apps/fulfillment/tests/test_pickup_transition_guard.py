@@ -3,6 +3,7 @@ import uuid
 import pytest
 from django.urls import reverse
 
+from apps.fulfillment.exceptions import InvalidFulfillment
 from apps.fulfillment.models import Fulfillment
 from apps.fulfillment.services import create_fulfillment, transition_fulfillment
 
@@ -29,6 +30,36 @@ def _ready_pickup(*, organization, confirmed_order, confirmed_item, pickup_unit,
             idempotency_key=str(uuid.uuid4()),
         )
     return fulfillment
+
+
+def test_service_cannot_complete_ready_pickup_without_verified_code(
+    organization,
+    confirmed_order,
+    confirmed_item,
+    pickup_unit,
+    user,
+    operator_membership,
+):
+    fulfillment = _ready_pickup(
+        organization=organization,
+        confirmed_order=confirmed_order,
+        confirmed_item=confirmed_item,
+        pickup_unit=pickup_unit,
+        user=user,
+    )
+
+    with pytest.raises(InvalidFulfillment, match="exige validação do código"):
+        transition_fulfillment(
+            organization=organization,
+            fulfillment=fulfillment,
+            actor=user,
+            target_status=Fulfillment.Status.COMPLETED,
+            expected_version=fulfillment.version,
+            idempotency_key=str(uuid.uuid4()),
+        )
+
+    fulfillment.refresh_from_db()
+    assert fulfillment.status == Fulfillment.Status.READY
 
 
 def test_generic_transition_cannot_complete_ready_pickup(
