@@ -4,7 +4,8 @@ import pytest
 
 from apps.fulfillment.exceptions import InvalidFulfillment
 from apps.fulfillment.models import Fulfillment, FulfillmentCommandReceipt
-from apps.fulfillment.services import consume_order_cancelled_event, create_fulfillment
+from apps.fulfillment.pickup_services import complete_pickup_with_code, pickup_verification_code
+from apps.fulfillment.services import consume_order_cancelled_event, create_fulfillment, transition_fulfillment
 from apps.fulfillment.tasks import consume_order_cancellations
 from apps.orders.services import cancel_order
 from apps.platform.services import enqueue_event
@@ -43,9 +44,7 @@ def test_order_cancel_event_cancels_open_batches_once_and_preserves_completed(
         allocations=[{"order_item": confirmed_item, "quantity": 5}],
         idempotency_key=str(uuid.uuid4()),
     )
-    from apps.fulfillment.services import transition_fulfillment
-
-    for target in ("preparing", "ready", "completed"):
+    for target in ("preparing", "ready"):
         completed = transition_fulfillment(
             organization=organization,
             fulfillment=completed,
@@ -54,6 +53,14 @@ def test_order_cancel_event_cancels_open_batches_once_and_preserves_completed(
             expected_version=completed.version,
             idempotency_key=str(uuid.uuid4()),
         )
+    completed = complete_pickup_with_code(
+        organization=organization,
+        fulfillment=completed,
+        actor=user,
+        code=pickup_verification_code(fulfillment=completed),
+        expected_version=completed.version,
+        idempotency_key=str(uuid.uuid4()),
+    )
     cancel_order(
         organization=organization,
         order=confirmed_order,
