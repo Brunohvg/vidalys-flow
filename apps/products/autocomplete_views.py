@@ -12,7 +12,15 @@ AUTOCOMPLETE_LIMIT = 10
 @require_GET
 def product_autocomplete(request):
     organization, membership = active_organization_for_user(user=request.user, session=request.session)
-    if not organization or not membership or not policies.can_view_products(user=request.user, organization=organization):
+    can_view = bool(
+        organization
+        and membership
+        and policies.can_view_products(
+            user=request.user,
+            organization=organization,
+        )
+    )
+    if not can_view:
         return JsonResponse({"results": []}, status=403)
 
     query = (request.GET.get("q") or "").strip()
