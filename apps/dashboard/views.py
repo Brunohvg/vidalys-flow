@@ -1,11 +1,14 @@
+import csv
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
 
 from apps.dashboard.global_search import global_search_for_organization
 from apps.dashboard.pickups import ready_pickups_for_organization
+from apps.dashboard.reports import REPORT_PERIODS, order_report_for_organization
 from apps.organizations.selectors import active_organization_for_user
 
 from .selectors import (
@@ -73,6 +76,43 @@ def pickup_center(request):
             "pickups": pickups,
         },
     )
+
+
+@login_required
+@require_GET
+def order_report(request):
+    organization, response = _active_organization_or_redirect(request)
+    if response:
+        return response
+    period = request.GET.get("period", "month")
+    report = order_report_for_organization(organization=organization, period=period)
+    return render(
+        request,
+        "dashboard/order_report.html",
+        {
+            "organization": organization,
+            "periods": REPORT_PERIODS,
+            "report": report,
+        },
+    )
+
+
+@login_required
+@require_GET
+def order_report_csv(request):
+    organization, response = _active_organization_or_redirect(request)
+    if response:
+        return response
+    period = request.GET.get("period", "month")
+    report = order_report_for_organization(organization=organization, period=period)
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="pedidos-{report["period"]}.csv"'
+    response.write("\ufeff")
+    writer = csv.writer(response)
+    writer.writerow(("Data", "Quantidade de pedidos", "Valor dos pedidos"))
+    for row in report["daily"]:
+        writer.writerow((row["day"].isoformat(), row["count"], row["value"] or "0.00"))
+    return response
 
 
 @login_required
