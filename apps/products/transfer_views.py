@@ -9,6 +9,15 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from apps.organizations.selectors import active_organization_for_user
+from apps.platform.import_receipts import (
+    ImportReceiptConflict,
+    claim_import_batch,
+    complete_import_batch,
+    import_batch_digest,
+    import_row_digest,
+    record_import_row,
+)
+from apps.platform.models import DataImportBatchReceipt
 from apps.products import policies, selectors, services
 from apps.products.exceptions import ProductDomainError
 
@@ -87,6 +96,7 @@ def product_import_csv(request):
                 rows = list(reader)
                 if len(rows) > MAX_IMPORT_ROWS:
                     raise ValueError(f"O arquivo excede o limite de {MAX_IMPORT_ROWS} linhas.")
+
                 groups = {}
                 for index, row in enumerate(rows, start=2):
                     key = (row["product_key"] or "").strip()
@@ -101,21 +111,29 @@ def product_import_csv(request):
                             "name": name,
                             "description": row["description"],
                             "default_unit": row["default_unit"],
-                            "variants": [],
+                            "entries": [],
                         },
                     )
                     if group["name"] != name:
                         raise ValueError(f"Linha {index}: product_key reutilizado com nome diferente.")
-                    if any((row[field] or "").strip() for field in ("variant_name", "sku", "barcode")):
-                        group["variants"].append(
-                            {
-                                "name": row["variant_name"],
-                                "sku": row["sku"],
-                                "barcode": row["barcode"],
-                            }
-                        )
+                    group["entries"].append({"row_number": index, "row": row})
 
+                source_digest = import_batch_digest(
+                    domain=DataImportBatchReceipt.Domain.PRODUCTS,
+                    headers=PRODUCT_HEADERS,
+                    rows=rows,
+                )
                 with transaction.atomic():
+                    batch, is_new = claim_import_batch(
+                        organization=organization,
+                        domain=DataImportBatchReceipt.Domain.PRODUCTS,
+                        source_digest=source_digest,
+                        row_count=len(rows),
+                    )
+                    if not is_new:
+                        messages.info(request, "Este arquivo de produtos já foi importado.")
+                        return redirect("products:list")
+
                     for group in groups.values():
                         product = services.create_product(
                             organization=organization,
@@ -124,14 +142,30 @@ def product_import_csv(request):
                             description=group["description"],
                             default_unit=group["default_unit"],
                         )
-                        for variant in group["variants"]:
-                            services.create_variant(
-                                organization=organization,
-                                product=product,
-                                actor=request.user,
-                                **variant,
+                        for entry in group["entries"]:
+                            row = entry["row"]
+                            if any((row[field] or "").strip() for field in ("variant_name", "sku", "barcode")):
+                                services.create_variant(
+                                    organization=organization,
+                                    product=product,
+                                    actor=request.user,
+                                    name=row["variant_name"],
+                                    sku=row["sku"],
+                                    barcode=row["barcode"],
+                                )
+                            record_import_row(
+                                batch=batch,
+                                row_number=entry["row_number"],
+                                row_digest=import_row_digest(headers=PRODUCT_HEADERS, row=row),
+                                entity_id=product.id,
                             )
-            except (UnicodeDecodeError, ValueError, ProductDomainError) as exc:
+                    complete_import_batch(batch=batch)
+            except (
+                UnicodeDecodeError,
+                ValueError,
+                ProductDomainError,
+                ImportReceiptConflict,
+            ) as exc:
                 messages.error(request, f"Importação cancelada: {exc}")
             else:
                 messages.success(request, f"{len(groups)} produtos importados.")
