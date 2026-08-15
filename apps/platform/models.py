@@ -41,3 +41,48 @@ class OutboxEvent(BaseModel):
 
     def __str__(self):
         return f"{self.event_type}: {self.aggregate_type}/{self.aggregate_id}"
+
+
+class DataImportBatchReceipt(BaseModel):
+    class Domain(models.TextChoices):
+        CUSTOMERS = "customers", "Clientes"
+        PRODUCTS = "products", "Produtos"
+
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="data_import_batches",
+    )
+    domain = models.CharField(max_length=32, choices=Domain.choices)
+    source_digest = models.CharField(max_length=64)
+    row_count = models.PositiveIntegerField()
+    completed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("organization", "domain", "source_digest"),
+                name="data_import_batch_unique_per_org_domain",
+            )
+        ]
+
+
+class DataImportRowReceipt(BaseModel):
+    batch = models.ForeignKey(
+        DataImportBatchReceipt,
+        on_delete=models.CASCADE,
+        related_name="rows",
+    )
+    row_number = models.PositiveIntegerField()
+    row_digest = models.CharField(max_length=64)
+    entity_id = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ("row_number",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("batch", "row_number"),
+                name="data_import_row_unique_per_batch",
+            )
+        ]
