@@ -4,10 +4,10 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
 
+from apps.dashboard.global_search import global_search_for_organization
 from apps.organizations.selectors import active_organization_for_user
 
 from .selectors import (
-    dashboard_search_for_organization,
     dashboard_summary,
     fulfillment_attention_for_organization,
     integration_attention_for_organization,
@@ -47,7 +47,10 @@ def dashboard_home(request):
             "integration_connections": integrations["connections"],
             "integration_deliveries": integrations["deliveries"],
             "search_query": search_query,
-            "search_results": dashboard_search_for_organization(organization=organization, query=search_query),
+            "search_results": global_search_for_organization(
+                organization=organization,
+                query=search_query,
+            ),
         },
     )
 
