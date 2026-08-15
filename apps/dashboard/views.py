@@ -30,6 +30,14 @@ def _active_organization_or_redirect(request):
     return organization, None
 
 
+def _report_parameters(request):
+    return {
+        "period": request.GET.get("period", "month"),
+        "custom_start": request.GET.get("start", ""),
+        "custom_end": request.GET.get("end", ""),
+    }
+
+
 @login_required
 @require_GET
 def dashboard_home(request):
@@ -84,8 +92,7 @@ def order_report(request):
     organization, response = _active_organization_or_redirect(request)
     if response:
         return response
-    period = request.GET.get("period", "month")
-    report = order_report_for_organization(organization=organization, period=period)
+    report = order_report_for_organization(organization=organization, **_report_parameters(request))
     return render(
         request,
         "dashboard/order_report.html",
@@ -103,8 +110,7 @@ def order_report_csv(request):
     organization, response = _active_organization_or_redirect(request)
     if response:
         return response
-    period = request.GET.get("period", "month")
-    report = order_report_for_organization(organization=organization, period=period)
+    report = order_report_for_organization(organization=organization, **_report_parameters(request))
     response = HttpResponse(content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="pedidos-{report["period"]}.csv"'
     response.write("\ufeff")
