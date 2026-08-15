@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from django.db.models import Count, Sum
@@ -14,6 +14,7 @@ REPORT_PERIODS = {
     "month": "Este mês",
     "previous_month": "Mês anterior",
     "year": "Este ano",
+    "custom": "Personalizado",
 }
 
 
@@ -21,7 +22,18 @@ def _aware_start(day):
     return timezone.make_aware(datetime.combine(day, time.min), timezone.get_current_timezone())
 
 
-def report_range(*, period, today=None):
+def _coerce_date(value):
+    if isinstance(value, date):
+        return value
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def report_range(*, period, today=None, custom_start=None, custom_end=None):
     today = today or timezone.localdate()
     if period == "today":
         start_day, end_day = today, today + timedelta(days=1)
@@ -37,6 +49,18 @@ def report_range(*, period, today=None):
     elif period == "year":
         start_day = today.replace(month=1, day=1)
         end_day = today.replace(year=today.year + 1, month=1, day=1)
+    elif period == "custom":
+        start_day = _coerce_date(custom_start)
+        inclusive_end = _coerce_date(custom_end)
+        if start_day is not None and inclusive_end is not None and start_day <= inclusive_end:
+            end_day = inclusive_end + timedelta(days=1)
+        else:
+            period = "month"
+            start_day = today.replace(day=1)
+            if start_day.month == 12:
+                end_day = start_day.replace(year=start_day.year + 1, month=1)
+            else:
+                end_day = start_day.replace(month=start_day.month + 1)
     else:
         period = "month"
         start_day = today.replace(day=1)
@@ -64,8 +88,20 @@ def _period_queryset(*, organization, start, end):
     )
 
 
-def order_report_for_organization(*, organization, period="month", today=None):
-    period, start, end = report_range(period=period, today=today)
+def order_report_for_organization(
+    *,
+    organization,
+    period="month",
+    today=None,
+    custom_start=None,
+    custom_end=None,
+):
+    period, start, end = report_range(
+        period=period,
+        today=today,
+        custom_start=custom_start,
+        custom_end=custom_end,
+    )
     queryset = _period_queryset(organization=organization, start=start, end=end)
     confirmed = queryset.filter(status=Order.Status.CONFIRMED)
     cancelled = queryset.filter(status=Order.Status.CANCELLED)
@@ -91,6 +127,8 @@ def order_report_for_organization(*, organization, period="month", today=None):
         "period_label": REPORT_PERIODS[period],
         "start": start,
         "end": end,
+        "start_date": start.date(),
+        "end_date": (end - timedelta(days=1)).date(),
         "all": _summary(queryset),
         "confirmed": _summary(confirmed),
         "cancelled": _summary(cancelled),
