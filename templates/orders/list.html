@@ -5,6 +5,16 @@
   <p class="muted">{{ organization.name }}</p>
   <div class="actions"><a href="{% url 'orders:create' %}">Novo pedido</a></div>
 
+  <div class="card" aria-label="Filtros rápidos">
+    <strong>Filtros rápidos</strong>
+    <div class="actions">
+      {% for preset in operational_presets %}
+        <a href="?{{ preset.querystring }}">{{ preset.label }}</a>
+      {% endfor %}
+      {% if request.GET %}<a href="{% url 'orders:list' %}">Limpar filtros</a>{% endif %}
+    </div>
+  </div>
+
   <form method="get" class="grid">
     {{ filter_form.as_p }}
     <p><button type="submit">Filtrar</button></p>
