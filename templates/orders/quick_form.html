@@ -44,6 +44,9 @@
       <h2>Cliente</h2>
       <p class="hint">Use um cadastro existente ou informe os dados mínimos de um novo cliente.</p>
       <div class="field full">
+        <label for="customer-existing-search">Buscar cliente existente</label>
+        <input id="customer-existing-search" type="search" autocomplete="off" placeholder="Digite pelo menos 2 caracteres" aria-describedby="customer-search-hint">
+        <p class="hint" id="customer-search-hint">A busca usa somente clientes da organização ativa e não exibe documento ou contato.</p>
         {{ form.customer.label_tag }}
         {{ form.customer }}
         {{ form.customer.errors }}
@@ -100,6 +103,34 @@
   }
   radios.forEach(r => r.addEventListener('change', sync));
   sync();
+
+  const search = document.getElementById('customer-existing-search');
+  const select = document.getElementById('id_customer');
+  let timer = null;
+  if (search && select) {
+    search.addEventListener('input', function(){
+      clearTimeout(timer);
+      const query = search.value.trim();
+      if (query.length < 2) return;
+      timer = setTimeout(async function(){
+        try {
+          const response = await fetch('{% url "customers:autocomplete" %}?q=' + encodeURIComponent(query), {
+            headers: {'Accept': 'application/json'}, credentials: 'same-origin'
+          });
+          if (!response.ok) return;
+          const data = await response.json();
+          const selectedValue = select.value;
+          select.replaceChildren(new Option('Selecione um cliente', ''));
+          data.results.forEach(function(item){
+            const option = new Option(item.label, item.id, false, item.id === selectedValue);
+            select.add(option);
+          });
+        } catch (_) {
+          // Progressive enhancement: the original server-rendered select remains the fallback.
+        }
+      }, 220);
+    });
+  }
 })();
 </script>
 {% endblock %}
