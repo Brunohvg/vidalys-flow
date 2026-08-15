@@ -42,9 +42,11 @@ def product_export_csv(request):
     response.write("\ufeff")
     writer = csv.writer(response)
     writer.writerow(PRODUCT_HEADERS)
-    for product in selectors.products_for_organization(organization=organization, include_inactive=True).prefetch_related(
-        "variants"
-    ):
+    products = selectors.products_for_organization(
+        organization=organization,
+        include_inactive=True,
+    ).prefetch_related("variants")
+    for product in products:
         variants = list(product.variants.all())
         if not variants:
             variants = [None]
