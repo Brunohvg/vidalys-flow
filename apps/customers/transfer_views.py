@@ -12,9 +12,26 @@ from apps.customers import policies, selectors, services
 from apps.customers.exceptions import CustomerDomainError
 from apps.customers.models import Customer
 from apps.organizations.selectors import active_organization_for_user
+from apps.platform.import_receipts import (
+    ImportReceiptConflict,
+    claim_import_batch,
+    complete_import_batch,
+    import_batch_digest,
+    import_row_digest,
+    record_import_row,
+)
+from apps.platform.models import DataImportBatchReceipt
 
 MAX_IMPORT_ROWS = 1000
-CUSTOMER_HEADERS = ("customer_type", "display_name", "legal_name", "document", "email", "phone", "notes_summary")
+CUSTOMER_HEADERS = (
+    "customer_type",
+    "display_name",
+    "legal_name",
+    "document",
+    "email",
+    "phone",
+    "notes_summary",
+)
 
 
 def _organization_or_redirect(request):
@@ -89,14 +106,28 @@ def customer_import_csv(request):
                 rows = list(reader)
                 if len(rows) > MAX_IMPORT_ROWS:
                     raise ValueError(f"O arquivo excede o limite de {MAX_IMPORT_ROWS} linhas.")
+                source_digest = import_batch_digest(
+                    domain=DataImportBatchReceipt.Domain.CUSTOMERS,
+                    headers=CUSTOMER_HEADERS,
+                    rows=rows,
+                )
                 with transaction.atomic():
+                    batch, is_new = claim_import_batch(
+                        organization=organization,
+                        domain=DataImportBatchReceipt.Domain.CUSTOMERS,
+                        source_digest=source_digest,
+                        row_count=len(rows),
+                    )
+                    if not is_new:
+                        messages.info(request, "Este arquivo de clientes já foi importado.")
+                        return redirect("customers:list")
                     for index, row in enumerate(rows, start=2):
                         customer_type = (row["customer_type"] or "").strip().lower()
                         if customer_type not in Customer.Type.values:
                             raise ValueError(f"Linha {index}: tipo de cliente inválido.")
                         if not (row["display_name"] or "").strip():
                             raise ValueError(f"Linha {index}: nome do cliente é obrigatório.")
-                        services.create_customer(
+                        customer = services.create_customer(
                             organization=organization,
                             actor=request.user,
                             customer_type=customer_type,
@@ -107,7 +138,19 @@ def customer_import_csv(request):
                             phone=row["phone"],
                             notes_summary=row["notes_summary"],
                         )
-            except (UnicodeDecodeError, ValueError, CustomerDomainError) as exc:
+                        record_import_row(
+                            batch=batch,
+                            row_number=index,
+                            row_digest=import_row_digest(headers=CUSTOMER_HEADERS, row=row),
+                            entity_id=customer.id,
+                        )
+                    complete_import_batch(batch=batch)
+            except (
+                UnicodeDecodeError,
+                ValueError,
+                CustomerDomainError,
+                ImportReceiptConflict,
+            ) as exc:
                 messages.error(request, f"Importação cancelada: {exc}")
             else:
                 messages.success(request, f"{len(rows)} clientes importados.")
