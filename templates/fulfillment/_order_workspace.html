@@ -1,0 +1,53 @@
+{% if visible %}
+<section class="panel" id="fulfillment-workspace" aria-labelledby="fulfillment-workspace-heading">
+  <div class="panel-head"><h2 id="fulfillment-workspace-heading">Atendimento</h2></div>
+  {% if order.status != "confirmed" %}
+    <p class="muted-block">Disponível após confirmação do pedido.</p>
+  {% elif not rows %}
+    <p class="muted-block">Nenhum atendimento criado.</p>
+    <div class="compact-actions"><a href="{% url 'fulfillment:create' order.id %}">Definir retirada ou entrega</a></div>
+  {% else %}
+    {% for row in rows %}
+      {% with fulfillment=row.fulfillment %}
+        <div class="summary-item" style="margin-bottom:.75rem;">
+          <small>{{ fulfillment.display_number }}</small>
+          <strong>{{ fulfillment.get_method_display }} · {{ fulfillment.get_status_display }}</strong>
+          {% if fulfillment.method == "pickup" and fulfillment.pickup_unit_name_snapshot %}
+            <p class="muted-block">Retirada em {{ fulfillment.pickup_unit_name_snapshot }}</p>
+          {% endif %}
+
+          {% if fulfillment.tracking_code or fulfillment.tracking_url %}
+            <div style="margin-top:.55rem;">
+              {% if fulfillment.tracking_code %}<div><small>Rastreio</small><strong>{{ fulfillment.tracking_code }}</strong></div>{% endif %}
+              {% if fulfillment.tracking_url %}<div class="compact-actions" style="margin-top:.4rem;"><a href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener noreferrer">Abrir rastreio</a></div>{% endif %}
+            </div>
+          {% endif %}
+
+          {% if can_operate and row.target_status %}
+            <form method="post" action="{% url 'fulfillment:workspace_transition' fulfillment.id row.target_status %}" style="margin-top:.6rem;">
+              {% csrf_token %}
+              <input type="hidden" name="expected_version" value="{{ fulfillment.version }}">
+              <input type="hidden" name="idempotency_key" value="{{ row.transition_key }}">
+              <button type="submit">{{ row.transition_label }}</button>
+            </form>
+          {% elif fulfillment.method == "pickup" and fulfillment.status == "ready" %}
+            <p class="muted-block">A retirada deve ser concluída com o código informado pelo cliente.</p>
+          {% endif %}
+
+          {% if row.tracking_form %}
+            <details class="inline-editor">
+              <summary>{% if fulfillment.tracking_code or fulfillment.tracking_url %}Editar rastreio{% else %}Adicionar rastreio{% endif %}</summary>
+              <div class="editor-body">
+                <form method="post" action="{% url 'fulfillment:workspace_tracking' fulfillment.id %}">
+                  {% csrf_token %}{{ row.tracking_form.as_p }}
+                  <button type="submit">Salvar rastreio</button>
+                </form>
+              </div>
+            </details>
+          {% endif %}
+        </div>
+      {% endwith %}
+    {% endfor %}
+  {% endif %}
+</section>
+{% endif %}

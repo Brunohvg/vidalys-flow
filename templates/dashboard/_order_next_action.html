@@ -9,20 +9,20 @@
 
   {% elif action.kind == "create_payment" %}
     {% if action.can_operate %}
-      <a href="#payment-workspace">Preparar pagamento neste pedido</a>
+      <a href="#payment-workspace">Preparar pagamento</a>
     {% else %}
-      <p class="muted">A gerência precisa preparar o pagamento.</p>
+      <p class="muted">A gerência precisa criar a cobrança.</p>
     {% endif %}
 
   {% elif action.kind == "payment_pending" %}
-    <a href="#payment-workspace">Resolver pagamento neste pedido</a>
+    <a href="#payment-workspace">Operar pagamento no pedido</a>
 
   {% elif action.kind == "payment_attention" or action.kind == "payment_closed" %}
-    <a href="#payment-workspace">Revisar pagamento neste pedido</a>
+    <a href="#payment-workspace">Revisar pagamento</a>
 
   {% elif action.kind == "create_fulfillment" %}
     {% if action.can_operate %}
-      <a href="{% url 'fulfillment:create' order.id %}">Criar entrega ou retirada</a>
+      <a href="#fulfillment-workspace">Definir atendimento</a>
     {% endif %}
 
   {% elif action.kind == "pickup_validation" %}
@@ -47,13 +47,12 @@
 
   {% elif action.kind == "fulfillment_transition" %}
     {% if action.can_operate and action.target_status %}
-      <form method="post" action="{% url 'fulfillment:transition' action.fulfillment.id action.target_status %}">
+      <form method="post" action="{% url 'fulfillment:workspace_transition' action.fulfillment.id action.target_status %}">
         {% csrf_token %}
         <input type="hidden" name="expected_version" value="{{ action.fulfillment.version }}">
         <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
         <button type="submit">{{ action.label }}</button>
       </form>
-      <p><a href="{% url 'fulfillment:detail' action.fulfillment.id %}">Ver detalhes do fulfillment</a></p>
     {% endif %}
   {% endif %}
 </section>

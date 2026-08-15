@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load dashboard_experience payment_workspace %}
+{% load dashboard_experience fulfillment_workspace payment_workspace %}
 {% block title %}{{ detail.display_number }} — Vidalys Flow{% endblock %}
 {% block content %}
 <style>
@@ -112,14 +112,7 @@
 
       {% payment_order_workspace organization order %}
 
-      <section class="panel" aria-labelledby="fulfillment-heading">
-        <div class="panel-head"><h2 id="fulfillment-heading">Atendimento</h2></div>
-        {% if order.status == "confirmed" %}
-          {% for fulfillment in order.fulfillments.all %}
-            <div style="margin-bottom:.7rem;"><strong>{{ fulfillment.display_number }}</strong><div>{{ fulfillment.get_method_display }}</div><div class="muted">{{ fulfillment.get_status_display }}</div><div class="compact-actions" style="margin-top:.45rem;"><a href="{% url 'fulfillment:detail' fulfillment.id %}">Ver atendimento</a></div></div>
-          {% empty %}<p class="muted-block">Nenhum atendimento criado.</p><div class="compact-actions"><a href="{% url 'fulfillment:create' order.id %}">Definir retirada ou entrega</a></div>{% endfor %}
-        {% else %}<p class="muted-block">Disponível após confirmação do pedido.</p>{% endif %}
-      </section>
+      {% fulfillment_order_workspace organization order %}
 
       <section class="panel"><h2>Resumo</h2><div class="summary-grid" style="margin-top:.7rem;"><div class="summary-item"><small>Subtotal</small><strong>R$ {{ order.subtotal }}</strong></div><div class="summary-item"><small>Descontos</small><strong>R$ {{ order.discount_total }}</strong></div><div class="summary-item"><small>Acréscimos</small><strong>R$ {{ order.surcharge_total }}</strong></div><div class="summary-item"><small>Total</small><strong>R$ {{ order.total }}</strong></div></div></section>
 
