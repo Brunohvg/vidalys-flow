@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Retiradas · Vidalys Flow{% endblock %}
+{% block content %}
+  <div class="section-heading">
+    <div>
+      <h1>Retiradas</h1>
+      <p class="muted">{{ organization.name }} · pedidos prontos aguardando o cliente.</p>
+    </div>
+  </div>
+
+  <section class="card">
+    <form method="get" class="actions" role="search">
+      <input name="q" value="{{ query }}" placeholder="Número do pedido ou cliente" aria-label="Buscar retirada">
+      <button type="submit">Buscar</button>
+    </form>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <h2>Prontos para retirada</h2>
+      <strong>{{ pickups|length }}</strong>
+    </div>
+    {% if pickups %}
+      <table class="responsive-table">
+        <thead><tr><th>Pedido</th><th>Cliente</th><th>Unidade</th><th>Pronto desde</th><th>Ação</th></tr></thead>
+        <tbody>
+          {% for fulfillment in pickups %}
+            <tr>
+              <td data-label="Pedido">{{ fulfillment.order.display_number }}</td>
+              <td data-label="Cliente">{{ fulfillment.order.customer_name_snapshot|default:fulfillment.order.customer.display_name }}</td>
+              <td data-label="Unidade">{{ fulfillment.pickup_unit_name_snapshot }}</td>
+              <td data-label="Pronto desde">{{ fulfillment.ready_at|date:"d/m/Y H:i" }}</td>
+              <td data-label="Ação"><a href="{% url 'orders:detail' fulfillment.order_id %}">Validar retirada</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">Nenhum pedido pronto para retirada nesta organização.</p>
+    {% endif %}
+  </section>
+{% endblock %}
