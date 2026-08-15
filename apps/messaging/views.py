@@ -22,6 +22,7 @@ from apps.messaging.forms import (
 )
 from apps.messaging.models import MessagingChannel
 from apps.organizations.selectors import active_organization_for_user
+from apps.payments import policies as payment_policies
 
 
 def _context_or_redirect(request):
@@ -92,6 +93,11 @@ def message_send(request):
     organization, _ = context
     form = MessageSendForm(request.POST or None, organization=organization)
     if request.method == "POST" and form.is_valid():
+        if (
+            form.cleaned_data["purpose"] == services.PURPOSE_CHECKOUT_LINK
+            and not payment_policies.can_operate_payments(user=request.user, organization=organization)
+        ):
+            raise Http404
         try:
             services.create_message_from_command(
                 organization=organization,
