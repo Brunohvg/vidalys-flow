@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Novo pedido — Vidalys Flow{% endblock %}
+{% block title %}Nova venda — Vidalys Flow{% endblock %}
 {% block content %}
 <style>
   .quick-order-shell { max-width: 58rem; margin: 0 auto; }
@@ -24,16 +24,14 @@
   .or-divider { display:flex; align-items:center; gap:.75rem; color:#8a869b; font-size:.8rem; margin:.8rem 0; }
   .or-divider:before,.or-divider:after { content:""; height:1px; background:#eceaf2; flex:1; }
   .errorlist { margin:.35rem 0 0; font-size:.85rem; }
-  details.quick-card summary { cursor:pointer; font-weight:750; color:#27234d; }
-  details.quick-card[open] summary { margin-bottom:.8rem; }
   @media(max-width:42rem){ .field-grid,.mode-switch{grid-template-columns:1fr}.quick-order-header{display:block}.submit-row{flex-direction:column-reverse;align-items:stretch}.submit-row a{text-align:center}.submit-row button{width:100%} }
 </style>
 <div class="quick-order-shell">
   <div class="quick-order-header">
     <div>
       <p class="muted" style="margin:0 0 .25rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; font-size:.72rem;">{{ organization.name }}</p>
-      <h1>Novo pedido</h1>
-      <p class="muted" style="margin:0;">Registre uma venda em poucos campos. Produtos podem ser adicionados depois.</p>
+      <h1>Nova venda</h1>
+      <p class="muted" style="margin:0;">Cliente, valor e atendimento em uma única jornada.</p>
     </div>
   </div>
 
@@ -48,12 +46,12 @@
       <div class="field full">
         <label for="customer-existing-search">Buscar cliente existente</label>
         <input id="customer-existing-search" type="search" autocomplete="off" placeholder="Digite pelo menos 2 caracteres" aria-describedby="customer-search-hint">
-        <p class="hint" id="customer-search-hint">A busca usa somente clientes da organização ativa e não exibe documento ou contato.</p>
+        <p class="hint" id="customer-search-hint">A busca usa somente clientes da Organization ativa e não exibe documento ou contato.</p>
         {{ form.customer.label_tag }}
         {{ form.customer }}
         {{ form.customer.errors }}
       </div>
-      <div class="or-divider">ou cadastre junto com o pedido</div>
+      <div class="or-divider">ou cadastre junto com a venda</div>
       <div class="field-grid">
         <div class="field full">{{ form.customer_name.label_tag }}{{ form.customer_name }}{{ form.customer_name.errors }}</div>
         <div class="field">{{ form.customer_phone.label_tag }}{{ form.customer_phone }}{{ form.customer_phone.errors }}</div>
@@ -63,8 +61,8 @@
     </section>
 
     <section class="quick-card">
-      <h2>Valor da venda</h2>
-      <p class="hint">Para uma venda simples, informe apenas o total. Se quiser detalhar produtos, escolha “Por itens”.</p>
+      <h2>Valor e produto</h2>
+      <p class="hint">Venda por valor não exige produto. No modo por itens, informe ao menos um produto nesta jornada rápida.</p>
       <div class="mode-switch">
         {% for value,label in form.pricing_mode.field.choices %}
           <div class="mode-option">
@@ -78,22 +76,38 @@
         {{ form.manual_total }}
         {{ form.manual_total.errors }}
       </div>
-      <p class="hint" id="itemized-hint" hidden>O pedido será criado em rascunho com total zero. Você poderá adicionar produtos/itens no detalhe antes de confirmar.</p>
+      <div class="field-grid" style="margin-top:1rem;">
+        <div class="field full">
+          <label for="product-search">Buscar produto, SKU ou código de barras</label>
+          <input id="product-search" type="search" autocomplete="off" placeholder="Digite pelo menos 2 caracteres" aria-describedby="product-search-hint">
+          <p class="hint" id="product-search-hint">O autocomplete consulta apenas o catálogo ativo da Organization atual.</p>
+          {{ form.product.label_tag }}{{ form.product }}{{ form.product.errors }}
+        </div>
+        <div class="field">{{ form.product_quantity.label_tag }}{{ form.product_quantity }}{{ form.product_quantity.errors }}</div>
+        <div class="field">{{ form.product_unit_price.label_tag }}{{ form.product_unit_price }}{{ form.product_unit_price.errors }}</div>
+      </div>
     </section>
 
-    <details class="quick-card" {% if form.delivery_postal_code.errors or form.delivery_street.errors or form.delivery_city.errors or form.delivery_state.errors %}open{% endif %}>
-      <summary>Endereço de entrega (opcional)</summary>
-      <p class="hint">Preencha apenas se esta venda precisar de entrega. A consulta automática de CEP ainda não está habilitada; o preenchimento manual continua disponível.</p>
+    <section class="quick-card">
+      <h2>Atendimento</h2>
+      <p class="hint">O pedido é confirmado e o Fulfillment canônico é criado somente depois da confirmação.</p>
       <div class="field-grid">
-        <div class="field">{{ form.delivery_postal_code.label_tag }}{{ form.delivery_postal_code }}{{ form.delivery_postal_code.errors }}</div>
-        <div class="field">{{ form.delivery_state.label_tag }}{{ form.delivery_state }}{{ form.delivery_state.errors }}</div>
-        <div class="field full">{{ form.delivery_street.label_tag }}{{ form.delivery_street }}{{ form.delivery_street.errors }}</div>
-        <div class="field">{{ form.delivery_number.label_tag }}{{ form.delivery_number }}{{ form.delivery_number.errors }}</div>
-        <div class="field">{{ form.delivery_complement.label_tag }}{{ form.delivery_complement }}{{ form.delivery_complement.errors }}</div>
-        <div class="field">{{ form.delivery_district.label_tag }}{{ form.delivery_district }}{{ form.delivery_district.errors }}</div>
-        <div class="field">{{ form.delivery_city.label_tag }}{{ form.delivery_city }}{{ form.delivery_city.errors }}</div>
+        <div class="field">{{ form.fulfillment_method.label_tag }}{{ form.fulfillment_method }}{{ form.fulfillment_method.errors }}</div>
+        <div class="field" id="pickup-unit-field">{{ form.pickup_unit.label_tag }}{{ form.pickup_unit }}{{ form.pickup_unit.errors }}</div>
       </div>
-    </details>
+      <div id="delivery-fields" style="margin-top:1rem;">
+        <p class="hint">Entrega exige endereço completo. O preenchimento manual é o fallback canônico.</p>
+        <div class="field-grid">
+          <div class="field">{{ form.delivery_postal_code.label_tag }}{{ form.delivery_postal_code }}{{ form.delivery_postal_code.errors }}</div>
+          <div class="field">{{ form.delivery_state.label_tag }}{{ form.delivery_state }}{{ form.delivery_state.errors }}</div>
+          <div class="field full">{{ form.delivery_street.label_tag }}{{ form.delivery_street }}{{ form.delivery_street.errors }}</div>
+          <div class="field">{{ form.delivery_number.label_tag }}{{ form.delivery_number }}{{ form.delivery_number.errors }}</div>
+          <div class="field">{{ form.delivery_complement.label_tag }}{{ form.delivery_complement }}{{ form.delivery_complement.errors }}</div>
+          <div class="field">{{ form.delivery_district.label_tag }}{{ form.delivery_district }}{{ form.delivery_district.errors }}</div>
+          <div class="field">{{ form.delivery_city.label_tag }}{{ form.delivery_city }}{{ form.delivery_city.errors }}</div>
+        </div>
+      </div>
+    </section>
 
     <section class="quick-card">
       <h2>Informação opcional</h2>
@@ -102,7 +116,7 @@
 
     <div class="submit-row">
       <a href="{% url 'orders:list' %}">Cancelar</a>
-      <button type="submit">Criar pedido</button>
+      <button type="submit">Registrar venda</button>
     </div>
   </form>
 </div>
@@ -110,43 +124,54 @@
 (function(){
   const radios = document.querySelectorAll('input[name="pricing_mode"]');
   const manual = document.getElementById('manual-total-field');
-  const itemizedHint = document.getElementById('itemized-hint');
-  function sync(){
+  function syncPricing(){
     const selected = document.querySelector('input[name="pricing_mode"]:checked');
-    const isManual = !selected || selected.value === 'manual';
-    manual.hidden = !isManual;
-    itemizedHint.hidden = isManual;
+    manual.hidden = Boolean(selected && selected.value === 'itemized');
   }
-  radios.forEach(r => r.addEventListener('change', sync));
-  sync();
+  radios.forEach(r => r.addEventListener('change', syncPricing));
+  syncPricing();
 
-  const search = document.getElementById('customer-existing-search');
-  const select = document.getElementById('id_customer');
-  let timer = null;
-  if (search && select) {
+  const method = document.getElementById('id_fulfillment_method');
+  const pickup = document.getElementById('pickup-unit-field');
+  const delivery = document.getElementById('delivery-fields');
+  function syncFulfillment(){
+    const isDelivery = method && method.value === 'delivery';
+    pickup.hidden = isDelivery;
+    delivery.hidden = !isDelivery;
+  }
+  if (method) method.addEventListener('change', syncFulfillment);
+  syncFulfillment();
+
+  function attachAutocomplete(searchId, selectId, endpoint, emptyLabel){
+    const search = document.getElementById(searchId);
+    const select = document.getElementById(selectId);
+    let timer = null;
+    if (!search || !select) return;
     search.addEventListener('input', function(){
       clearTimeout(timer);
       const query = search.value.trim();
       if (query.length < 2) return;
       timer = setTimeout(async function(){
         try {
-          const response = await fetch('{% url "customers:autocomplete" %}?q=' + encodeURIComponent(query), {
+          const response = await fetch(endpoint + '?q=' + encodeURIComponent(query), {
             headers: {'Accept': 'application/json'}, credentials: 'same-origin'
           });
           if (!response.ok) return;
           const data = await response.json();
           const selectedValue = select.value;
-          select.replaceChildren(new Option('Selecione um cliente', ''));
+          select.replaceChildren(new Option(emptyLabel, ''));
           data.results.forEach(function(item){
-            const option = new Option(item.label, item.id, false, item.id === selectedValue);
-            select.add(option);
+            select.add(new Option(item.label, item.id, false, item.id === selectedValue));
           });
         } catch (_) {
-          // Progressive enhancement: the original server-rendered select remains the fallback.
+          // Progressive enhancement: the server-rendered select remains the fallback.
         }
       }, 220);
     });
   }
+
+  attachAutocomplete('customer-existing-search', 'id_customer', '{% url "customers:autocomplete" %}', 'Selecione um cliente');
+  attachAutocomplete('product-search', 'id_product', '{% url "products:autocomplete" %}', 'Selecione um produto');
 })();
 </script>
 {% endblock %}
