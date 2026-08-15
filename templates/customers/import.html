@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Importar clientes · Vidalys Flow{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="section-heading">
+    <div>
+      <p class="muted" style="margin:0">CLIENTES</p>
+      <h1>Importar CSV</h1>
+    </div>
+    <a href="{% url 'customers:export-csv' %}">Baixar CSV atual</a>
+  </div>
+  <p>O arquivo é validado por completo antes da confirmação. Se uma linha falhar, nenhuma linha será importada.</p>
+  <p class="muted">Limite: {{ max_rows }} linhas. Cabeçalho obrigatório: {% for header in headers %}<code>{{ header }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="customer-import-file">Arquivo CSV UTF-8</label>
+    <input id="customer-import-file" type="file" name="file" accept=".csv,text/csv" required>
+    <div class="actions">
+      <button type="submit">Importar clientes</button>
+      <a href="{% url 'customers:list' %}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
