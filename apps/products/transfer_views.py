@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from apps.organizations.selectors import active_organization_for_user
+from apps.platform.csv_safety import spreadsheet_safe_cell
 from apps.platform.import_receipts import (
     ImportReceiptConflict,
     claim_import_batch,
@@ -57,21 +58,18 @@ def product_export_csv(request):
         include_inactive=True,
     ).prefetch_related("variants")
     for product in products:
-        variants = list(product.variants.all())
-        if not variants:
-            variants = [None]
+        variants = list(product.variants.all()) or [None]
         for variant in variants:
-            writer.writerow(
-                (
-                    str(product.id),
-                    product.name,
-                    product.description,
-                    product.default_unit,
-                    variant.name if variant else "",
-                    variant.sku if variant else "",
-                    variant.barcode if variant else "",
-                )
+            row = (
+                str(product.id),
+                product.name,
+                product.description,
+                product.default_unit,
+                variant.name if variant else "",
+                variant.sku if variant else "",
+                variant.barcode if variant else "",
             )
+            writer.writerow(tuple(spreadsheet_safe_cell(value) for value in row))
     return response
 
 
