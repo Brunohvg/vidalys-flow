@@ -44,6 +44,19 @@ def test_list_is_scoped_and_paginated(client, organization, other_organization, 
 
 
 @pytest.mark.django_db
+def test_list_exposes_operational_filter_presets(client, organization, user, operator_membership):
+    client.force_login(user)
+    response = client.get(reverse("orders:list"))
+
+    assert response.status_code == 200
+    labels = [preset["label"] for preset in response.context["operational_presets"]]
+    assert labels == ["Pedidos de hoje", "Rascunhos", "Confirmados", "Cancelados"]
+    html = response.content.decode()
+    for label in labels:
+        assert label in html
+
+
+@pytest.mark.django_db
 def test_list_accepts_valid_search_filter(client, organization, order, user, operator_membership):
     client.force_login(user)
     response = client.get(reverse("orders:list"), {"q": order.display_number})
