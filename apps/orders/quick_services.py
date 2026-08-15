@@ -39,7 +39,12 @@ def _resolve_customer(
     customer_email="",
 ):
     if customer is not None:
-        if customer.organization_id != organization.id or customer.merged_into_id or customer.status != Customer.Status.ACTIVE:
+        invalid_customer = (
+            customer.organization_id != organization.id
+            or customer.merged_into_id
+            or customer.status != Customer.Status.ACTIVE
+        )
+        if invalid_customer:
             raise OrderPermissionDenied("Cliente inválido para a organização ativa.")
         return customer
 
