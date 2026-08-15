@@ -92,6 +92,7 @@ def complete_pickup_with_code(
         target_status=Fulfillment.Status.COMPLETED,
         expected_version=expected_version,
         idempotency_key=idempotency_key,
+        _pickup_verified=True,
     )
     cache.delete(rate_key)
     return result
