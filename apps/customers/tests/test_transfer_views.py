@@ -66,8 +66,10 @@ def test_customer_import_success_creates_contacts_and_can_be_exported(
     assert Customer.objects.filter(organization=organization, display_name="Empresa Importada").exists()
 
     exported = client.get(reverse("customers:export-csv")).content.decode("utf-8-sig")
-    assert "maria@example.com" in exported
-    assert "11999999999" in exported
+    assert "maria@example.com" not in exported
+    assert "11999999999" not in exported
+    assert "ma***@example.com" in exported
+    assert "+55****99" in exported
 
 
 def test_customer_import_rolls_back_entire_file_on_invalid_row(
