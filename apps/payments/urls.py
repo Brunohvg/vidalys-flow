@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.payments import manual_views, views
+from apps.payments import manual_views, pix_views, views
 
 app_name = "payments"
 
@@ -11,6 +11,7 @@ urlpatterns = [
         name="mercado_pago_callback",
     ),
     path("", views.payment_list, name="list"),
+    path("settings/pix/", pix_views.pix_settings, name="pix_settings"),
     path("orders/<uuid:order_id>/new/", views.payment_create, name="create"),
     path("<uuid:payment_id>/", views.payment_detail, name="detail"),
     path("<uuid:payment_id>/manual/", manual_views.payment_confirm_manual, name="confirm_manual"),
