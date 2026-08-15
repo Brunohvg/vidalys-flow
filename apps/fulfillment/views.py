@@ -191,6 +191,13 @@ def fulfillment_transition(request, fulfillment_id, target_status):
     }
     if target_status not in valid_targets:
         raise Http404
+    if (
+        fulfillment.method == Fulfillment.Method.PICKUP
+        and fulfillment.status == Fulfillment.Status.READY
+        and target_status == Fulfillment.Status.COMPLETED
+    ):
+        messages.error(request, "Retirada pronta exige validação do código do cliente.")
+        return redirect("fulfillment:detail", fulfillment_id=fulfillment.id)
     form = TransitionForm(request.POST)
     if form.is_valid():
         try:
