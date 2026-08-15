@@ -240,5 +240,7 @@ def test_pickup_center_view_is_read_only(
     _activate_organization(client, organization)
     response = client.get(reverse("dashboard:pickups"), {"q": "Maria"})
     assert response.status_code == 200
-    assert "Central de Retiradas" in response.content.decode()
+    html = response.content.decode()
+    assert "Retiradas" in html
+    assert "Prontos para retirada" in html
     assert client.post(reverse("dashboard:pickups"), {}).status_code == 405
