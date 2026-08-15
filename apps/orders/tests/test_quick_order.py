@@ -5,6 +5,7 @@ import pytest
 
 from apps.audit.models import AuditEvent
 from apps.customers.models import Customer
+from apps.fulfillment.models import Fulfillment
 from apps.orders.models import Order
 from apps.orders.quick_forms import QuickOrderCreateForm
 from apps.orders.quick_services import create_quick_order
@@ -149,6 +150,7 @@ def test_quick_order_form_rejects_partial_delivery_address(organization):
             "customer_name": "Cliente entrega incompleta",
             "pricing_mode": Order.PricingMode.MANUAL,
             "manual_total": "50.00",
+            "fulfillment_method": Fulfillment.Method.DELIVERY,
             "delivery_postal_code": "30130-110",
             "delivery_street": "Rua da Bahia",
             "idempotency_key": str(uuid.uuid4()),
@@ -168,6 +170,7 @@ def test_quick_order_form_normalizes_manual_delivery_cep_and_state(organization)
             "customer_name": "Cliente entrega completa",
             "pricing_mode": Order.PricingMode.MANUAL,
             "manual_total": "50.00",
+            "fulfillment_method": Fulfillment.Method.DELIVERY,
             "delivery_postal_code": "30130-110",
             "delivery_street": "Rua da Bahia",
             "delivery_city": "Belo Horizonte",
