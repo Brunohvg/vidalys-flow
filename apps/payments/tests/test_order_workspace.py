@@ -109,6 +109,7 @@ def test_order_workspace_renders_pix_and_active_checkout_actions(
         provider=mercado_account.provider,
         status=PaymentAttempt.Status.ACTIVE,
         provider_idempotency_key=str(uuid.uuid4()),
+        external_resource_id="workspace-checkout-active",
         hosted_url=hosted_url,
     )
     client.force_login(manager)
