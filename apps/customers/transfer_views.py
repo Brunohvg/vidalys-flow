@@ -13,6 +13,7 @@ from apps.customers.exceptions import CustomerDomainError
 from apps.customers.models import Customer
 from apps.customers.normalization import mask_contact, mask_document
 from apps.organizations.selectors import active_organization_for_user
+from apps.platform.csv_safety import spreadsheet_safe_cell
 from apps.platform.import_receipts import (
     ImportReceiptConflict,
     claim_import_batch,
@@ -50,7 +51,7 @@ def _csv_response(*, filename, rows):
     response.write("\ufeff")
     writer = csv.writer(response)
     writer.writerow(CUSTOMER_HEADERS)
-    writer.writerows(rows)
+    writer.writerows(tuple(spreadsheet_safe_cell(value) for value in row) for row in rows)
     return response
 
 
