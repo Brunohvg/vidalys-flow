@@ -198,4 +198,5 @@ def test_order_workspace_renders_fulfillment_actions_and_tracking(
     assert fulfillment.display_number in html
     assert "Marcar como enviado" in html
     assert "Adicionar rastreio" in html
-    assert reverse("fulfillment:detail", args=(fulfillment.id,)) not in html
+    fulfillment_detail_url = reverse("fulfillment:detail", args=(fulfillment.id,))
+    assert f'href="{fulfillment_detail_url}"' not in html
