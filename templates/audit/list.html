@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Auditoria · Vidalys Flow{% endblock %}
+{% block content %}
+<div class="section-heading">
+  <div>
+    <p class="muted" style="margin:0">ADMINISTRAÇÃO</p>
+    <h1>Auditoria</h1>
+  </div>
+</div>
+<p class="muted">Eventos imutáveis da organização {{ organization.name }}. Esta tela é somente leitura.</p>
+
+<form method="get" class="grid" role="search">
+  <label>Entidade / ID
+    <input name="q" value="{{ query }}" placeholder="ID da entidade">
+  </label>
+  <label>Ação
+    <input name="action" value="{{ action_filter }}" placeholder="order.created">
+  </label>
+  <label>Tipo
+    <input name="entity_type" value="{{ entity_type_filter }}" placeholder="order, payment...">
+  </label>
+  <div class="actions"><button type="submit">Filtrar</button><a href="{% url 'audit:list' %}">Limpar</a></div>
+</form>
+
+<table class="responsive-table">
+  <thead><tr><th>Quando</th><th>Ação</th><th>Entidade</th><th>Ator</th><th>Payload</th></tr></thead>
+  <tbody>
+    {% for event in events %}
+      <tr>
+        <td data-label="Quando">{{ event.created_at|date:"d/m/Y H:i:s" }}</td>
+        <td data-label="Ação"><code>{{ event.action }}</code></td>
+        <td data-label="Entidade">{{ event.entity_type }} · {{ event.entity_id }}</td>
+        <td data-label="Ator">{{ event.actor.email|default:"sistema" }}</td>
+        <td data-label="Payload"><code>{{ event.payload }}</code></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">Nenhum evento encontrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if events.paginator.num_pages > 1 %}
+<nav class="actions" aria-label="Paginação">
+  {% if events.has_previous %}<a href="?page={{ events.previous_page_number }}&q={{ query }}&action={{ action_filter }}&entity_type={{ entity_type_filter }}">Anterior</a>{% endif %}
+  <span>Página {{ events.number }} de {{ events.paginator.num_pages }}</span>
+  {% if events.has_next %}<a href="?page={{ events.next_page_number }}&q={{ query }}&action={{ action_filter }}&entity_type={{ entity_type_filter }}">Próxima</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}
