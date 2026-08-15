@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Configuração PIX · Vidalys Flow{% endblock %}
+{% block content %}
+  <div class="section-heading">
+    <div>
+      <h1>Configuração PIX</h1>
+      <p class="muted">{{ organization.name }}</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Chave para cobrança</h2>
+      <p class="muted">Esta chave pode ser apresentada em pedidos pendentes. Enviar a chave não marca o pedido como pago.</p>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar configuração PIX</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Como será usada</h2>
+      {% if instruction %}
+        <p><strong>Tipo:</strong> {{ instruction.get_key_type_display }}</p>
+        <p><strong>Favorecido:</strong> {{ instruction.beneficiary_name }}</p>
+        <p><strong>Banco:</strong> {{ instruction.bank_name|default:"Não informado" }}</p>
+        <p><strong>Status:</strong> {% if instruction.is_active %}Disponível{% else %}Desativada{% endif %}</p>
+        <p class="muted">Versão {{ instruction.version }}. O valor bruto da chave não é escrito em AuditEvent.</p>
+      {% else %}
+        <p class="muted">Nenhuma chave PIX configurada.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}
