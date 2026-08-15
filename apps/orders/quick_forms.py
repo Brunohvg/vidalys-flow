@@ -31,6 +31,13 @@ class QuickOrderCreateForm(forms.Form):
         label="Valor da venda",
     )
     channel = forms.CharField(max_length=40, required=False, label="Canal")
+    delivery_postal_code = forms.CharField(max_length=9, required=False, label="CEP")
+    delivery_street = forms.CharField(max_length=200, required=False, label="Rua")
+    delivery_number = forms.CharField(max_length=30, required=False, label="Número")
+    delivery_complement = forms.CharField(max_length=120, required=False, label="Complemento")
+    delivery_district = forms.CharField(max_length=120, required=False, label="Bairro")
+    delivery_city = forms.CharField(max_length=120, required=False, label="Cidade")
+    delivery_state = forms.CharField(max_length=2, required=False, label="UF")
     idempotency_key = forms.CharField(max_length=64, widget=forms.HiddenInput)
 
     def __init__(self, *args, organization, **kwargs):
@@ -57,4 +64,29 @@ class QuickOrderCreateForm(forms.Form):
             self.add_error("manual_total", "Informe o valor da venda.")
         if pricing_mode == Order.PricingMode.ITEMIZED:
             cleaned["manual_total"] = None
+
+        address_fields = (
+            "delivery_postal_code",
+            "delivery_street",
+            "delivery_number",
+            "delivery_complement",
+            "delivery_district",
+            "delivery_city",
+            "delivery_state",
+        )
+        has_delivery_address = any((cleaned.get(field) or "").strip() for field in address_fields)
+        cleaned["has_delivery_address"] = has_delivery_address
+        if has_delivery_address:
+            for field in ("delivery_postal_code", "delivery_street", "delivery_city", "delivery_state"):
+                if not (cleaned.get(field) or "").strip():
+                    self.add_error(field, "Campo obrigatório para endereço de entrega.")
+            postal_code = "".join(character for character in (cleaned.get("delivery_postal_code") or "") if character.isdigit())
+            if postal_code and len(postal_code) != 8:
+                self.add_error("delivery_postal_code", "CEP deve conter 8 dígitos.")
+            else:
+                cleaned["delivery_postal_code"] = postal_code
+            state = (cleaned.get("delivery_state") or "").strip().upper()
+            if state and len(state) != 2:
+                self.add_error("delivery_state", "UF deve conter 2 letras.")
+            cleaned["delivery_state"] = state
         return cleaned
