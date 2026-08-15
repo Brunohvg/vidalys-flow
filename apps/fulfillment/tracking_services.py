@@ -2,14 +2,13 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import transaction
 
-from apps.fulfillment import services
 from apps.fulfillment.events import FULFILLMENT_UPDATED
 from apps.fulfillment.exceptions import InvalidFulfillment
 from apps.fulfillment.idempotency import claim_command, complete_command
 from apps.fulfillment.models import Fulfillment
+from apps.fulfillment import services
 
-
-_https_validator = URLValidator(schemes=("https",))
+https_validator = URLValidator(schemes=("https",))
 
 
 @transaction.atomic
@@ -30,9 +29,10 @@ def set_tracking(
         raise InvalidFulfillment("Código de rastreio excede o limite permitido.")
     if url:
         try:
-            _https_validator(url)
+            https_validator(url)
         except ValidationError as exc:
             raise InvalidFulfillment("Link de rastreio deve ser uma URL HTTPS válida.") from exc
+
     payload = {
         "fulfillment_id": str(fulfillment.id),
         "expected_version": expected_version,
@@ -49,7 +49,7 @@ def set_tracking(
     if not is_new:
         return services._existing_result(receipt)
 
-    _order, fulfillment = services._lock_order_then_fulfillment(
+    _, fulfillment = services._lock_order_then_fulfillment(
         organization=organization,
         fulfillment=fulfillment,
     )
