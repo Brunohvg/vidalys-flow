@@ -193,7 +193,8 @@
         {% if order.status == "confirmed" %}
           {% for fulfillment in order.fulfillments.all %}
             <div style="margin-bottom:.7rem;">
-              <strong>{{ fulfillment.get_method_display }}</strong>
+              <strong>{{ fulfillment.display_number }}</strong>
+              <div>{{ fulfillment.get_method_display }}</div>
               <div class="muted">{{ fulfillment.get_status_display }}</div>
               <div class="compact-actions" style="margin-top:.45rem;"><a href="{% url 'fulfillment:detail' fulfillment.id %}">Ver atendimento</a></div>
             </div>
