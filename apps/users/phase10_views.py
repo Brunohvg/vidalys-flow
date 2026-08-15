@@ -4,7 +4,9 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.organizations.models import Membership
 from apps.organizations.selectors import active_organization_for_user
+from apps.payments import policies as payment_policies
 from apps.users.phase10_forms import MembershipUpdateForm, ProfileForm
 from apps.users.team_services import (
     TeamInvariantError,
@@ -13,6 +15,8 @@ from apps.users.team_services import (
     team_memberships,
     update_membership,
 )
+
+MANAGER_ROLES = {Membership.Role.OWNER, Membership.Role.ADMIN, Membership.Role.MANAGER}
 
 
 @login_required
@@ -32,6 +36,28 @@ def profile(request):
             "organization": organization,
             "membership": membership,
             "form": form,
+        },
+    )
+
+
+@login_required
+def settings_home(request):
+    organization, membership = active_organization_for_user(user=request.user, session=request.session)
+    if organization is None or membership is None:
+        messages.info(request, "Selecione uma organização ativa para continuar.")
+        return redirect("organizations:list")
+    return render(
+        request,
+        "users/settings.html",
+        {
+            "organization": organization,
+            "membership": membership,
+            "can_manage_team": can_manage_team(organization=organization, actor=request.user),
+            "can_manage_payments": payment_policies.can_operate_payments(
+                user=request.user,
+                organization=organization,
+            ),
+            "can_view_audit": membership.role in MANAGER_ROLES,
         },
     )
 
