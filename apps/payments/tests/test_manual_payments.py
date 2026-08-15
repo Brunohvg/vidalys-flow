@@ -20,7 +20,12 @@ def _intent(*, organization, payable_order, manager):
     )
 
 
-def test_manual_pix_marks_intent_paid_with_immutable_history(organization, payable_order, manager):
+def test_manual_pix_marks_intent_paid_with_immutable_history(
+    organization,
+    payable_order,
+    manager,
+    manager_membership,
+):
     intent = _intent(organization=organization, payable_order=payable_order, manager=manager)
     key = str(uuid.uuid4())
 
@@ -42,7 +47,12 @@ def test_manual_pix_marks_intent_paid_with_immutable_history(organization, payab
     assert history.reason_code == "manual_pix"
 
 
-def test_manual_payment_is_idempotent(organization, payable_order, manager):
+def test_manual_payment_is_idempotent(
+    organization,
+    payable_order,
+    manager,
+    manager_membership,
+):
     intent = _intent(organization=organization, payable_order=payable_order, manager=manager)
     key = str(uuid.uuid4())
     kwargs = {
@@ -62,7 +72,12 @@ def test_manual_payment_is_idempotent(organization, payable_order, manager):
     assert PaymentStatusHistory.objects.filter(intent=first, command_id=key).count() == 1
 
 
-def test_manual_payment_rejects_amount_mismatch(organization, payable_order, manager):
+def test_manual_payment_rejects_amount_mismatch(
+    organization,
+    payable_order,
+    manager,
+    manager_membership,
+):
     intent = _intent(organization=organization, payable_order=payable_order, manager=manager)
 
     with pytest.raises(InvalidPayment, match="corresponder exatamente"):
@@ -81,6 +96,7 @@ def test_manual_payment_rejects_open_hosted_checkout(
     organization,
     payable_order,
     manager,
+    manager_membership,
     mercado_account,
 ):
     intent = _intent(organization=organization, payable_order=payable_order, manager=manager)
