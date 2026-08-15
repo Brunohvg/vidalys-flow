@@ -3,29 +3,35 @@
 {% block title %}Clientes — Vidalys Flow{% endblock %}
 
 {% block content %}
-  <div class="actions">
+  <div class="section-heading">
     <div>
+      <p class="muted" style="margin:0">CADASTROS</p>
       <h1>Clientes</h1>
       <p class="muted">{{ organization.name }}</p>
     </div>
-    <a href="{% url 'customers:create' %}">Novo cliente</a>
+    <div class="actions">
+      <a href="{% url 'customers:export-csv' %}">Exportar CSV</a>
+      <a href="{% url 'customers:import-csv' %}">Importar</a>
+      <a href="{% url 'customers:create' %}">Novo cliente</a>
+    </div>
   </div>
 
-  <form method="get" role="search">
-    <label for="customer-search">Buscar por nome, documento, telefone ou e-mail</label>
-    <input id="customer-search" type="search" name="q" value="{{ query }}">
+  <form method="get" role="search" class="actions">
+    <label for="customer-search" style="flex:1">Buscar por nome, documento, telefone ou e-mail
+      <input id="customer-search" type="search" name="q" value="{{ query }}">
+    </label>
     <button type="submit">Buscar</button>
   </form>
 
-  <table>
+  <table class="responsive-table">
     <thead><tr><th>Nome</th><th>Tipo</th><th>Status</th><th>Ação</th></tr></thead>
     <tbody>
       {% for customer in customers %}
         <tr>
-          <td>{{ customer.display_name }}</td>
-          <td>{{ customer.get_customer_type_display }}</td>
-          <td>{{ customer.get_status_display }}</td>
-          <td><a href="{% url 'customers:detail' customer_id=customer.id %}">Ver detalhes</a></td>
+          <td data-label="Nome"><strong>{{ customer.display_name }}</strong></td>
+          <td data-label="Tipo">{{ customer.get_customer_type_display }}</td>
+          <td data-label="Status"><span class="badge">{{ customer.get_status_display }}</span></td>
+          <td data-label="Ação"><a href="{% url 'customers:detail' customer_id=customer.id %}">Ver detalhes</a></td>
         </tr>
       {% empty %}
         <tr><td colspan="4">Nenhum cliente encontrado nesta organização.</td></tr>
@@ -33,7 +39,7 @@
     </tbody>
   </table>
   {% if customers.paginator.num_pages > 1 %}
-    <nav aria-label="Paginação de clientes">
+    <nav class="actions" aria-label="Paginação de clientes">
       {% if customers.has_previous %}<a href="?q={{ query|urlencode }}&page={{ customers.previous_page_number }}">Anterior</a>{% endif %}
       <span>Página {{ customers.number }} de {{ customers.paginator.num_pages }}</span>
       {% if customers.has_next %}<a href="?q={{ query|urlencode }}&page={{ customers.next_page_number }}">Próxima</a>{% endif %}
