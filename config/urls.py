@@ -24,6 +24,19 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path(
+        "account/password/",
+        auth_views.PasswordChangeView.as_view(
+            template_name="auth/password_change.html",
+            success_url="/account/password/done/",
+        ),
+        name="password_change",
+    ),
+    path(
+        "account/password/done/",
+        auth_views.PasswordChangeDoneView.as_view(template_name="auth/password_change_done.html"),
+        name="password_change_done",
+    ),
     path("health/", include("apps.platform.urls")),
     path("dashboard/", include("apps.dashboard.urls")),
     path("account/", include("apps.users.urls")),
