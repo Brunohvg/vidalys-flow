@@ -36,6 +36,8 @@
             <td data-label="Unidade">{{ item.order_item.unit_snapshot }}</td>
             <td data-label="Quantidade">{{ item.quantity }}</td>
           </tr>
+        {% empty %}
+          <tr><td colspan="4">Pedido manual sem itens alocados.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -62,7 +64,8 @@
       {% elif fulfillment.status == "ready" and fulfillment.method == "delivery" %}
         <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'in_transit' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Despachar entrega</button></form>
       {% elif fulfillment.status == "ready" and fulfillment.method == "pickup" %}
-        <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'completed' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Concluir retirada</button></form>
+        <p>Retirada pronta exige o código de 6 dígitos informado pelo cliente.</p>
+        <p><a href="{% url 'orders:detail' fulfillment.order_id %}">Validar retirada no pedido</a></p>
       {% elif fulfillment.status == "in_transit" %}
         <form method="post" action="{% url 'fulfillment:transition' fulfillment.id 'completed' %}">{% csrf_token %}{{ transition_form.as_p }}<button type="submit">Concluir entrega</button></form>
       {% endif %}
