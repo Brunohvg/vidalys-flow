@@ -5,18 +5,22 @@
   <div class="section-heading">
     <div>
       <p class="muted" style="margin:0">CLIENTES</p>
-      <h1>Importar CSV</h1>
+      <h1>Importar clientes</h1>
     </div>
-    <a href="{% url 'customers:export-csv' %}">Baixar CSV atual</a>
+    <div class="actions">
+      <a href="{% url 'customers:export-csv' %}">Baixar CSV atual</a>
+      <a href="{% url 'customers:export-xlsx' %}">Baixar XLSX atual</a>
+    </div>
   </div>
-  <p>O arquivo é validado por completo antes da confirmação. Se uma linha falhar, nenhuma linha será importada.</p>
-  <p class="muted">Limite: {{ max_rows }} linhas. Cabeçalho obrigatório: {% for header in headers %}<code>{{ header }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+  <p>Fluxo seguro: upload → mapeamento → validação e conflitos → prévia → confirmação → resultado.</p>
+  <p class="muted">Limite: {{ max_rows }} linhas. CSV deve usar UTF-8; XLSX aceita somente dados tabulares, sem fórmulas ou macros.</p>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <label for="customer-import-file">Arquivo CSV UTF-8</label>
-    <input id="customer-import-file" type="file" name="file" accept=".csv,text/csv" required>
+    <input type="hidden" name="step" value="upload">
+    <label for="customer-import-file">Arquivo CSV ou XLSX</label>
+    <input id="customer-import-file" type="file" name="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
     <div class="actions">
-      <button type="submit">Importar clientes</button>
+      <button type="submit">Continuar para mapeamento</button>
       <a href="{% url 'customers:list' %}">Cancelar</a>
     </div>
   </form>
