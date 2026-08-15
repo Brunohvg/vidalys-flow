@@ -26,6 +26,29 @@
   </section>
 
   <section>
+    <h2>Comparação com o período anterior</h2>
+    <p class="muted">
+      {{ report.previous.start|date:"d/m/Y" }} a {{ report.previous.end|date:"d/m/Y" }} · mesma duração do período selecionado.
+    </p>
+    <div class="grid">
+      <article class="card">
+        <span class="muted">Pedidos no período anterior</span>
+        <strong class="metric">{{ report.previous.all.count }}</strong>
+        <span>R$ {{ report.previous.all.value }}</span>
+      </article>
+      <article class="card">
+        <span class="muted">Confirmados no período anterior</span>
+        <strong class="metric">{{ report.previous.confirmed.count }}</strong>
+        <span>R$ {{ report.previous.confirmed.value }}</span>
+      </article>
+      <article class="card">
+        <span class="muted">Ticket médio anterior</span>
+        <strong class="metric">R$ {{ report.previous.all.ticket }}</strong>
+      </article>
+    </div>
+  </section>
+
+  <section>
     <h2>Pedidos por dia</h2>
     {% if report.daily %}
       <table class="responsive-table">
