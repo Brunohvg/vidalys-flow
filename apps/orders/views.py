@@ -132,6 +132,7 @@ def _detail_context(*, request, organization, membership, order):
                         "notes": item.notes,
                     },
                 ),
+                "remove_key": CommandForm.command_initial(version=order.version)["idempotency_key"],
             }
             for item in items
         ],
