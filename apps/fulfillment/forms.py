@@ -99,5 +99,10 @@ class TransitionForm(forms.Form):
         return {"expected_version": version, "idempotency_key": str(uuid.uuid4())}
 
 
+class TrackingForm(TransitionForm):
+    tracking_code = forms.CharField(max_length=120, required=False, label="Código de rastreio")
+    tracking_url = forms.URLField(max_length=500, required=False, label="Link de rastreio")
+
+
 class CancelForm(TransitionForm):
     reason = forms.CharField(max_length=500, label="Motivo", widget=forms.Textarea(attrs={"rows": 3}))
