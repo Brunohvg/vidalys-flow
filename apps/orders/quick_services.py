@@ -1,0 +1,219 @@
+from decimal import Decimal
+
+from django.db import transaction
+
+from apps.audit.services import record_event
+from apps.customers import selectors as customer_selectors
+from apps.customers import services as customer_services
+from apps.customers.models import Customer
+from apps.customers.normalization import normalize_document, normalize_email, normalize_phone
+from apps.orders import policies
+from apps.orders.events import ORDER_CREATED
+from apps.orders.exceptions import OrderPermissionDenied
+from apps.orders.idempotency import claim_command, complete_command
+from apps.orders.models import Order, OrderStatusHistory
+from apps.orders.numbering import allocate_order_number
+from apps.platform.services import enqueue_event
+
+
+def _require_permission(*, actor, organization):
+    if not policies.can_manage_drafts(user=actor, organization=organization):
+        raise OrderPermissionDenied("Membership ativa ou papel insuficiente.")
+
+
+def _customer_type_for_document(document):
+    normalized = normalize_document(document) if document else ""
+    if len(normalized) == 14:
+        return Customer.Type.COMPANY, normalized
+    return Customer.Type.INDIVIDUAL, normalized
+
+
+def _resolve_customer(
+    *,
+    organization,
+    actor,
+    customer=None,
+    customer_name="",
+    customer_document="",
+    customer_phone="",
+    customer_email="",
+):
+    if customer is not None:
+        if customer.organization_id != organization.id or customer.merged_into_id or customer.status != Customer.Status.ACTIVE:
+            raise OrderPermissionDenied("Cliente inválido para a organização ativa.")
+        return customer
+
+    customer_type, normalized_document = _customer_type_for_document(customer_document)
+    if normalized_document:
+        existing = customer_selectors.find_by_document(
+            organization=organization,
+            document_normalized=normalized_document,
+        )
+        if existing and not existing.merged_into_id and existing.status == Customer.Status.ACTIVE:
+            return existing
+
+    display_name = customer_name.strip()
+    if not display_name:
+        raise ValueError("Informe o cliente ou o nome do novo cliente.")
+
+    return customer_services.create_customer(
+        organization=organization,
+        actor=actor,
+        customer_type=customer_type,
+        display_name=display_name,
+        document=normalized_document,
+        phone=customer_phone.strip(),
+        email=customer_email.strip(),
+    )
+
+
+def _payload(
+    *,
+    customer,
+    customer_name,
+    customer_document,
+    customer_phone,
+    customer_email,
+    channel,
+    pricing_mode,
+    manual_total,
+):
+    document = normalize_document(customer_document) if customer_document else ""
+    phone = normalize_phone(customer_phone) if customer_phone else ""
+    email = normalize_email(customer_email) if customer_email else ""
+    return {
+        "customer_id": str(customer.id) if customer else None,
+        "customer_name": customer_name.strip(),
+        "customer_document": document,
+        "customer_phone": phone,
+        "customer_email": email,
+        "channel": channel.strip(),
+        "pricing_mode": pricing_mode,
+        "manual_total": str(manual_total) if manual_total is not None else None,
+    }
+
+
+@transaction.atomic
+def create_quick_order(
+    *,
+    organization,
+    actor,
+    idempotency_key,
+    customer=None,
+    customer_name="",
+    customer_document="",
+    customer_phone="",
+    customer_email="",
+    channel="",
+    pricing_mode=Order.PricingMode.MANUAL,
+    manual_total=None,
+):
+    """Create a draft Order and, when needed, its Customer in one transaction.
+
+    The idempotency receipt is claimed before Customer creation so a retry cannot
+    create duplicate inline customers. Phone/e-mail are never used for silent
+    identity resolution; the UI may suggest them, but reuse requires explicit
+    customer selection or an exact canonical document match.
+    """
+
+    _require_permission(actor=actor, organization=organization)
+    if pricing_mode not in Order.PricingMode.values:
+        raise ValueError("Modo de preço inválido.")
+
+    if pricing_mode == Order.PricingMode.MANUAL:
+        if manual_total is None:
+            raise ValueError("Informe o valor da venda.")
+        manual_total = Decimal(manual_total).quantize(Decimal("0.01"))
+        if manual_total <= 0:
+            raise ValueError("O valor da venda deve ser maior que zero.")
+    else:
+        manual_total = None
+
+    payload = _payload(
+        customer=customer,
+        customer_name=customer_name,
+        customer_document=customer_document,
+        customer_phone=customer_phone,
+        customer_email=customer_email,
+        channel=channel,
+        pricing_mode=pricing_mode,
+        manual_total=manual_total,
+    )
+    receipt, is_new = claim_command(
+        organization=organization,
+        operation="create_quick_order",
+        idempotency_key=idempotency_key,
+        payload=payload,
+        actor=actor,
+    )
+    if not is_new:
+        if receipt.order_id is None:
+            raise ValueError("Comando idempotente incompleto; tente novamente.")
+        return Order.objects.get(organization=organization, id=receipt.order_id)
+
+    customer = _resolve_customer(
+        organization=organization,
+        actor=actor,
+        customer=customer,
+        customer_name=customer_name,
+        customer_document=customer_document,
+        customer_phone=customer_phone,
+        customer_email=customer_email,
+    )
+
+    number = allocate_order_number(organization=organization)
+    values = {
+        "organization": organization,
+        "number": number,
+        "customer": customer,
+        "channel": channel.strip(),
+        "pricing_mode": pricing_mode,
+        "manual_total": manual_total,
+        "created_by": actor,
+    }
+    if pricing_mode == Order.PricingMode.MANUAL:
+        values.update(
+            subtotal=manual_total,
+            discount_total=Decimal("0.00"),
+            surcharge_total=Decimal("0.00"),
+            total=manual_total,
+        )
+    order = Order.objects.create(**values)
+
+    OrderStatusHistory.objects.create(
+        organization=organization,
+        order=order,
+        from_status="",
+        to_status=Order.Status.DRAFT,
+        actor=actor,
+        command_id=str(idempotency_key),
+    )
+    record_event(
+        organization=organization,
+        actor=actor,
+        action=ORDER_CREATED,
+        entity_type="order",
+        entity_id=order.id,
+        payload={
+            "order_number": order.display_number,
+            "version": order.version,
+            "status": order.status,
+            "pricing_mode": order.pricing_mode,
+            "inline_customer_created": payload["customer_id"] is None,
+        },
+    )
+    enqueue_event(
+        organization=organization,
+        event_type=ORDER_CREATED,
+        aggregate_type="order",
+        aggregate_id=order.id,
+        payload={
+            "order_id": str(order.id),
+            "order_number": order.display_number,
+            "status": order.status,
+            "version": order.version,
+        },
+        idempotency_key=f"order:{order.id}:{ORDER_CREATED}:{idempotency_key}",
+    )
+    complete_command(receipt=receipt, order=order)
+    return order
