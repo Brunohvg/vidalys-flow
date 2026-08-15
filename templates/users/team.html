@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Usuários · Vidalys Flow{% endblock %}
+{% block content %}
+  <div class="section-heading">
+    <div><h1>Usuários</h1><p class="muted">{{ organization.name }}</p></div>
+  </div>
+  <p class="muted">Convites por e-mail não são enviados nesta fase enquanto efeitos externos permanecerem desabilitados.</p>
+  <table class="responsive-table">
+    <thead><tr><th>Usuário</th><th>Papel</th><th>Status</th><th>Ação</th></tr></thead>
+    <tbody>
+      {% for membership in memberships %}
+        <tr>
+          <td data-label="Usuário">{{ membership.user.get_full_name|default:membership.user.email }}<br><span class="muted">{{ membership.user.email }}</span></td>
+          <td data-label="Papel">{{ membership.get_role_display }}</td>
+          <td data-label="Status">{% if membership.is_active %}Ativo{% else %}Inativo{% endif %}</td>
+          <td data-label="Ação">
+            {% if can_manage %}
+              <form method="post" action="{% url 'users:team-update' membership.id %}">
+                {% csrf_token %}
+                <select name="role" aria-label="Papel de {{ membership.user.email }}">
+                  <option value="owner"{% if membership.role == "owner" %} selected{% endif %}>Proprietário</option>
+                  <option value="admin"{% if membership.role == "admin" %} selected{% endif %}>Administrador</option>
+                  <option value="manager"{% if membership.role == "manager" %} selected{% endif %}>Gerente</option>
+                  <option value="operator"{% if membership.role == "operator" %} selected{% endif %}>Operador</option>
+                </select>
+                <label><input type="checkbox" name="is_active"{% if membership.is_active %} checked{% endif %}> Acesso ativo</label>
+                <button type="submit">Salvar</button>
+              </form>
+            {% else %}Somente leitura{% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">Nenhum usuário nesta organização.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
