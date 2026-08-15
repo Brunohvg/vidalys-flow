@@ -101,30 +101,35 @@ def order_next_action(*, organization, order, user):
     target = None
     label = None
     description = None
+    kind = "closed"
     if fulfillment.status == Fulfillment.Status.DRAFT:
         target = Fulfillment.Status.PREPARING
         label = "Iniciar preparação"
         description = "O atendimento está pronto para entrar em preparação."
+        kind = "fulfillment_transition"
     elif fulfillment.status == Fulfillment.Status.PREPARING:
         target = Fulfillment.Status.READY
         label = "Liberar para retirada" if fulfillment.method == Fulfillment.Method.PICKUP else "Marcar como pronto"
         description = "Finalize a preparação para liberar a próxima etapa."
+        kind = "fulfillment_transition"
     elif fulfillment.status == Fulfillment.Status.READY:
         if fulfillment.method == Fulfillment.Method.PICKUP:
-            target = Fulfillment.Status.COMPLETED
-            label = "Confirmar retirada"
-            description = "O pedido está pronto e aguarda a retirada do cliente."
+            label = "Validar retirada"
+            description = "A retirada exige validação do código do cliente antes da conclusão."
+            kind = "pickup_validation"
         else:
             target = Fulfillment.Status.IN_TRANSIT
             label = "Marcar como enviado"
             description = "O pedido está pronto para despacho."
+            kind = "fulfillment_transition"
     elif fulfillment.status == Fulfillment.Status.IN_TRANSIT:
         target = Fulfillment.Status.COMPLETED
         label = "Confirmar entrega"
         description = "O pedido está em trânsito e pode ser concluído após entrega confirmada."
+        kind = "fulfillment_transition"
 
     return {
-        "kind": "fulfillment_transition" if target else "closed",
+        "kind": kind,
         "title": label or "Atendimento concluído",
         "description": description or "Nenhuma próxima ação disponível.",
         "fulfillment": fulfillment,
