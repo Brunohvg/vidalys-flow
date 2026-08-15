@@ -24,12 +24,18 @@ class Order(BaseModel):
         CONFIRMED = "confirmed", "Confirmado"
         CANCELLED = "cancelled", "Cancelado"
 
+    class PricingMode(models.TextChoices):
+        ITEMIZED = "itemized", "Por itens"
+        MANUAL = "manual", "Valor manual"
+
     organization = models.ForeignKey("organizations.Organization", on_delete=models.PROTECT, related_name="orders")
     number = models.PositiveBigIntegerField()
     customer = models.ForeignKey("customers.Customer", on_delete=models.PROTECT, related_name="orders")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     channel = models.CharField(max_length=40, blank=True)
     currency = models.CharField(max_length=3, default="BRL")
+    pricing_mode = models.CharField(max_length=20, choices=PricingMode.choices, default=PricingMode.ITEMIZED)
+    manual_total = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     discount_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     surcharge_total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
@@ -58,12 +64,34 @@ class Order(BaseModel):
                 condition=models.Q(status__in=("draft", "confirmed", "cancelled")),
                 name="order_status_valid",
             ),
+            models.CheckConstraint(
+                condition=models.Q(pricing_mode__in=("itemized", "manual")),
+                name="order_pricing_mode_valid",
+            ),
             models.CheckConstraint(condition=models.Q(currency="BRL"), name="order_currency_brl"),
             models.CheckConstraint(condition=models.Q(version__gte=1), name="order_version_positive"),
             models.CheckConstraint(condition=models.Q(subtotal__gte=0), name="order_subtotal_non_negative"),
             models.CheckConstraint(condition=models.Q(discount_total__gte=0), name="order_discount_non_negative"),
             models.CheckConstraint(condition=models.Q(surcharge_total__gte=0), name="order_surcharge_non_negative"),
             models.CheckConstraint(condition=models.Q(total__gte=0), name="order_total_non_negative"),
+            models.CheckConstraint(
+                condition=models.Q(manual_total__isnull=True) | models.Q(manual_total__gte=0),
+                name="order_manual_total_non_negative",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(pricing_mode="itemized", manual_total__isnull=True)
+                    | models.Q(
+                        pricing_mode="manual",
+                        manual_total__isnull=False,
+                        subtotal=models.F("manual_total"),
+                        total=models.F("manual_total"),
+                        discount_total=0,
+                        surcharge_total=0,
+                    )
+                ),
+                name="order_pricing_source_consistent",
+            ),
             models.CheckConstraint(
                 condition=models.Q(discount_total__lte=models.F("subtotal")),
                 name="order_discount_not_above_subtotal",
