@@ -72,6 +72,31 @@ def _resolve_customer(
     )
 
 
+def _delivery_payload(
+    *,
+    has_delivery_address,
+    delivery_postal_code,
+    delivery_street,
+    delivery_number,
+    delivery_complement,
+    delivery_district,
+    delivery_city,
+    delivery_state,
+):
+    if not has_delivery_address:
+        return None
+    return {
+        "postal_code": delivery_postal_code.strip(),
+        "street": delivery_street.strip(),
+        "number": delivery_number.strip(),
+        "complement": delivery_complement.strip(),
+        "district": delivery_district.strip(),
+        "city": delivery_city.strip(),
+        "state": delivery_state.strip().upper(),
+        "country": "BR",
+    }
+
+
 def _payload(
     *,
     customer,
@@ -82,6 +107,7 @@ def _payload(
     channel,
     pricing_mode,
     manual_total,
+    delivery_address,
 ):
     document = normalize_document(customer_document) if customer_document else ""
     phone = normalize_phone(customer_phone) if customer_phone else ""
@@ -95,6 +121,7 @@ def _payload(
         "channel": channel.strip(),
         "pricing_mode": pricing_mode,
         "manual_total": str(manual_total) if manual_total is not None else None,
+        "delivery_address": delivery_address,
     }
 
 
@@ -112,13 +139,21 @@ def create_quick_order(
     channel="",
     pricing_mode=Order.PricingMode.MANUAL,
     manual_total=None,
+    has_delivery_address=False,
+    delivery_postal_code="",
+    delivery_street="",
+    delivery_number="",
+    delivery_complement="",
+    delivery_district="",
+    delivery_city="",
+    delivery_state="",
 ):
-    """Create a draft Order and, when needed, its Customer in one transaction.
+    """Create a draft Order and related inline Customer data in one transaction.
 
-    The idempotency receipt is claimed before Customer creation so a retry cannot
-    create duplicate inline customers. Phone/e-mail are never used for silent
-    identity resolution; the UI may suggest them, but reuse requires explicit
-    customer selection or an exact canonical document match.
+    The idempotency receipt is claimed before Customer or address creation so a
+    retry cannot create duplicate inline data. Phone/e-mail are never used for
+    silent identity resolution; reuse requires explicit customer selection or
+    an exact canonical document match.
     """
 
     _require_permission(actor=actor, organization=organization)
@@ -134,6 +169,16 @@ def create_quick_order(
     else:
         manual_total = None
 
+    delivery_address = _delivery_payload(
+        has_delivery_address=has_delivery_address,
+        delivery_postal_code=delivery_postal_code,
+        delivery_street=delivery_street,
+        delivery_number=delivery_number,
+        delivery_complement=delivery_complement,
+        delivery_district=delivery_district,
+        delivery_city=delivery_city,
+        delivery_state=delivery_state,
+    )
     payload = _payload(
         customer=customer,
         customer_name=customer_name,
@@ -143,6 +188,7 @@ def create_quick_order(
         channel=channel,
         pricing_mode=pricing_mode,
         manual_total=manual_total,
+        delivery_address=delivery_address,
     )
     receipt, is_new = claim_command(
         organization=organization,
@@ -165,6 +211,24 @@ def create_quick_order(
         customer_phone=customer_phone,
         customer_email=customer_email,
     )
+
+    if delivery_address:
+        customer_services.add_address(
+            organization=organization,
+            customer=customer,
+            actor=actor,
+            label="Entrega do pedido",
+            recipient_name=customer.display_name,
+            postal_code=delivery_address["postal_code"],
+            street=delivery_address["street"],
+            number=delivery_address["number"],
+            complement=delivery_address["complement"],
+            district=delivery_address["district"],
+            city=delivery_address["city"],
+            state=delivery_address["state"],
+            country=delivery_address["country"],
+            is_default_shipping=True,
+        )
 
     number = allocate_order_number(organization=organization)
     values = {
@@ -205,6 +269,7 @@ def create_quick_order(
             "status": order.status,
             "pricing_mode": order.pricing_mode,
             "inline_customer_created": payload["customer_id"] is None,
+            "delivery_address_added": delivery_address is not None,
         },
     )
     enqueue_event(
