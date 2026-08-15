@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "review_checkpoint": "independent_review_revalidation",
+  "checkpoint": "Independent Review revalidation after blocker P09-IR-001",
+  "phase_id": 9,
+  "phase_name": "Infrastructure and homologation",
+  "repository": "Brunohvg/vidalys-flow",
+  "branch": "phase/09-infrastructure-homologation",
+  "candidate_head": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+  "previous_candidate_head": "e41cacfeab38d9da35e6f344c2009ef53d960165",
+  "documentary_head_reviewed": "96a16b0d41ad5d5530700b8b318ff93992321613",
+  "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2",
+  "base_ref": "main",
+  "actual_base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
+  "reviewed_at": "2026-08-15T00:45:00Z",
+  "reviewer_role": "Independent Review Agent",
+  "status": "READY_FOR_QA_AND_SECURITY",
+  "material_sha_confirmation": "Independent Review revalidation was performed against material candidate fac5e9c0d86b2137c8542d7ef4101e1746a38fab. The documentary carrier 96a16b0d41ad5d5530700b8b318ff93992321613 is two commits ahead and changes only project/handoffs/phase-09.json; it does not redefine the material candidate.",
+  "blocking_findings": [],
+  "resolved_findings": [
+    {
+      "id": "P09-IR-001",
+      "previous_status": "blocking_changes_requested",
+      "status": "RESOLVED",
+      "category": "homologation_runbook",
+      "finding": "docs/HOMOLOGATION.md lacked an operational incident response procedure covering classification, containment, evidence preservation, rollback/recovery decision, post-incident validation and escalation.",
+      "rework": "The single material rework commit after the prior documentary carrier adds 93 lines only to docs/HOMOLOGATION.md. It defines SEV-1/SEV-2/SEV-3 classification, immediate containment, evidence preservation, diagnosis and recovery strategy selection, controlled recovery, post-incident validation and closure, escalation and governance consequences.",
+      "scope_validation": "Comparison 86f74800f2c799214770226d09731748c7821b01...fac5e9c0d86b2137c8542d7ef4101e1746a38fab is one commit ahead and changes only docs/HOMOLOGATION.md. No runtime, model, migration, authorization, Organization rule, provider configuration, callback, DNS, deployment or Phase 10 code changed.",
+      "conclusion": "P09-IR-001 is fully resolved for Independent Review readiness."
+    }
+  ],
+  "non_blocking_findings": [
+    {
+      "id": "P09-IR-INFO-001",
+      "category": "backup_restore",
+      "severity": "medium",
+      "title": "Real restore evidence remains environment-dependent",
+      "description": "The runbook correctly requires a real restore into an exclusive temporary database before final Phase 09 approval. Repository documentation and CI do not constitute proof that restore works in the future real homologation environment."
+    },
+    {
+      "id": "P09-IR-INFO-002",
+      "category": "runtime_acceptance",
+      "severity": "low",
+      "title": "External homologation acceptance remains deferred",
+      "description": "Private PostgreSQL reachability, actual Coolify ingress behavior, backup/restore execution and runtime smoke evidence require the separately authorized real homologation environment."
+    },
+    {
+      "id": "P09-IR-INFO-003",
+      "category": "ci_maintenance",
+      "severity": "low",
+      "title": "GitHub Actions Node.js deprecation warning",
+      "description": "Known non-blocking GitHub Actions runtime deprecation warnings remain maintenance work and do not block Phase 09 Independent Review."
+    }
+  ],
+  "candidate_comparison": {
+    "prior_documentary_carrier": "86f74800f2c799214770226d09731748c7821b01",
+    "new_material_candidate": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "relationship": "ahead",
+    "commits_ahead": 1,
+    "changed_files": ["docs/HOMOLOGATION.md"],
+    "additions": 93,
+    "deletions": 0,
+    "material_scope": "Documentation-only incident response rework."
+  },
+  "carrier_validation": {
+    "material_candidate": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+    "documentary_carrier": "96a16b0d41ad5d5530700b8b318ff93992321613",
+    "relationship": "ahead",
+    "commits_ahead": 2,
+    "changed_files": ["project/handoffs/phase-09.json"],
+    "classification": "governance/documentation only"
+  },
+  "coolify_topology": {
+    "status": "APPROVED_FOR_QA",
+    "services": ["web", "worker-default", "worker-integrations", "beat", "release", "redis"],
+    "ingress": "Only web:8000 is intended for Coolify proxy ingress.",
+    "public_ports": "Redis, Celery workers, Beat and PostgreSQL have no published application-stack ports."
+  },
+  "database_boundary": {
+    "status": "APPROVED_FOR_QA",
+    "postgresql": "PostgreSQL 17 is external to docker-compose.homologation.yml, exclusive to Vidalys Flow and addressed through DATABASE_URL.",
+    "flowlog_reuse": false,
+    "canonical_storage": "PostgreSQL remains canonical; Redis is explicitly ephemeral broker/cache state."
+  },
+  "release_migrations": {
+    "status": "APPROVED_FOR_QA",
+    "service": "release",
+    "command": "python manage.py migrate --noinput",
+    "one_shot": true,
+    "long_lived_services_depend_on_success": true,
+    "phase_09_new_migrations": 0
+  },
+  "runtime_configuration": {
+    "status": "APPROVED_FOR_QA",
+    "settings": "config.settings.production",
+    "external_effects": "VIDALYS_DEMO_MODE remains fail-closed by default.",
+    "real_provider": false,
+    "sandbox": false,
+    "credentials": false,
+    "public_callbacks": false
+  },
+  "health_and_observability": {
+    "status": "APPROVED_FOR_QA",
+    "https_proxy_healthcheck": "The web readiness healthcheck supplies X-Forwarded-Proto=https and is compatible with SECURE_SSL_REDIRECT and SECURE_PROXY_SSL_HEADER.",
+    "worker_queues": ["default", "integrations"],
+    "beat": "Single Beat service in homologation topology.",
+    "incident_response": "Runbook now covers severity, containment, evidence, recovery/rollback decisions, controlled recovery, post-incident validation, escalation and governance impact."
+  },
+  "backup_restore": {
+    "status": "DOCUMENTED_NOT_YET_PROVEN_IN_REAL_ENVIRONMENT",
+    "review_conclusion": "Documentation is adequate and explicitly states that backup is not validated merely by configuration; proof requires actual restore and smoke evidence in the authorized homologation environment."
+  },
+  "rollback": {
+    "status": "APPROVED_FOR_QA",
+    "guardrails": ["classify migration compatibility before image rollback", "backup before technical migration rollback", "never use --fake as recovery", "do not reuse Flowlog runtime or data"]
+  },
+  "security": {
+    "status": "APPROVED_FOR_QA",
+    "organization_isolation": "No Phase 09 material rework changed Organization authorization or tenancy. Existing cross-Organization regression remains green.",
+    "secrets": "Homologation example environment contains placeholders only and Foundation CI secret scan is green.",
+    "scope_expansion": false,
+    "qa_note": "This is Independent Review evidence only and does not constitute QA/Security GO."
+  },
+  "tests_and_gates": {
+    "status": "APPROVED_FOR_QA",
+    "test_summary": {
+      "tests": 454,
+      "passed": 454,
+      "skipped": 0,
+      "coverage_percent": 86,
+      "minimum_required_percent": 85,
+      "database": "PostgreSQL 17.11"
+    },
+    "material_candidate_ci": {
+      "workflow": "Foundation CI",
+      "run_number": 209,
+      "run_id": 31849693025,
+      "head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "documentary_carrier_ci": {
+      "workflow": "Foundation CI",
+      "run_number": 211,
+      "run_id": 31849870288,
+      "head_sha": "96a16b0d41ad5d5530700b8b318ff93992321613",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "gates": ["governance validation", "baseline/ancestry", "secret scan", "independence scan", "Ruff", "Django check", "migration consistency", "PostgreSQL regression suite and coverage", "Docker build", "local/test/homologation Compose validation", "Celery topology"]
+  },
+  "risks": [
+    "Real PostgreSQL private connectivity and Coolify proxy behavior remain to be evidenced in the actual homologation environment.",
+    "Backup/restore must be proven by a real restore before final Phase 09 approval.",
+    "Incident response is now operationally documented but execution evidence depends on a real authorized homologation environment."
+  ],
+  "residual_risks": [
+    "Independent Review does not replace fresh QA/Security execution on the Phase 09 material candidate.",
+    "External runtime acceptance evidence remains deferred until homologation infrastructure is explicitly authorized and provisioned.",
+    "No provider activation is authorized by this review."
+  ],
+  "deferred": [
+    "real Coolify resource provisioning and runtime acceptance evidence",
+    "real backup/restore proof",
+    "provider sandbox activation and credentials",
+    "public callbacks and DNS changes",
+    "production go-live and cutover",
+    "Flowlog operational shutdown",
+    "legacy data migration/import",
+    "Phase 10"
+  ],
+  "human_decisions_required": [
+    "QA/Security checkpoint remains pending.",
+    "Final human approval of Phase 09 remains pending.",
+    "PR, merge, deployment, provider activation, production/go-live and Phase 10 require separate authorization."
+  ],
+  "checkpoint_recommendation": {
+    "status": "READY_FOR_QA_AND_SECURITY",
+    "rationale": "P09-IR-001 is resolved by a documentation-only rework that adds the complete incident-response procedure requested by the Independent Review. The rework introduces no runtime or domain change, both the exact material candidate and documentary carrier have green Foundation CI, and no new blocker was identified.",
+    "next_checkpoint": "Fresh independent QA/Security on material candidate fac5e9c0d86b2137c8542d7ef4101e1746a38fab. Do not infer QA/Security GO from this Independent Review."
+  }
+}

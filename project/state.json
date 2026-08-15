@@ -8,6 +8,12 @@
   "baseline_branch": "main",
   "next_phase": 9,
   "next_phase_name": "Infrastructure and homologation",
-  "active_candidate": null,
+  "active_candidate": {
+    "phase": 9,
+    "branch": "phase/09-infrastructure-homologation",
+    "base_ref": "main",
+    "actual_base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
+    "dependency_head": "8ec559ab69b88fbd781144b1ad9dc00d465193c2"
+  },
   "human_approval_required": true
 }
