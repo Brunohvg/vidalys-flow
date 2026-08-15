@@ -4,4 +4,26 @@
 <h1>Enviar mensagem transacional</h1>
 <p class="muted">{{ organization.name }}</p>
 <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Registrar envio</button></form>
+<script>
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const allowedSourceTypes = new Set(['order', 'fulfillment', 'payment']);
+  const allowedPurposes = new Set(['order_confirmation', 'fulfillment_progress', 'payment_confirmation', 'checkout_link']);
+  const sourceType = params.get('source_type');
+  const sourceId = params.get('source_id');
+  const purpose = params.get('purpose');
+  if (allowedSourceTypes.has(sourceType)) {
+    const field = document.getElementById('id_source_type');
+    if (field) field.value = sourceType;
+  }
+  if (sourceId && /^[0-9a-fA-F-]{36}$/.test(sourceId)) {
+    const field = document.getElementById('id_source_id');
+    if (field) field.value = sourceId;
+  }
+  if (allowedPurposes.has(purpose)) {
+    const field = document.getElementById('id_purpose');
+    if (field) field.value = purpose;
+  }
+})();
+</script>
 {% endblock %}
