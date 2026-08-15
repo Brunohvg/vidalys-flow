@@ -1,0 +1,114 @@
+{
+  "schema_version": 2,
+  "id": 10,
+  "name": "Product Experience Completion",
+  "dependency_phase": 9,
+  "dependency_head": "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095",
+  "base_ref": "main",
+  "actual_base_sha": "92365f28410405aefbbf8cf0789320d7d76efd51",
+  "branch": "phase/10-product-experience-completion",
+  "status": "in_progress",
+  "plan_status": "approved",
+  "implementation_status": "in_progress",
+  "review_status": "pending",
+  "qa_status": "pending",
+  "human_approval_status": "pending",
+  "initiation_authorization": {
+    "status": "authorized",
+    "date": "2026-08-15",
+    "evidence": "Human explicitly approved Phase 10 Product Experience Completion, including functional contracts, Order Operational Actions, revisable UX/visual scope, design system and brand identity, and authorized formal documentation and implementation. Real deploy, production, providers, credentials, public callbacks, cutover and Flowlog shutdown remain unauthorized."
+  },
+  "plan_approval": {
+    "status": "approved",
+    "date": "2026-08-15",
+    "evidence": "Human explicitly approved the complete Phase 10 plan after reviewing quick-order, inline customer creation, manual-value orders, contextual order actions, offline/manual payment, Organization PIX configuration, hosted checkout UX, pickup/dispatch operations, reporting, import/export, administration, search, design system, brand identity and an explicit margin for visual/UX rework."
+  },
+  "allowed_apps": ["orders","payments","fulfillment","messaging","customers","products","dashboard","users","organizations","audit","integrations","platform","core"],
+  "forbidden_apps": ["inventory","tax","accounting","marketing"],
+  "principle": "The common path must be the shortest path without weakening Organization isolation, authorization, privacy, auditability, idempotency, concurrency or domain boundaries.",
+  "tranches": [
+    "10A Contracts and foundations",
+    "10B Quick Order Experience",
+    "10C Order Operational Actions",
+    "10D Operational Speed",
+    "10E Administration",
+    "10F Data Operations",
+    "10G Reporting",
+    "10H Design System, Brand and Logo",
+    "10I Complete Experience Regression"
+  ],
+  "expected_features": [
+    "Quick order creation with inline reuse-or-create Customer behavior in one atomic business operation.",
+    "Explicit manual versus itemized pricing mode; products remain optional and totals never diverge silently.",
+    "Customer and product autocomplete scoped to active Organization; CEP lookup behind a neutral optional adapter with manual fallback.",
+    "Order Workspace contextual next-action surface that delegates to canonical Orders, Payments, Fulfillment and Messaging services.",
+    "Auditable offline/manual payment confirmation with explicit method and no provider impersonation.",
+    "Organization-scoped PIX payment instructions that can be copied or sent without implying payment receipt.",
+    "Hosted checkout creation/copy/send/cancel UX over the approved Payments contract, with real provider effects still disabled.",
+    "Delivery and pickup operational actions, tracking communication, secure pickup validation and a dedicated pickup center.",
+    "Order operational timeline derived from sanitized canonical history/audit evidence.",
+    "Global Organization-scoped search and saved read-only filters.",
+    "Customer and product CSV/XLSX import/export with validation, preview, conflict handling, permissions and PII controls.",
+    "Read-only operational reports with standard periods, period comparison and CSV/XLSX export.",
+    "Profile, users/team, general settings and audit administration screens constrained by existing policies.",
+    "Unified information architecture, responsive design system, Vidalys Flow brand identity and logo variants.",
+    "Formal human visual-review checkpoint and revisable UX presentation within Phase 10 without treating ordinary visual rework as scope expansion."
+  ],
+  "canonical_rules": {
+    "quick_order": [
+      "Existing Customer may be selected by explicit autocomplete result.",
+      "Exact CPF/CNPJ is authoritative for safe reuse within the same Organization; phone/email exact matches may be suggestions but never silent merges.",
+      "When no canonical Customer is selected, Customer and Order creation must succeed or roll back together.",
+      "Name similarity never causes automatic merge."
+    ],
+    "pricing": [
+      "pricing_mode is explicit: manual or itemized.",
+      "manual mode persists a canonical manual_total and does not require OrderItems.",
+      "itemized mode derives Order total only from persisted OrderItems using the existing money rules.",
+      "No fake product/item named Venda is created to represent manual total.",
+      "Changing between modes or adding items while a manual total exists requires explicit resolution of any difference."
+    ],
+    "payments": [
+      "Manual/offline receipt is a Payment-domain action with explicit method, amount, actor and timestamp.",
+      "Manual payment must never claim provider acceptance or fabricate external identifiers.",
+      "Sending PIX instructions does not change payment state.",
+      "Hosted checkout remains owned by Payments; Orders only exposes an orchestration surface.",
+      "Payment state never directly rewrites Order lifecycle."
+    ],
+    "fulfillment": [
+      "Pickup and delivery actions use the existing Fulfillment lifecycle and never add synthetic Order statuses.",
+      "Pickup validation may use order lookup, pickup code and QR UX, but completion must call Fulfillment canonical commands.",
+      "Tracking fields/actions remain Fulfillment/integration concerns even when surfaced in Order Workspace."
+    ],
+    "messaging": [
+      "Order Workspace may request approved transactional messages but Messaging remains the owner of permission, template, connection and dispatch rules.",
+      "No direct ad-hoc provider calls are allowed from Orders, Dashboard or templates."
+    ]
+  },
+  "visual_review_margin": {
+    "revisable_without_scope_expansion": ["screen composition","navigation grouping","card hierarchy","button labels and placement","next-action presentation","dashboard composition","report presentation","pickup-center layout","typography","secondary colors","logo proposals and lockups","responsive layout"],
+    "not_revisable_as_visual_only": ["Organization isolation","authorization","PII masking","idempotency","canonical money source","domain lifecycle boundaries","provider-effect guardrails","audit sanitization"]
+  },
+  "tests": {
+    "database": "PostgreSQL 17",
+    "network_access": false,
+    "coverage_minimum_total_percent": 85,
+    "required": ["quick-order atomicity and duplicate prevention","manual/itemized pricing transitions","cross-Organization autocomplete/search/import/export negatives","manual-payment authorization/idempotency/audit","PIX instructions do not mutate payment state","Order Workspace action eligibility and boundary delegation","pickup/dispatch contextual actions","report correctness and read-only behavior","profile/users/settings authorization","PII masking/export controls","responsive/empty-state regression","full historical regression"]
+  },
+  "ci": ["governance validation","baseline/ancestry","secret and independence scans","Ruff","Django check","migration consistency and rollback","PostgreSQL tests and coverage","Docker/Compose","Celery topology"],
+  "acceptance_criteria": [
+    "A simple manual-value order can be created in a single journey without pre-creating a Customer or Product.",
+    "Inline Customer creation is atomic with Order creation and respects canonical duplicate rules.",
+    "Manual and itemized pricing have one unambiguous source of truth at all times.",
+    "Order Workspace exposes only currently authorized and lifecycle-valid next actions.",
+    "Manual payment, PIX instructions and hosted checkout are distinguishable and auditable.",
+    "Customer/Product import/export and reports remain Organization-scoped and privacy-safe.",
+    "Profile, users, settings and audit administration respect role policies.",
+    "Visual candidate receives explicit human visual review before final technical approval.",
+    "Independent Review and QA/Security GO are required before final human approval.",
+    "Deploy, production, provider activation, credentials, public callbacks, cutover and Flowlog closure remain outside Phase 10."
+  ],
+  "deferred_features": ["real provider activation or sandbox effects","public callbacks and real credentials","production deploy/go-live","cutover and Flowlog operational shutdown","legacy database import/reuse","ERP, fiscal, inventory, accounting and marketing domains"],
+  "forbidden_scope": ["Flowlog runtime/data/code/migration/ID/secret/infrastructure reuse","collapsing Orders, Payments, Fulfillment or Messaging into a shared lifecycle","silent money reconciliation","direct provider calls from UI/Orders/Dashboard","real external effects without separate authorization","Phase 11 execution"],
+  "branch_hygiene_note": "Only phase/10-product-experience-completion is the authorized Phase 10 branch. phase/11-cutover and phase/10-product-experience-completion-backup/docs refs were accidentally precreated at the unchanged Phase 09 closeout SHA with no Phase 10 work and must not be used as candidate, dependency or Phase 11 baseline. Future Phase 11 must resolve a fresh origin/main after Phase 10 approval."
+}
