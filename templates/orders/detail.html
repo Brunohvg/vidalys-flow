@@ -2,169 +2,231 @@
 {% load dashboard_experience %}
 {% block title %}{{ detail.display_number }} — Vidalys Flow{% endblock %}
 {% block content %}
-  <div class="actions">
-    <h1>{{ detail.display_number }}</h1>
-    <span class="badge">{{ order.get_status_display }}</span>
+<style>
+  .order-workspace { max-width:76rem; margin:0 auto; }
+  .order-toolbar { display:flex; justify-content:space-between; gap:1rem; align-items:center; margin-bottom:1rem; }
+  .order-toolbar > div { min-width:0; }
+  .back-link { display:inline-block; margin-bottom:.4rem; color:var(--muted); font-size:.86rem; }
+  .order-title { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; }
+  .order-title h1 { margin:0; }
+  .order-total { text-align:right; white-space:nowrap; }
+  .order-total strong { display:block; font-size:1.8rem; letter-spacing:-.04em; }
+  .status-strip { display:flex; flex-wrap:wrap; gap:.45rem; margin:.8rem 0 1.2rem; }
+  .workspace-grid { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(17rem,.85fr); gap:1rem; align-items:start; }
+  .workspace-stack { display:grid; gap:1rem; }
+  .panel { border:1px solid var(--line); border-radius:1rem; background:#fff; padding:1.05rem; box-shadow:0 7px 22px rgba(39,27,87,.035); }
+  .panel-head { display:flex; justify-content:space-between; align-items:center; gap:.75rem; margin-bottom:.7rem; }
+  .panel-head h2,.panel h2 { margin:0; font-size:1.05rem; }
+  .panel h3 { margin:.2rem 0 .45rem; font-size:.98rem; }
+  .summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; }
+  .summary-item { padding:.72rem; border-radius:.75rem; background:#f8f7fb; }
+  .summary-item small { display:block; color:var(--muted); margin-bottom:.2rem; }
+  .item-row { padding:.85rem 0; border-bottom:1px solid #efedf5; }
+  .item-row:last-child { border-bottom:0; }
+  .item-main { display:flex; justify-content:space-between; gap:1rem; }
+  .item-price { white-space:nowrap; font-weight:800; }
+  details.inline-editor { margin-top:.7rem; border-top:1px dashed #e2deec; padding-top:.65rem; }
+  details.inline-editor > summary { cursor:pointer; color:#5b45d6; font-weight:740; }
+  .editor-body { margin-top:.75rem; }
+  .compact-actions { display:flex; flex-wrap:wrap; gap:.55rem; align-items:center; }
+  .compact-actions a,.secondary-action { display:inline-flex; align-items:center; padding:.62rem .78rem; border:1px solid var(--line); border-radius:.65rem; background:white; color:#504a68; font-weight:700; }
+  .compact-actions a:hover,.secondary-action:hover { text-decoration:none; border-color:#cfc8e4; }
+  .danger-link { color:#a52a21 !important; }
+  .timeline { list-style:none; padding:0; margin:.3rem 0 0; }
+  .timeline li { position:relative; padding:.55rem 0 .55rem 1rem; border-left:2px solid #e8e4f2; color:#4f4a63; }
+  .timeline li::before { content:""; position:absolute; left:-.34rem; top:.88rem; width:.55rem; height:.55rem; border-radius:50%; background:#7757ec; }
+  .muted-block { color:var(--muted); margin:.3rem 0; }
+  @media(max-width:58rem){ .workspace-grid{grid-template-columns:1fr}.order-toolbar{align-items:flex-start}.order-total{text-align:left} }
+  @media(max-width:40rem){ .order-toolbar{display:block}.order-total{margin-top:.8rem}.summary-grid{grid-template-columns:1fr}.item-main{display:block}.item-price{margin-top:.35rem} }
+</style>
+<div class="order-workspace">
+  <div class="order-toolbar">
+    <div>
+      <a class="back-link" href="{% url 'orders:list' %}">← Pedidos</a>
+      <div class="order-title">
+        <h1>{{ detail.display_number }}</h1>
+        <span class="badge">{{ order.get_status_display }}</span>
+      </div>
+      <p class="muted" style="margin:.35rem 0 0;">{{ detail.customer_name }}{% if order.channel %} · {{ order.channel }}{% endif %} · {{ order.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+    <div class="order-total">
+      <small class="muted">Total do pedido</small>
+      <strong>R$ {{ order.total }}</strong>
+      <small class="muted">versão {{ order.version }}</small>
+    </div>
   </div>
-  <p>Cliente: <strong>{{ detail.customer_name }}</strong> · Canal: {{ order.channel|default:"—" }}</p>
-  <p>Versão {{ order.version }} · Criado em {{ order.created_at|date:"d/m/Y H:i" }}</p>
+
+  <div class="status-strip">
+    <span class="badge">Pedido · {{ order.get_status_display }}</span>
+    {% if order.payment_intent %}<span class="badge">Pagamento · {{ order.payment_intent.get_status_display }}</span>{% endif %}
+    {% for fulfillment in order.fulfillments.all %}<span class="badge">{{ fulfillment.get_method_display }} · {{ fulfillment.get_status_display }}</span>{% endfor %}
+  </div>
 
   {% order_next_action_card organization order %}
 
-  <section aria-labelledby="totals">
-    <h2 id="totals">Totais</h2>
-    <div class="grid">
-      <div class="card">Subtotal<br><strong>R$ {{ order.subtotal }}</strong></div>
-      <div class="card">Descontos<br><strong>R$ {{ order.discount_total }}</strong></div>
-      <div class="card">Acréscimos<br><strong>R$ {{ order.surcharge_total }}</strong></div>
-      <div class="card">Total<br><strong>R$ {{ order.total }}</strong></div>
-    </div>
-  </section>
-
-  {% if order.status != "draft" %}
-    <section aria-labelledby="customer-snapshot">
-      <h2 id="customer-snapshot">Snapshot do cliente</h2>
-      <p>Documento: {{ detail.customer_document|default:"—" }}</p>
-      <p>Contato:
-        {% if detail.customer_contact %}
-          {{ detail.customer_contact.kind }} · {{ detail.customer_contact.value }}
-        {% else %}—{% endif %}
-      </p>
-      <div class="grid">
-        <div class="card">
-          <h3>Entrega</h3>
-          {% if detail.shipping_address %}
-            <p>{{ detail.shipping_address.recipient_name }}</p>
-            <p>{{ detail.shipping_address.street }}, {{ detail.shipping_address.number }}</p>
-            <p>{{ detail.shipping_address.district }} · {{ detail.shipping_address.city }}/{{ detail.shipping_address.state }}</p>
-            <p>{{ detail.shipping_address.postal_code }}</p>
-          {% else %}<p>Não informado.</p>{% endif %}
+  <div class="workspace-grid">
+    <div class="workspace-stack">
+      <section class="panel" aria-labelledby="customer-heading">
+        <div class="panel-head">
+          <h2 id="customer-heading">Cliente</h2>
+          {% if order.is_editable %}<span class="muted">Rascunho editável</span>{% endif %}
         </div>
-        <div class="card">
-          <h3>Cobrança</h3>
-          {% if detail.billing_address %}
-            <p>{{ detail.billing_address.recipient_name }}</p>
-            <p>{{ detail.billing_address.street }}, {{ detail.billing_address.number }}</p>
-            <p>{{ detail.billing_address.district }} · {{ detail.billing_address.city }}/{{ detail.billing_address.state }}</p>
-            <p>{{ detail.billing_address.postal_code }}</p>
-          {% else %}<p>Não informado.</p>{% endif %}
-        </div>
-      </div>
-    </section>
-  {% endif %}
-
-  {% if order.is_editable %}
-    <section aria-labelledby="change-customer">
-      <h2 id="change-customer">Cliente do rascunho</h2>
-      <form method="post" action="{% url 'orders:change-customer' order.id %}">
-        {% csrf_token %}
-        {{ customer_form.as_p }}
-        <button type="submit">Alterar cliente</button>
-      </form>
-    </section>
-  {% endif %}
-
-  <section aria-labelledby="items">
-    <h2 id="items">Itens</h2>
-    {% for entry in item_forms %}
-      <article class="card">
-        <h3>{{ entry.item.position }}. {{ entry.item.name_snapshot }}</h3>
-        {% if entry.item.variant_snapshot %}<p>Variação: {{ entry.item.variant_snapshot }}</p>{% endif %}
-        <p>SKU: {{ entry.item.sku_snapshot|default:"—" }} · Unidade: {{ entry.item.unit_snapshot }}</p>
-        <p>
-          {{ entry.item.quantity }} × R$ {{ entry.item.unit_price }}
-          − R$ {{ entry.item.discount_amount }}
-          + R$ {{ entry.item.surcharge_amount }}
-          = <strong>R$ {{ entry.item.total }}</strong>
-        </p>
-        {% if entry.item.surcharge_reason %}<p>Motivo do acréscimo: {{ entry.item.surcharge_reason }}</p>{% endif %}
-        {% if entry.item.notes %}<p>Observação: {{ entry.item.notes }}</p>{% endif %}
-        {% if order.is_editable %}
-          <details>
-            <summary>Editar item</summary>
-            <form method="post" action="{% url 'orders:update-item' order.id entry.item.id %}">
-              {% csrf_token %}
-              {{ entry.form.as_p }}
-              <button type="submit">Salvar item</button>
-            </form>
-          </details>
-          <form method="post" action="{% url 'orders:remove-item' order.id entry.item.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="expected_version" value="{{ order.version }}">
-            <input type="hidden" name="idempotency_key" value="{{ entry.remove_key }}">
-            <button class="danger" type="submit">Remover item</button>
-          </form>
+        <strong>{{ detail.customer_name }}</strong>
+        {% if order.status != "draft" %}
+          <div class="summary-grid" style="margin-top:.75rem;">
+            <div class="summary-item"><small>Documento</small>{{ detail.customer_document|default:"—" }}</div>
+            <div class="summary-item"><small>Contato</small>{% if detail.customer_contact %}{{ detail.customer_contact.kind }} · {{ detail.customer_contact.value }}{% else %}—{% endif %}</div>
+          </div>
         {% endif %}
-      </article>
-    {% empty %}
-      <p>Nenhum item.</p>
-    {% endfor %}
-  </section>
+        {% if order.is_editable %}
+          <details class="inline-editor">
+            <summary>Alterar cliente</summary>
+            <div class="editor-body">
+              <form method="post" action="{% url 'orders:change-customer' order.id %}">
+                {% csrf_token %}{{ customer_form.as_p }}<button type="submit">Salvar cliente</button>
+              </form>
+            </div>
+          </details>
+        {% endif %}
+      </section>
 
-  {% if order.is_editable %}
-    <section aria-labelledby="add-item">
-      <h2 id="add-item">Adicionar item</h2>
-      <p class="muted">Produto e variação são opcionais. Sem catálogo, informe nome e unidade.</p>
-      {% if not can_adjust %}<p class="muted">Somente gerência pode aplicar descontos ou acréscimos.</p>{% endif %}
-      <form method="post" action="{% url 'orders:add-item' order.id %}">
-        {% csrf_token %}
-        {{ item_form.as_p }}
-        <button type="submit">Adicionar item</button>
-      </form>
-    </section>
-
-    <section aria-labelledby="confirm-order">
-      <h2 id="confirm-order">Confirmar pedido</h2>
-      <p>A confirmação congela cliente, contato, endereços, itens e valores.</p>
-      <form method="post" action="{% url 'orders:confirm' order.id %}">
-        {% csrf_token %}
-        {{ confirm_form.as_p }}
-        <button type="submit">Confirmar pedido</button>
-      </form>
-    </section>
-  {% endif %}
-
-  {% if can_cancel and order.status != "cancelled" %}
-    <section aria-labelledby="cancel-order">
-      <h2 id="cancel-order">Cancelar pedido</h2>
-      <form method="post" action="{% url 'orders:cancel' order.id %}">
-        {% csrf_token %}
-        {{ cancel_form.as_p }}
-        <button class="danger" type="submit">Cancelar pedido</button>
-      </form>
-    </section>
-  {% endif %}
-
-  {% if order.status == "confirmed" %}
-    <section aria-labelledby="payments">
-      <h2 id="payments">Pagamento</h2>
-      {% if order.payment_intent %}
-        <p><a href="{% url 'payments:detail' order.payment_intent.id %}">Ver pagamento</a></p>
-      {% elif can_adjust %}
-        <p><a href="{% url 'payments:create' order.id %}">Criar pagamento integral</a></p>
-      {% else %}
-        <p class="muted">A gerência ainda não criou o pagamento.</p>
-      {% endif %}
-    </section>
-    <section aria-labelledby="fulfillment">
-      <h2 id="fulfillment">Fulfillment</h2>
-      <p><a href="{% url 'fulfillment:create' order.id %}">Criar lote de entrega ou retirada</a></p>
-      <ul>
-        {% for fulfillment in order.fulfillments.all %}
-          <li><a href="{% url 'fulfillment:detail' fulfillment.id %}">{{ fulfillment.display_number }}</a> · {{ fulfillment.get_method_display }} · {{ fulfillment.get_status_display }}</li>
+      <section class="panel" aria-labelledby="items-heading">
+        <div class="panel-head">
+          <h2 id="items-heading">Itens e valor</h2>
+          <strong>R$ {{ order.total }}</strong>
+        </div>
+        {% if order.pricing_mode == "manual" and not order.items.exists %}
+          <p class="muted-block">Venda por valor manual. Não é necessário criar item fictício.</p>
+        {% endif %}
+        {% for entry in item_forms %}
+          <article class="item-row">
+            <div class="item-main">
+              <div>
+                <strong>{{ entry.item.quantity }} × {{ entry.item.name_snapshot }}</strong>
+                {% if entry.item.variant_snapshot %}<div class="muted">{{ entry.item.variant_snapshot }}</div>{% endif %}
+                {% if entry.item.sku_snapshot %}<div class="muted">SKU {{ entry.item.sku_snapshot }}</div>{% endif %}
+              </div>
+              <div class="item-price">R$ {{ entry.item.total }}</div>
+            </div>
+            {% if order.is_editable %}
+              <details class="inline-editor">
+                <summary>Editar item</summary>
+                <div class="editor-body">
+                  <form method="post" action="{% url 'orders:update-item' order.id entry.item.id %}">
+                    {% csrf_token %}{{ entry.form.as_p }}<button type="submit">Salvar item</button>
+                  </form>
+                  <form method="post" action="{% url 'orders:remove-item' order.id entry.item.id %}" style="margin-top:.6rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="expected_version" value="{{ order.version }}">
+                    <input type="hidden" name="idempotency_key" value="{{ entry.remove_key }}">
+                    <button class="danger" type="submit">Remover item</button>
+                  </form>
+                </div>
+              </details>
+            {% endif %}
+          </article>
         {% empty %}
-          <li>Nenhum lote criado.</li>
+          {% if order.pricing_mode != "manual" %}<p class="muted-block">Nenhum item adicionado.</p>{% endif %}
         {% endfor %}
-      </ul>
-    </section>
-  {% endif %}
 
-  <section aria-labelledby="history">
-    <h2 id="history">Histórico de estado</h2>
-    <ol>
-      {% for event in detail.history %}
-        <li>{{ event.created_at|date:"d/m/Y H:i" }} · {{ event.from_status|default:"criação" }} → {{ event.to_status }}</li>
-      {% endfor %}
-    </ol>
-  </section>
+        {% if order.is_editable %}
+          <details class="inline-editor">
+            <summary>+ Adicionar item</summary>
+            <div class="editor-body">
+              <p class="muted">Produto e variação são opcionais. As regras canônicas de preço continuam sendo aplicadas.</p>
+              <form method="post" action="{% url 'orders:add-item' order.id %}">
+                {% csrf_token %}{{ item_form.as_p }}<button type="submit">Adicionar item</button>
+              </form>
+            </div>
+          </details>
+        {% endif %}
+      </section>
+
+      {% if order.status != "draft" %}
+        <section class="panel" aria-labelledby="delivery-address-heading">
+          <div class="panel-head"><h2 id="delivery-address-heading">Endereço</h2></div>
+          {% if detail.shipping_address %}
+            <p style="margin:.2rem 0;"><strong>{{ detail.shipping_address.recipient_name }}</strong></p>
+            <p class="muted-block">{{ detail.shipping_address.street }}, {{ detail.shipping_address.number }}{% if detail.shipping_address.complement %} · {{ detail.shipping_address.complement }}{% endif %}</p>
+            <p class="muted-block">{{ detail.shipping_address.district }} · {{ detail.shipping_address.city }}/{{ detail.shipping_address.state }} · {{ detail.shipping_address.postal_code }}</p>
+          {% else %}<p class="muted-block">Nenhum endereço de entrega registrado.</p>{% endif %}
+        </section>
+      {% endif %}
+
+      <section class="panel" aria-labelledby="history-heading">
+        <div class="panel-head"><h2 id="history-heading">Histórico</h2></div>
+        <ol class="timeline">
+          {% for event in detail.history %}
+            <li>{{ event.created_at|date:"d/m/Y H:i" }} · {{ event.from_status|default:"criação" }} → {{ event.to_status }}</li>
+          {% empty %}<li>Sem eventos registrados.</li>{% endfor %}
+        </ol>
+      </section>
+    </div>
+
+    <aside class="workspace-stack">
+      {% if order.is_editable %}
+        <section class="panel">
+          <h2>Próximo passo</h2>
+          <p class="muted-block">Quando os dados estiverem corretos, confirme o pedido. A confirmação congela os snapshots canônicos.</p>
+          <form method="post" action="{% url 'orders:confirm' order.id %}">
+            {% csrf_token %}{{ confirm_form.as_p }}<button type="submit">Confirmar pedido</button>
+          </form>
+        </section>
+      {% endif %}
+
+      <section class="panel" aria-labelledby="payment-heading">
+        <div class="panel-head"><h2 id="payment-heading">Pagamento</h2></div>
+        {% if order.status == "confirmed" %}
+          {% if order.payment_intent %}
+            <p><strong>{{ order.payment_intent.get_status_display }}</strong></p>
+            <p class="muted-block">As ações de PIX, checkout e recebimento serão concentradas aqui no próximo incremento.</p>
+            <div class="compact-actions"><a href="{% url 'payments:detail' order.payment_intent.id %}">Ver detalhes</a></div>
+          {% elif can_adjust %}
+            <p class="muted-block">Ainda não há intenção de pagamento.</p>
+            <div class="compact-actions"><a href="{% url 'payments:create' order.id %}">Preparar pagamento</a></div>
+          {% else %}<p class="muted-block">A gerência ainda não preparou o pagamento.</p>{% endif %}
+        {% else %}<p class="muted-block">Disponível após confirmação do pedido.</p>{% endif %}
+      </section>
+
+      <section class="panel" aria-labelledby="fulfillment-heading">
+        <div class="panel-head"><h2 id="fulfillment-heading">Atendimento</h2></div>
+        {% if order.status == "confirmed" %}
+          {% for fulfillment in order.fulfillments.all %}
+            <div style="margin-bottom:.7rem;">
+              <strong>{{ fulfillment.get_method_display }}</strong>
+              <div class="muted">{{ fulfillment.get_status_display }}</div>
+              <div class="compact-actions" style="margin-top:.45rem;"><a href="{% url 'fulfillment:detail' fulfillment.id %}">Ver atendimento</a></div>
+            </div>
+          {% empty %}
+            <p class="muted-block">Nenhum atendimento criado.</p>
+            <div class="compact-actions"><a href="{% url 'fulfillment:create' order.id %}">Definir retirada ou entrega</a></div>
+          {% endfor %}
+        {% else %}<p class="muted-block">Disponível após confirmação do pedido.</p>{% endif %}
+      </section>
+
+      <section class="panel">
+        <h2>Resumo</h2>
+        <div class="summary-grid" style="margin-top:.7rem;">
+          <div class="summary-item"><small>Subtotal</small><strong>R$ {{ order.subtotal }}</strong></div>
+          <div class="summary-item"><small>Descontos</small><strong>R$ {{ order.discount_total }}</strong></div>
+          <div class="summary-item"><small>Acréscimos</small><strong>R$ {{ order.surcharge_total }}</strong></div>
+          <div class="summary-item"><small>Total</small><strong>R$ {{ order.total }}</strong></div>
+        </div>
+      </section>
+
+      {% if can_cancel and order.status != "cancelled" %}
+        <section class="panel">
+          <details class="inline-editor">
+            <summary class="danger-link">Cancelar pedido</summary>
+            <div class="editor-body">
+              <form method="post" action="{% url 'orders:cancel' order.id %}">
+                {% csrf_token %}{{ cancel_form.as_p }}<button class="danger" type="submit">Confirmar cancelamento</button>
+              </form>
+            </div>
+          </details>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+</div>
 {% endblock %}
