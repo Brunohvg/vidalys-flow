@@ -162,7 +162,17 @@ def _existing_result(receipt, *, item=False):
 
 
 def _recalculate(order):
-    totals = calculate_order(order.items.all())
+    if order.pricing_mode == Order.PricingMode.MANUAL:
+        if order.manual_total is None:
+            raise InvalidItem("Pedido manual exige valor canônico.")
+        totals = {
+            "subtotal": order.manual_total,
+            "discount_total": Decimal("0.00"),
+            "surcharge_total": Decimal("0.00"),
+            "total": order.manual_total,
+        }
+    else:
+        totals = calculate_order(order.items.all())
     for field, value in totals.items():
         setattr(order, field, value)
     order.save(update_fields=(*totals.keys(), "updated_at"))
@@ -505,8 +515,8 @@ def confirm_order(*, organization, order, actor, expected_version, idempotency_k
     ensure_transition(from_status=order.status, to_status=Order.Status.CONFIRMED)
     customer, items = _lock_confirmation_sources(organization=organization, order=order)
     _require_customer(organization=organization, customer=customer)
-    if not items:
-        raise ConfirmationBlocked("Pedido sem itens não pode ser confirmado.")
+    if not items and order.pricing_mode != Order.PricingMode.MANUAL:
+        raise ConfirmationBlocked("Pedido por itens sem itens não pode ser confirmado.")
     for item in items:
         _validate_catalog_item(
             organization=organization,
