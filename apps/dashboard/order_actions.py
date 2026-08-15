@@ -1,5 +1,6 @@
 from apps.fulfillment import policies as fulfillment_policies
 from apps.fulfillment.models import Fulfillment
+from apps.fulfillment.pickup_services import pickup_verification_code
 from apps.payments import policies as payment_policies
 from apps.payments.models import PaymentIntent, PixPaymentInstruction
 
@@ -102,6 +103,7 @@ def order_next_action(*, organization, order, user):
     label = None
     description = None
     kind = "closed"
+    pickup_code = None
     if fulfillment.status == Fulfillment.Status.DRAFT:
         target = Fulfillment.Status.PREPARING
         label = "Iniciar preparação"
@@ -117,6 +119,8 @@ def order_next_action(*, organization, order, user):
             label = "Validar retirada"
             description = "A retirada exige validação do código do cliente antes da conclusão."
             kind = "pickup_validation"
+            if fulfillment_policies.can_cancel_fulfillments(user=user, organization=organization):
+                pickup_code = pickup_verification_code(fulfillment=fulfillment)
         else:
             target = Fulfillment.Status.IN_TRANSIT
             label = "Marcar como enviado"
@@ -136,4 +140,5 @@ def order_next_action(*, organization, order, user):
         "target_status": target,
         "label": label,
         "can_operate": can_operate_fulfillment,
+        "pickup_code": pickup_code,
     }
