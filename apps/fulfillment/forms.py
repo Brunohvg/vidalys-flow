@@ -4,6 +4,7 @@ from decimal import Decimal
 from django import forms
 
 from apps.fulfillment.models import Fulfillment
+from apps.orders.models import Order
 from apps.organizations.models import OrganizationUnit
 
 
@@ -29,6 +30,7 @@ class AllocationForm(forms.Form):
         super().__init__(*args, **kwargs)
         initial_allocations = initial_allocations or {}
         self.order_items = list(order.items.order_by("position"))
+        self.allow_empty_allocations = order.pricing_mode == Order.PricingMode.MANUAL and not self.order_items
         for item in self.order_items:
             field_name = f"quantity_{item.id}"
             self.fields[field_name] = forms.DecimalField(
@@ -51,10 +53,11 @@ class AllocationForm(forms.Form):
                 item_id = name.removeprefix("quantity_")
                 item = next(item for item in self.order_items if str(item.id) == item_id)
                 allocations.append({"order_item": item, "quantity": value})
-        if not allocations:
+        if not allocations and not self.allow_empty_allocations:
             raise forms.ValidationError("Informe ao menos uma quantidade.")
         cleaned["allocations"] = allocations
         return cleaned
+
 
 class FulfillmentCreateForm(AllocationForm):
     method = forms.ChoiceField(choices=Fulfillment.Method.choices, label="Método")
