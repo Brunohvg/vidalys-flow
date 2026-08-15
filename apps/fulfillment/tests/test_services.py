@@ -16,6 +16,7 @@ from apps.fulfillment.models import (
     FulfillmentCommandReceipt,
     FulfillmentStatusHistory,
 )
+from apps.fulfillment.pickup_services import complete_pickup_with_code, pickup_verification_code
 from apps.fulfillment.services import create_fulfillment, replace_allocations, transition_fulfillment
 from apps.organizations.models import Membership
 
@@ -192,11 +193,11 @@ def test_delivery_and_pickup_have_method_specific_lifecycles(
         expected_version=delivery.version,
         idempotency_key=str(uuid.uuid4()),
     )
-    pickup = transition_fulfillment(
+    pickup = complete_pickup_with_code(
         organization=organization,
         fulfillment=pickup,
         actor=user,
-        target_status="completed",
+        code=pickup_verification_code(fulfillment=pickup),
         expected_version=pickup.version,
         idempotency_key=str(uuid.uuid4()),
     )
