@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 
+from apps.audit.models import AuditEvent
 from apps.customers.models import Customer
 from apps.orders.models import Order
 from apps.orders.quick_forms import QuickOrderCreateForm
@@ -31,6 +32,8 @@ def test_quick_manual_order_creates_customer_and_preserves_manual_total(
     assert order.subtotal == Decimal("180.00")
     assert order.total == Decimal("180.00")
     assert order.items.count() == 0
+    audit = AuditEvent.objects.get(organization=organization, entity_type="order", entity_id=str(order.id))
+    assert audit.payload["inline_customer_created"] is True
 
 
 @pytest.mark.django_db
@@ -79,6 +82,8 @@ def test_quick_order_reuses_exact_document_without_name_merge(
 
     assert order.customer_id == customer.id
     assert Customer.objects.filter(organization=organization).count() == before
+    audit = AuditEvent.objects.get(organization=organization, entity_type="order", entity_id=str(order.id))
+    assert audit.payload["inline_customer_created"] is False
 
 
 @pytest.mark.django_db
