@@ -5,7 +5,6 @@ from django.urls import reverse
 
 from apps.customers.models import Customer
 from apps.orders.models import Order
-from apps.orders.services import add_item
 
 
 @pytest.mark.django_db
