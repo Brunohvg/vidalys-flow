@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Relatório de pedidos · Vidalys Flow{% endblock %}
+{% block content %}
+  <div class="section-heading">
+    <div>
+      <h1>Relatório de pedidos</h1>
+      <p class="muted">{{ organization.name }} · dados operacionais, não fiscais.</p>
+    </div>
+    <a href="{% url 'dashboard:order-report-csv' %}?period={{ report.period }}">Exportar CSV</a>
+  </div>
+
+  <nav aria-label="Períodos do relatório">
+    {% for value, label in periods.items %}
+      <a href="?period={{ value }}"{% if report.period == value %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  <section>
+    <h2>{{ report.period_label }}</h2>
+    <div class="grid">
+      <article class="card"><span class="muted">Pedidos</span><strong class="metric">{{ report.all.count }}</strong><span>R$ {{ report.all.value }}</span></article>
+      <article class="card"><span class="muted">Confirmados</span><strong class="metric">{{ report.confirmed.count }}</strong><span>R$ {{ report.confirmed.value }}</span></article>
+      <article class="card"><span class="muted">Cancelados</span><strong class="metric">{{ report.cancelled.count }}</strong><span>R$ {{ report.cancelled.value }}</span></article>
+      <article class="card"><span class="muted">Ticket médio dos pedidos</span><strong class="metric">R$ {{ report.all.ticket }}</strong></article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pedidos por dia</h2>
+    {% if report.daily %}
+      <table class="responsive-table">
+        <thead><tr><th>Data</th><th>Pedidos</th><th>Valor dos pedidos</th></tr></thead>
+        <tbody>
+          {% for row in report.daily %}
+            <tr><td data-label="Data">{{ row.day|date:"d/m/Y" }}</td><td data-label="Pedidos">{{ row.count }}</td><td data-label="Valor">R$ {{ row.value|default:"0,00" }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">Nenhum pedido no período.</p>
+    {% endif %}
+  </section>
+{% endblock %}
