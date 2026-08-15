@@ -68,10 +68,9 @@ def test_list_accepts_valid_search_filter(client, organization, order, user, ope
 def test_create_add_and_confirm_web_flow(client, organization, user, operator_membership, customer):
     client.force_login(user)
     response = client.post(
-        reverse("orders:create"),
+        reverse("orders:create-draft"),
         {
             "customer": customer.id,
-            "pricing_mode": Order.PricingMode.ITEMIZED,
             "channel": "balcão",
             "idempotency_key": str(uuid.uuid4()),
         },
