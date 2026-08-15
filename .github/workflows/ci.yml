@@ -112,6 +112,24 @@ jobs:
         run: |
           docker compose config
           docker compose -f docker-compose.test.yml config
-          docker compose --env-file .env.homologation.example -f docker-compose.homologation.yml config
+          homologation_config="$(
+            env \
+              -u SECRET_KEY \
+              -u DATABASE_URL \
+              -u VIDALYS_DEMO_MODE \
+              -u ALLOWED_HOSTS \
+              -u CSRF_TRUSTED_ORIGINS \
+              -u CORS_ALLOWED_ORIGINS \
+              docker compose \
+                --env-file .env.homologation.example \
+                -f docker-compose.homologation.yml \
+                config
+          )"
+          printf '%s\n' "$homologation_config"
+          printf '%s\n' "$homologation_config" | grep -q 'REPLACE_PRIVATE_POSTGRES_HOST'
+          if printf '%s\n' "$homologation_config" | grep -q '127.0.0.1:5432/vidalys_test'; then
+            echo 'Homologation Compose inherited the CI test database.' >&2
+            exit 1
+          fi
       - name: Celery runtime topology
         run: uv run python scripts/check_celery_runtime.py
