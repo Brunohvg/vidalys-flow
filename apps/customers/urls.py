@@ -1,12 +1,14 @@
 from django.urls import path
 
-from apps.customers import views
+from apps.customers import transfer_views, views
 
 app_name = "customers"
 
 urlpatterns = [
     path("", views.customer_list, name="list"),
     path("new/", views.customer_create, name="create"),
+    path("import/", transfer_views.customer_import_csv, name="import-csv"),
+    path("export.csv", transfer_views.customer_export_csv, name="export-csv"),
     path("<uuid:customer_id>/", views.customer_detail, name="detail"),
     path("<uuid:customer_id>/edit/", views.customer_edit, name="edit"),
     path("<uuid:customer_id>/contacts/", views.customer_add_contact, name="add-contact"),
