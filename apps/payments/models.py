@@ -405,3 +405,46 @@ class PaymentWebhookReceipt(BaseModel):
 
     def delete(self, *args, **kwargs):
         raise TypeError("PaymentWebhookReceipt é imutável.")
+
+
+class PixPaymentInstruction(BaseModel):
+    class KeyType(models.TextChoices):
+        CPF = "cpf", "CPF"
+        CNPJ = "cnpj", "CNPJ"
+        EMAIL = "email", "E-mail"
+        PHONE = "phone", "Telefone"
+        RANDOM = "random", "Chave aleatória"
+
+    organization = models.OneToOneField(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="pix_payment_instruction",
+    )
+    key_type = models.CharField(max_length=20, choices=KeyType.choices)
+    key_value = models.CharField(max_length=160)
+    beneficiary_name = models.CharField(max_length=200)
+    bank_name = models.CharField(max_length=120, blank=True)
+    is_active = models.BooleanField(default=True)
+    version = models.PositiveBigIntegerField(default=1)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="pix_payment_instructions_updated",
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(key_type__in=("cpf", "cnpj", "email", "phone", "random")),
+                name="pix_instruction_key_type_valid",
+            ),
+            models.CheckConstraint(condition=models.Q(version__gte=1), name="pix_instruction_version_positive"),
+            models.CheckConstraint(condition=~models.Q(key_value=""), name="pix_instruction_key_not_empty"),
+            models.CheckConstraint(condition=~models.Q(beneficiary_name=""), name="pix_instruction_beneficiary_not_empty"),
+        ]
+
+    def __str__(self):
+        return f"PIX / {self.organization} / {self.get_key_type_display()}"
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("A instrução PIX deve ser desativada, não excluída.")
