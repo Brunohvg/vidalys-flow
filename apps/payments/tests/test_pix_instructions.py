@@ -28,7 +28,7 @@ def test_manager_can_create_pix_instruction_without_raw_key_in_audit(
         action="payment.pix_instruction_created",
     )
     assert event.payload == {
-        "key_type": "email",
+        "key_type": "[REDACTED]",
         "is_active": True,
         "version": 1,
     }
