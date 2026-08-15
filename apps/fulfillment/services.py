@@ -128,9 +128,19 @@ def _canonical_allocations(allocations):
             raise InvalidFulfillment("Um item do pedido não pode aparecer duas vezes no lote.")
         seen.add(item.id)
         canonical.append((item, quantity(allocation["quantity"])))
-    if not canonical:
-        raise InvalidFulfillment("Informe ao menos um item para o lote.")
     return sorted(canonical, key=lambda entry: str(entry[0].id))
+
+
+def _validate_allocation_requirement(*, organization, order, allocations):
+    if allocations:
+        return
+    has_items = OrderItem.objects.select_for_update().filter(
+        organization=organization,
+        order=order,
+    ).exists()
+    if order.pricing_mode == Order.PricingMode.MANUAL and not has_items:
+        return
+    raise InvalidFulfillment("Informe ao menos um item para o lote.")
 
 
 def _lock_and_validate_allocations(*, organization, order, allocations, exclude_fulfillment=None):
@@ -245,6 +255,11 @@ def create_fulfillment(
     if not is_new:
         return _existing_result(receipt)
     order = _lock_order(organization=organization, order=order)
+    _validate_allocation_requirement(
+        organization=organization,
+        order=order,
+        allocations=allocations,
+    )
     allocations = _lock_and_validate_allocations(
         organization=organization,
         order=order,
@@ -323,6 +338,11 @@ def replace_allocations(
     if fulfillment.status != Fulfillment.Status.DRAFT:
         raise InvalidFulfillment("Somente lote em rascunho pode ser editado.")
     _ensure_version(fulfillment=fulfillment, expected_version=expected_version)
+    _validate_allocation_requirement(
+        organization=organization,
+        order=order,
+        allocations=allocations,
+    )
     allocations = _lock_and_validate_allocations(
         organization=organization,
         order=order,
