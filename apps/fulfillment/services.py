@@ -395,6 +395,7 @@ def transition_fulfillment(
     expected_version,
     idempotency_key,
     reason="",
+    _pickup_verified=False,
 ):
     cancel = target_status == Fulfillment.Status.CANCELLED
     _require_permission(actor=actor, organization=organization, cancel=cancel)
@@ -423,6 +424,13 @@ def transition_fulfillment(
         fulfillment=fulfillment,
     )
     _ensure_version(fulfillment=fulfillment, expected_version=expected_version)
+    if (
+        fulfillment.method == Fulfillment.Method.PICKUP
+        and fulfillment.status == Fulfillment.Status.READY
+        and target_status == Fulfillment.Status.COMPLETED
+        and not _pickup_verified
+    ):
+        raise InvalidFulfillment("Retirada pronta exige validação do código do cliente.")
     ensure_transition(fulfillment=fulfillment, target_status=target_status)
     from_status = fulfillment.status
     fulfillment.status = target_status
