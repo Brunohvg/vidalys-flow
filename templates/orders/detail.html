@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load dashboard_experience %}
 {% block title %}{{ detail.display_number }} — Vidalys Flow{% endblock %}
 {% block content %}
   <div class="actions">
@@ -7,6 +8,8 @@
   </div>
   <p>Cliente: <strong>{{ detail.customer_name }}</strong> · Canal: {{ order.channel|default:"—" }}</p>
   <p>Versão {{ order.version }} · Criado em {{ order.created_at|date:"d/m/Y H:i" }}</p>
+
+  {% order_next_action_card organization order %}
 
   <section aria-labelledby="totals">
     <h2 id="totals">Totais</h2>
