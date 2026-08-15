@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods
 from apps.customers import policies, selectors, services
 from apps.customers.exceptions import CustomerDomainError
 from apps.customers.models import Customer
+from apps.customers.normalization import mask_contact, mask_document
 from apps.organizations.selectors import active_organization_for_user
 from apps.platform.import_receipts import (
     ImportReceiptConflict,
@@ -35,11 +36,11 @@ CUSTOMER_HEADERS = (
 
 
 def _organization_or_redirect(request):
-    organization, _ = active_organization_for_user(user=request.user, session=request.session)
+    organization, membership = active_organization_for_user(user=request.user, session=request.session)
     if organization and policies.can_view_customers(user=request.user, organization=organization):
-        return organization, None
+        return organization, membership, None
     messages.info(request, "Selecione uma organização ativa para continuar.")
-    return None, redirect("organizations:list")
+    return None, None, redirect("organizations:list")
 
 
 def _csv_response(*, filename, rows):
@@ -54,28 +55,39 @@ def _csv_response(*, filename, rows):
 
 @login_required
 def customer_export_csv(request):
-    organization, response = _organization_or_redirect(request)
+    organization, membership, response = _organization_or_redirect(request)
     if response:
         return response
+    full_access = membership.role in policies.MANAGER_ROLES
     rows = []
     customers = selectors.customers_for_organization(
         organization=organization,
         include_inactive=True,
     ).prefetch_related("contacts")
     for customer in customers:
-        email = customer.contacts.filter(kind="email", is_active=True).values_list("value", flat=True).first() or ""
-        phone = (
-            customer.contacts.filter(kind__in=("phone", "whatsapp"), is_active=True)
-            .values_list("value", flat=True)
-            .first()
-            or ""
-        )
+        email_contact = customer.contacts.filter(kind="email", is_active=True).first()
+        phone_contact = customer.contacts.filter(kind__in=("phone", "whatsapp"), is_active=True).first()
+        document = customer.document_normalized if full_access else mask_document(customer.document_normalized)
+        email = ""
+        phone = ""
+        if email_contact:
+            email = (
+                email_contact.value
+                if full_access
+                else mask_contact(email_contact.kind, email_contact.normalized_value)
+            )
+        if phone_contact:
+            phone = (
+                phone_contact.value
+                if full_access
+                else mask_contact(phone_contact.kind, phone_contact.normalized_value)
+            )
         rows.append(
             (
                 customer.customer_type,
                 customer.display_name,
                 customer.legal_name,
-                customer.document_normalized,
+                document,
                 email,
                 phone,
                 customer.notes_summary,
@@ -87,7 +99,7 @@ def customer_export_csv(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def customer_import_csv(request):
-    organization, response = _organization_or_redirect(request)
+    organization, _membership, response = _organization_or_redirect(request)
     if response:
         return response
     if not policies.can_manage_customers(user=request.user, organization=organization):
