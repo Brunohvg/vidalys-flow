@@ -440,7 +440,10 @@ class PixPaymentInstruction(BaseModel):
             ),
             models.CheckConstraint(condition=models.Q(version__gte=1), name="pix_instruction_version_positive"),
             models.CheckConstraint(condition=~models.Q(key_value=""), name="pix_instruction_key_not_empty"),
-            models.CheckConstraint(condition=~models.Q(beneficiary_name=""), name="pix_instruction_beneficiary_not_empty"),
+            models.CheckConstraint(
+                condition=~models.Q(beneficiary_name=""),
+                name="pix_instruction_beneficiary_not_empty",
+            ),
         ]
 
     def __str__(self):
