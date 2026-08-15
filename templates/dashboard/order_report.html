@@ -6,7 +6,10 @@
       <h1>Relatório de pedidos</h1>
       <p class="muted">{{ organization.name }} · dados operacionais, não fiscais.</p>
     </div>
-    <a href="{% url 'dashboard:order-report-csv' %}?period={{ report.period }}&start={{ report.start_date|date:'Y-m-d' }}&end={{ report.end_date|date:'Y-m-d' }}">Exportar CSV</a>
+    <div class="actions">
+      <a href="{% url 'dashboard:order-report-csv' %}?period={{ report.period }}&start={{ report.start_date|date:'Y-m-d' }}&end={{ report.end_date|date:'Y-m-d' }}">Exportar CSV</a>
+      <a href="{% url 'dashboard:order-report-xlsx' %}?period={{ report.period }}&start={{ report.start_date|date:'Y-m-d' }}&end={{ report.end_date|date:'Y-m-d' }}">Exportar XLSX</a>
+    </div>
   </div>
 
   <nav aria-label="Períodos do relatório">
