@@ -8,15 +8,8 @@
     :root {
       color-scheme: light;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --ink: #17152b;
-      --muted: #706d86;
-      --surface: #ffffff;
-      --canvas: #f6f5fb;
-      --line: #e7e4f0;
-      --violet: #6d4aff;
-      --violet-deep: #271b57;
-      --violet-soft: #eeeaff;
-      --danger: #b42318;
+      --ink: #17152b; --muted: #706d86; --surface: #fff; --canvas: #f6f5fb; --line: #e7e4f0;
+      --violet: #6d4aff; --violet-deep: #271b57; --violet-soft: #eeeaff; --danger: #b42318;
       --shadow: 0 16px 40px rgba(39, 27, 87, .08);
     }
     * { box-sizing: border-box; }
@@ -46,6 +39,7 @@
     .workspace { min-width: 0; }
     .topbar { min-height: 4.4rem; padding: .9rem clamp(1rem, 3vw, 2.25rem); display: flex; justify-content: flex-end; align-items: center; }
     main { width: min(78rem, calc(100% - 2rem)); margin: 0 auto 2.5rem; }
+    .public-main { padding-top: clamp(2rem, 8vh, 6rem); max-width: 34rem; }
     .page-surface { background: var(--surface); border: 1px solid var(--line); border-radius: 1.15rem; padding: clamp(1rem, 2.5vw, 1.75rem); box-shadow: var(--shadow); }
     label { display: block; margin-top: 1rem; font-weight: 700; font-size: .92rem; }
     input, select, textarea {
@@ -79,7 +73,6 @@
     h2 { font-size: 1.2rem; letter-spacing: -.025em; }
     h1, h2 { margin-top: 0; }
     code { background: #f2effb; padding: .12rem .32rem; border-radius: .35rem; overflow-wrap: anywhere; }
-    .mobile-nav { display: none; }
     @media (max-width: 62rem) {
       .app-shell { display: block; }
       .sidebar { position: static; height: auto; padding: .75rem 1rem; flex-direction: row; align-items: center; gap: .6rem; }
@@ -133,21 +126,22 @@
         <a href="{% url 'users:profile' %}">Meu perfil</a>
         <a href="{% url 'organizations:list' %}">Organizações</a>
         <form class="logout" method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button type="submit">Sair</button>
+          {% csrf_token %}<button type="submit">Sair</button>
         </form>
       </div>
     </aside>
     <div class="workspace">
       <div class="topbar"><span class="muted">{{ request.user.get_short_name }}</span></div>
-      <main><div class="page-surface">
-        {% for message in messages %}<p class="message">{{ message }}</p>{% endfor %}
-        {% block content %}{% endblock %}
-      </div></main>
+{% endif %}
+      <main{% if not request.user.is_authenticated %} class="public-main"{% endif %}>
+        <div class="page-surface">
+          {% for message in messages %}<p class="message">{{ message }}</p>{% endfor %}
+          {% block content %}{% endblock %}
+        </div>
+      </main>
+{% if request.user.is_authenticated %}
     </div>
   </div>
-{% else %}
-  <main style="padding-top:2rem"><div class="page-surface">{% block public_content %}{% block content_public %}{% endblock %}{% endblock %}</div></main>
 {% endif %}
 </body>
 </html>
