@@ -49,3 +49,28 @@ def test_audit_is_tenant_scoped(
     assert response.status_code == 200
     assert "test.visible" in content
     assert "test.hidden" not in content
+
+
+def test_audit_timeline_does_not_render_payload_values(
+    client,
+    organization,
+    manager,
+    manager_membership,
+):
+    record_event(
+        organization=organization,
+        actor=manager,
+        action="test.sanitized_ui",
+        entity_type="customer",
+        entity_id="customer-1",
+        payload={"customer_document": "52998224725", "note": "conteúdo privado"},
+    )
+    client.force_login(manager)
+
+    response = client.get(reverse("audit:list"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "test.sanitized_ui" in content
+    assert "52998224725" not in content
+    assert "conteúdo privado" not in content
