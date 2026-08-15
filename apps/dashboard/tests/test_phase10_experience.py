@@ -11,6 +11,7 @@ from apps.dashboard.reports import order_report_for_organization, report_range
 from apps.fulfillment.models import Fulfillment
 from apps.orders.models import Order
 from apps.organizations.models import OrganizationUnit
+from apps.organizations.selectors import ACTIVE_ORGANIZATION_SESSION_KEY
 
 pytestmark = pytest.mark.django_db
 
@@ -24,23 +25,33 @@ def _customer(*, organization, name):
 
 
 def _order(*, organization, customer, user, number, status=Order.Status.CONFIRMED, total="10.00"):
-    return Order.objects.create(
-        organization=organization,
-        number=number,
-        customer=customer,
-        status=status,
-        subtotal=Decimal(total),
-        total=Decimal(total),
-        customer_name_snapshot=customer.display_name,
-        created_by=user,
-        confirmed_at=timezone.now() if status == Order.Status.CONFIRMED else None,
-    )
+    now = timezone.now()
+    values = {
+        "organization": organization,
+        "number": number,
+        "customer": customer,
+        "status": status,
+        "subtotal": Decimal(total),
+        "total": Decimal(total),
+        "customer_name_snapshot": customer.display_name,
+        "created_by": user,
+        "confirmed_at": now if status == Order.Status.CONFIRMED else None,
+    }
+    if status == Order.Status.CANCELLED:
+        values.update(cancelled_at=now, cancel_reason="Cancelado para teste de relatório")
+    return Order.objects.create(**values)
 
 
 def _set_created(order, *, year, month, day):
     stamp = timezone.make_aware(datetime(year, month, day, 12, 0))
     Order.objects.filter(pk=order.pk).update(created_at=stamp)
     order.created_at = stamp
+
+
+def _activate_organization(client, organization):
+    session = client.session
+    session[ACTIVE_ORGANIZATION_SESSION_KEY] = str(organization.id)
+    session.save()
 
 
 def test_report_range_covers_supported_periods():
@@ -226,6 +237,7 @@ def test_pickup_center_view_is_read_only(
     operator_membership,
 ):
     client.force_login(user)
+    _activate_organization(client, organization)
     response = client.get(reverse("dashboard:pickups"), {"q": "Maria"})
     assert response.status_code == 200
     assert "Central de Retiradas" in response.content.decode()
