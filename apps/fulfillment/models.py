@@ -43,6 +43,8 @@ class Fulfillment(BaseModel):
         related_name="fulfillments",
     )
     pickup_unit_name_snapshot = models.CharField(max_length=200, blank=True)
+    tracking_code = models.CharField(max_length=120, blank=True)
+    tracking_url = models.URLField(max_length=500, blank=True)
     version = models.PositiveBigIntegerField(default=1)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -84,6 +86,13 @@ class Fulfillment(BaseModel):
                     & ~models.Q(pickup_unit_name_snapshot="")
                 ),
                 name="fulfillment_method_snapshot_consistent",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(method="delivery")
+                    | models.Q(method="pickup", tracking_code="", tracking_url="")
+                ),
+                name="fulfillment_tracking_delivery_only",
             ),
             models.CheckConstraint(
                 condition=(
