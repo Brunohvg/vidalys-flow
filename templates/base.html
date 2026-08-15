@@ -5,77 +5,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Vidalys Flow{% endblock %}</title>
   <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --ink: #17152b;
+      --muted: #706d86;
+      --surface: #ffffff;
+      --canvas: #f6f5fb;
+      --line: #e7e4f0;
+      --violet: #6d4aff;
+      --violet-deep: #271b57;
+      --violet-soft: #eeeaff;
+      --danger: #b42318;
+      --shadow: 0 16px 40px rgba(39, 27, 87, .08);
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; background: #f6f7f9; color: #18202a; }
-    header, main { width: min(76rem, calc(100% - 2rem)); margin-inline: auto; }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1rem; }
-    main { background: white; border: 1px solid #dfe3e8; border-radius: .75rem; padding: 1.25rem; margin-bottom: 2rem; }
-    a { color: #155eef; }
-    label { display: block; margin-top: 1rem; font-weight: 600; }
-    input, select, textarea { width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .25rem; border: 1px solid #cbd2da; border-radius: .4rem; }
-    button { padding: .7rem 1rem; border: 0; border-radius: .4rem; background: #155eef; color: white; cursor: pointer; }
-    .message, .errorlist { padding: .75rem; border-radius: .4rem; background: #fff1f0; color: #9c1c13; }
-    .muted { color: #5f6b7a; }
+    body { margin: 0; min-height: 100vh; background: var(--canvas); color: var(--ink); }
+    a { color: #5a3ee8; text-decoration: none; font-weight: 600; }
+    a:hover { text-decoration: underline; }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh; padding: 1.4rem 1rem;
+      background: linear-gradient(180deg, #211747 0%, #17122f 100%); color: white;
+      display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    .brand { display: flex; align-items: center; gap: .75rem; padding: .35rem .45rem 1rem; }
+    .brand-mark {
+      width: 2.25rem; height: 2.25rem; border-radius: .75rem; display: grid; place-items: center;
+      background: linear-gradient(135deg, #8a6cff, #5d3df2); box-shadow: 0 10px 24px rgba(109,74,255,.35);
+      font-weight: 900; letter-spacing: -.08em;
+    }
+    .brand strong { font-size: 1.05rem; letter-spacing: -.02em; }
+    .brand small { display: block; color: #bdb5df; font-weight: 500; margin-top: .1rem; }
+    .sidebar nav { display: grid; gap: .3rem; }
+    .sidebar nav a { color: #d9d3f2; padding: .72rem .8rem; border-radius: .65rem; font-weight: 650; }
+    .sidebar nav a:hover { background: rgba(255,255,255,.08); color: white; text-decoration: none; }
+    .sidebar-footer { margin-top: auto; display: grid; gap: .75rem; }
+    .sidebar-footer a { color: #d9d3f2; padding-inline: .5rem; }
+    .logout button { width: 100%; background: rgba(255,255,255,.1); }
+    .workspace { min-width: 0; }
+    .topbar { min-height: 4.4rem; padding: .9rem clamp(1rem, 3vw, 2.25rem); display: flex; justify-content: flex-end; align-items: center; }
+    main { width: min(78rem, calc(100% - 2rem)); margin: 0 auto 2.5rem; }
+    .page-surface { background: var(--surface); border: 1px solid var(--line); border-radius: 1.15rem; padding: clamp(1rem, 2.5vw, 1.75rem); box-shadow: var(--shadow); }
+    label { display: block; margin-top: 1rem; font-weight: 700; font-size: .92rem; }
+    input, select, textarea {
+      width: 100%; padding: .76rem .82rem; margin-top: .3rem; border: 1px solid #d9d5e6; border-radius: .65rem;
+      background: white; color: var(--ink); font: inherit; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #8b73f5; box-shadow: 0 0 0 3px rgba(109,74,255,.11); }
+    button {
+      padding: .74rem 1rem; border: 0; border-radius: .65rem; background: linear-gradient(135deg, #7252ff, #5939df);
+      color: white; cursor: pointer; font: inherit; font-weight: 750; box-shadow: 0 8px 20px rgba(89,57,223,.16);
+    }
+    button:hover { filter: brightness(.98); }
+    .message, .errorlist { padding: .8rem 1rem; border-radius: .65rem; background: #fff0ef; color: #9c1c13; border: 1px solid #ffd6d2; }
+    .muted { color: var(--muted); }
     .inline { display: inline; }
-    nav { display: flex; flex-wrap: wrap; gap: .35rem .75rem; align-items: center; }
-    nav a { padding: .35rem .15rem; }
     table { width: 100%; border-collapse: collapse; margin-block: 1rem; }
-    th, td { padding: .65rem; border-bottom: 1px solid #dfe3e8; text-align: left; }
+    th { color: #5d5970; font-size: .8rem; letter-spacing: .03em; text-transform: uppercase; }
+    th, td { padding: .78rem .7rem; border-bottom: 1px solid #eeecf4; text-align: left; vertical-align: top; }
     .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin-block: 1rem; }
     .actions input { flex: 1 1 18rem; margin: 0; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
-    .card { border: 1px solid #dfe3e8; border-radius: .65rem; padding: 1rem; min-width: 0; }
-    .badge { display: inline-block; padding: .2rem .55rem; border-radius: 999px; background: #e8efff; }
-    .danger { background: #b42318; }
-    .metric { display: block; font-size: 2rem; margin-top: .35rem; }
+    .card { border: 1px solid var(--line); border-radius: .9rem; padding: 1rem; min-width: 0; background: #fff; box-shadow: 0 6px 18px rgba(39,27,87,.035); }
+    .badge { display: inline-block; padding: .24rem .58rem; border-radius: 999px; background: var(--violet-soft); color: #5134d5; font-weight: 750; font-size: .85rem; }
+    .danger { background: var(--danger); box-shadow: none; }
+    .metric { display: block; font-size: 2rem; margin-top: .35rem; letter-spacing: -.04em; }
     .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
     .clean-list { list-style: none; padding: 0; margin: .5rem 0; }
-    .clean-list li { padding: .55rem 0; border-bottom: 1px solid #edf0f3; }
+    .clean-list li { padding: .6rem 0; border-bottom: 1px solid #efedf5; }
     section { margin-block: 1.5rem; }
+    h1 { font-size: clamp(1.65rem, 3vw, 2.15rem); letter-spacing: -.04em; }
+    h2 { font-size: 1.2rem; letter-spacing: -.025em; }
     h1, h2 { margin-top: 0; }
-    @media (max-width: 54rem) {
-      header { align-items: flex-start; flex-direction: column; }
-      header form { align-self: flex-end; }
-      nav { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: .35rem; }
-      nav a { white-space: nowrap; }
+    code { background: #f2effb; padding: .12rem .32rem; border-radius: .35rem; overflow-wrap: anywhere; }
+    .mobile-nav { display: none; }
+    @media (max-width: 62rem) {
+      .app-shell { display: block; }
+      .sidebar { position: static; height: auto; padding: .75rem 1rem; flex-direction: row; align-items: center; gap: .6rem; }
+      .brand { padding: 0; }
+      .brand small { display: none; }
+      .sidebar nav { display: flex; overflow-x: auto; margin-left: auto; }
+      .sidebar nav a { white-space: nowrap; padding: .55rem .65rem; }
+      .sidebar-footer { margin: 0; display: flex; align-items: center; }
+      .sidebar-footer > a { display: none; }
+      .logout button { width: auto; padding: .55rem .7rem; }
+      .topbar { display: none; }
+      main { margin-top: 1rem; }
     }
-    @media (max-width: 42rem) {
-      header, main { width: min(100% - 1rem, 76rem); }
-      main { padding: .9rem; }
+    @media (max-width: 44rem) {
+      .sidebar { display: block; }
+      .brand { margin-bottom: .6rem; }
+      .sidebar nav { width: 100%; margin: 0; }
+      .sidebar-footer { display: none; }
+      main { width: min(100% - 1rem, 78rem); }
+      .page-surface { padding: .9rem; border-radius: .9rem; }
       .section-heading { align-items: flex-start; }
       .responsive-table thead { display: none; }
       .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; }
-      .responsive-table tr { border: 1px solid #dfe3e8; border-radius: .65rem; margin-block: .75rem; padding: .5rem; }
-      .responsive-table td { border: 0; padding: .35rem; }
-      .responsive-table td::before { content: attr(data-label) ": "; font-weight: 700; }
+      .responsive-table tr { border: 1px solid var(--line); border-radius: .75rem; margin-block: .75rem; padding: .5rem; }
+      .responsive-table td { border: 0; padding: .38rem; }
+      .responsive-table td::before { content: attr(data-label) ": "; font-weight: 800; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <strong>Vidalys Flow</strong>
-    {% if request.user.is_authenticated %}
+{% if request.user.is_authenticated %}
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">V</span>
+        <span><strong>Vidalys Flow</strong><small>Operação de vendas</small></span>
+      </div>
       <nav aria-label="Navegação principal">
         <a href="{% url 'dashboard:home' %}">Dashboard</a>
         <a href="{% url 'orders:list' %}">Pedidos</a>
         <a href="{% url 'customers:list' %}">Clientes</a>
         <a href="{% url 'products:list' %}">Produtos</a>
+        <a href="{% url 'dashboard:pickups' %}">Retiradas</a>
         <a href="{% url 'fulfillment:list' %}">Fulfillment</a>
         <a href="{% url 'payments:list' %}">Pagamentos</a>
         <a href="{% url 'messaging:list' %}">Mensagens</a>
+        <a href="{% url 'dashboard:order-report' %}">Relatórios</a>
         <a href="{% url 'integrations:list' %}">Integrações</a>
-        <a href="{% url 'organizations:list' %}">Organizações</a>
       </nav>
-      <form class="inline" method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Sair</button>
-      </form>
-    {% endif %}
-  </header>
-  <main>
-    {% for message in messages %}<p class="message">{{ message }}</p>{% endfor %}
-    {% block content %}{% endblock %}
-  </main>
+      <div class="sidebar-footer">
+        <a href="{% url 'users:profile' %}">Meu perfil</a>
+        <a href="{% url 'organizations:list' %}">Organizações</a>
+        <form class="logout" method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit">Sair</button>
+        </form>
+      </div>
+    </aside>
+    <div class="workspace">
+      <div class="topbar"><span class="muted">{{ request.user.get_short_name }}</span></div>
+      <main><div class="page-surface">
+        {% for message in messages %}<p class="message">{{ message }}</p>{% endfor %}
+        {% block content %}{% endblock %}
+      </div></main>
+    </div>
+  </div>
+{% else %}
+  <main style="padding-top:2rem"><div class="page-surface">{% block public_content %}{% block content_public %}{% endblock %}{% endblock %}</div></main>
+{% endif %}
 </body>
 </html>
