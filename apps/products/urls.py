@@ -1,12 +1,14 @@
 from django.urls import path
 
-from apps.products import views
+from apps.products import transfer_views, views
 
 app_name = "products"
 
 urlpatterns = [
     path("", views.product_list, name="list"),
     path("new/", views.product_create, name="create"),
+    path("import/", transfer_views.product_import_csv, name="import-csv"),
+    path("export.csv", transfer_views.product_export_csv, name="export-csv"),
     path("<uuid:product_id>/", views.product_detail, name="detail"),
     path("<uuid:product_id>/edit/", views.product_edit, name="edit"),
     path("<uuid:product_id>/variants/", views.product_add_variant, name="add-variant"),
