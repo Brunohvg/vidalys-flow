@@ -37,7 +37,7 @@ def test_valid_state_and_all_artifacts(repository):
     assert state["approved_phase_head"] == "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095"
     assert state["baseline_branch"] == "main"
     assert state["next_phase"] == 10
-    assert state["next_phase_name"] == "Cutover and Flowlog operational closure"
+    assert state["next_phase_name"] == "Product Experience Completion"
     assert state["active_candidate"] is None
 
 
