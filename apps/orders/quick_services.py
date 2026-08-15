@@ -46,7 +46,7 @@ def _resolve_customer(
         )
         if invalid_customer:
             raise OrderPermissionDenied("Cliente inválido para a organização ativa.")
-        return customer
+        return customer, False
 
     customer_type, normalized_document = _customer_type_for_document(customer_document)
     if normalized_document:
@@ -55,13 +55,13 @@ def _resolve_customer(
             document_normalized=normalized_document,
         )
         if existing and not existing.merged_into_id and existing.status == Customer.Status.ACTIVE:
-            return existing
+            return existing, False
 
     display_name = customer_name.strip()
     if not display_name:
         raise ValueError("Informe o cliente ou o nome do novo cliente.")
 
-    return customer_services.create_customer(
+    created = customer_services.create_customer(
         organization=organization,
         actor=actor,
         customer_type=customer_type,
@@ -70,6 +70,7 @@ def _resolve_customer(
         phone=customer_phone.strip(),
         email=customer_email.strip(),
     )
+    return created, True
 
 
 def _delivery_payload(
@@ -202,7 +203,7 @@ def create_quick_order(
             raise ValueError("Comando idempotente incompleto; tente novamente.")
         return Order.objects.get(organization=organization, id=receipt.order_id)
 
-    customer = _resolve_customer(
+    customer, inline_customer_created = _resolve_customer(
         organization=organization,
         actor=actor,
         customer=customer,
@@ -268,7 +269,7 @@ def create_quick_order(
             "version": order.version,
             "status": order.status,
             "pricing_mode": order.pricing_mode,
-            "inline_customer_created": payload["customer_id"] is None,
+            "inline_customer_created": inline_customer_created,
             "delivery_address_added": delivery_address is not None,
         },
     )
