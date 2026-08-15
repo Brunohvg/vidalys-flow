@@ -1,12 +1,13 @@
 from django.urls import path
 
-from apps.products import transfer_views, views
+from apps.products import autocomplete_views, transfer_views, views
 
 app_name = "products"
 
 urlpatterns = [
     path("", views.product_list, name="list"),
     path("new/", views.product_create, name="create"),
+    path("autocomplete/", autocomplete_views.product_autocomplete, name="autocomplete"),
     path("import/", transfer_views.product_import_csv, name="import-csv"),
     path("export.csv", transfer_views.product_export_csv, name="export-csv"),
     path("<uuid:product_id>/", views.product_detail, name="detail"),
