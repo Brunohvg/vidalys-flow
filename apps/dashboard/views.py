@@ -10,6 +10,7 @@ from apps.dashboard.global_search import global_search_for_organization
 from apps.dashboard.pickups import ready_pickups_for_organization
 from apps.dashboard.reports import REPORT_PERIODS, order_report_for_organization
 from apps.organizations.selectors import active_organization_for_user
+from apps.platform.xlsx import build_xlsx
 
 from .selectors import (
     dashboard_summary,
@@ -36,6 +37,13 @@ def _report_parameters(request):
         "custom_start": request.GET.get("start", ""),
         "custom_end": request.GET.get("end", ""),
     }
+
+
+def _report_rows(report):
+    return [
+        (row["day"].isoformat(), row["count"], row["value"] or "0.00")
+        for row in report["daily"]
+    ]
 
 
 @login_required
@@ -116,8 +124,26 @@ def order_report_csv(request):
     response.write("\ufeff")
     writer = csv.writer(response)
     writer.writerow(("Data", "Quantidade de pedidos", "Valor dos pedidos"))
-    for row in report["daily"]:
-        writer.writerow((row["day"].isoformat(), row["count"], row["value"] or "0.00"))
+    writer.writerows(_report_rows(report))
+    return response
+
+
+@login_required
+@require_GET
+def order_report_xlsx(request):
+    organization, response = _active_organization_or_redirect(request)
+    if response:
+        return response
+    report = order_report_for_organization(organization=organization, **_report_parameters(request))
+    payload = build_xlsx(
+        headers=("Data", "Quantidade de pedidos", "Valor dos pedidos"),
+        rows=_report_rows(report),
+    )
+    response = HttpResponse(
+        payload,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f'attachment; filename="pedidos-{report["period"]}.xlsx"'
     return response
 
 
