@@ -5,13 +5,14 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from apps.fulfillment import policies, selectors, services
+from apps.fulfillment import policies, selectors, services, tracking_services
 from apps.fulfillment.exceptions import FulfillmentDomainError
 from apps.fulfillment.forms import (
     CancelForm,
     FulfillmentAllocationForm,
     FulfillmentCreateForm,
     FulfillmentFilterForm,
+    TrackingForm,
     TransitionForm,
 )
 from apps.fulfillment.models import Fulfillment
@@ -125,6 +126,13 @@ def _detail_context(*, request, organization, membership, fulfillment):
             initial_allocations=item_initial,
         ),
         "transition_form": TransitionForm(initial=initial),
+        "tracking_form": TrackingForm(
+            initial={
+                **initial,
+                "tracking_code": fulfillment.tracking_code,
+                "tracking_url": fulfillment.tracking_url,
+            }
+        ),
         "cancel_form": CancelForm(initial=initial),
         "can_cancel": policies.can_cancel_fulfillments(user=request.user, organization=organization),
     }
@@ -174,6 +182,32 @@ def fulfillment_update(request, fulfillment_id):
             messages.success(request, "Quantidades atualizadas.")
     else:
         messages.error(request, "Revise as quantidades informadas.")
+    return redirect("fulfillment:detail", fulfillment_id=fulfillment.id)
+
+
+@login_required
+@require_POST
+def fulfillment_tracking(request, fulfillment_id):
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    fulfillment = _fulfillment_or_404(organization=organization, fulfillment_id=fulfillment_id)
+    form = TrackingForm(request.POST)
+    if form.is_valid():
+        try:
+            tracking_services.set_tracking(
+                organization=organization,
+                fulfillment=fulfillment,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except (FulfillmentDomainError, ValueError) as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Rastreio atualizado.")
+    else:
+        messages.error(request, "Revise o código ou link de rastreio.")
     return redirect("fulfillment:detail", fulfillment_id=fulfillment.id)
 
 
