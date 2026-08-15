@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.orders import policies, selectors, services
@@ -18,7 +19,7 @@ from apps.orders.forms import (
     OrderCreateForm,
     OrderFilterForm,
 )
-from apps.orders.models import OrderItem
+from apps.orders.models import Order, OrderItem
 from apps.organizations.selectors import active_organization_for_user
 
 
@@ -53,6 +54,7 @@ def order_list(request):
         selectors.search_orders(organization=organization, **filters),
         25,
     ).get_page(request.GET.get("page"))
+    today = timezone.localdate().isoformat()
     return render(
         request,
         "orders/list.html",
@@ -61,6 +63,12 @@ def order_list(request):
             "orders": orders,
             "filter_form": form,
             "querystring": query_params.urlencode(),
+            "operational_presets": (
+                {"label": "Pedidos de hoje", "querystring": f"created_from={today}&created_to={today}"},
+                {"label": "Rascunhos", "querystring": f"status={Order.Status.DRAFT}"},
+                {"label": "Confirmados", "querystring": f"status={Order.Status.CONFIRMED}"},
+                {"label": "Cancelados", "querystring": f"status={Order.Status.CANCELLED}"},
+            ),
         },
     )
 
@@ -126,12 +134,11 @@ def _detail_context(*, request, organization, membership, order):
                         "notes": item.notes,
                     },
                 ),
-                "remove_key": str(uuid.uuid4()),
             }
             for item in items
         ],
         "confirm_form": CommandForm(initial=command_initial),
-        "cancel_form": CancelForm(initial=CommandForm.command_initial(version=order.version)),
+        "cancel_form": CancelForm(initial=command_initial),
     }
 
 
@@ -154,174 +161,167 @@ def order_detail(request, order_id):
     )
 
 
-def _post_context(request, order_id):
-    context = _context_or_redirect(request)
-    if not isinstance(context, tuple):
-        return context, None, None
-    organization, _ = context
-    return None, organization, _order_or_404(organization=organization, order_id=order_id)
-
-
-def _run_command(request, form, callback):
-    if not form.is_valid():
-        messages.error(request, "Revise os campos informados.")
-        return None
-    try:
-        return callback(dict(form.cleaned_data))
-    except OrderDomainError as exc:
-        messages.error(request, str(exc))
-        return None
-    except ValueError as exc:
-        messages.error(request, str(exc))
-        return None
-
-
 @login_required
 @require_POST
 def order_change_customer(request, order_id):
-    response, organization, order = _post_context(request, order_id)
-    if response:
-        return response
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    order = _order_or_404(organization=organization, order_id=order_id)
     form = CustomerChangeForm(request.POST, organization=organization)
-    result = _run_command(
-        request,
-        form,
-        lambda data: services.change_customer(
-            organization=organization,
-            order=order,
-            actor=request.user,
-            **data,
-        ),
-    )
-    if result:
-        messages.success(request, "Cliente atualizado.")
+    if form.is_valid():
+        try:
+            services.change_customer(
+                organization=organization,
+                order=order,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except OrderDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Cliente atualizado.")
+    else:
+        messages.error(request, "Dados inválidos para alterar o cliente.")
     return redirect("orders:detail", order_id=order.id)
 
 
 @login_required
 @require_POST
 def order_add_item(request, order_id):
-    response, organization, order = _post_context(request, order_id)
-    if response:
-        return response
-    form = ItemCreateForm(
-        request.POST,
-        organization=organization,
-        can_adjust=policies.can_apply_adjustments(user=request.user, organization=organization),
-    )
-    result = _run_command(
-        request,
-        form,
-        lambda data: services.add_item(
-            organization=organization,
-            order=order,
-            actor=request.user,
-            **data,
-        ),
-    )
-    if result:
-        messages.success(request, "Item adicionado.")
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    order = _order_or_404(organization=organization, order_id=order_id)
+    can_adjust = policies.can_apply_adjustments(user=request.user, organization=organization)
+    form = ItemCreateForm(request.POST, organization=organization, can_adjust=can_adjust)
+    if form.is_valid():
+        try:
+            services.add_item(
+                organization=organization,
+                order=order,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except OrderDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Item adicionado.")
+    else:
+        messages.error(request, "Dados inválidos para adicionar item.")
     return redirect("orders:detail", order_id=order.id)
-
-
-def _item_or_404(*, organization, order, item_id):
-    item = OrderItem.objects.filter(organization=organization, order=order, id=item_id).first()
-    if not item:
-        raise Http404
-    return item
 
 
 @login_required
 @require_POST
 def order_update_item(request, order_id, item_id):
-    response, organization, order = _post_context(request, order_id)
-    if response:
-        return response
-    item = _item_or_404(organization=organization, order=order, item_id=item_id)
-    form = ItemUpdateForm(
-        request.POST,
-        can_adjust=policies.can_apply_adjustments(user=request.user, organization=organization),
-        initial={
-            "discount_amount": item.discount_amount,
-            "surcharge_amount": item.surcharge_amount,
-            "surcharge_reason": item.surcharge_reason,
-        },
-    )
-    result = _run_command(
-        request,
-        form,
-        lambda data: services.update_item(
-            organization=organization,
-            item=item,
-            actor=request.user,
-            **data,
-        ),
-    )
-    if result:
-        messages.success(request, "Item atualizado.")
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    order = _order_or_404(organization=organization, order_id=order_id)
+    item = OrderItem.objects.filter(organization=organization, order=order, id=item_id).first()
+    if item is None:
+        raise Http404
+    can_adjust = policies.can_apply_adjustments(user=request.user, organization=organization)
+    form = ItemUpdateForm(request.POST, can_adjust=can_adjust)
+    if form.is_valid():
+        try:
+            services.update_item(
+                organization=organization,
+                order=order,
+                item=item,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except OrderDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Item atualizado.")
+    else:
+        messages.error(request, "Dados inválidos para atualizar item.")
     return redirect("orders:detail", order_id=order.id)
 
 
 @login_required
 @require_POST
 def order_remove_item(request, order_id, item_id):
-    response, organization, order = _post_context(request, order_id)
-    if response:
-        return response
-    item = _item_or_404(organization=organization, order=order, item_id=item_id)
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    order = _order_or_404(organization=organization, order_id=order_id)
+    item = OrderItem.objects.filter(organization=organization, order=order, id=item_id).first()
+    if item is None:
+        raise Http404
     form = CommandForm(request.POST)
-    result = _run_command(
-        request,
-        form,
-        lambda data: services.remove_item(
-            organization=organization,
-            item=item,
-            actor=request.user,
-            **data,
-        ),
-    )
-    if result:
-        messages.success(request, "Item removido.")
+    if form.is_valid():
+        try:
+            services.remove_item(
+                organization=organization,
+                order=order,
+                item=item,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except OrderDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Item removido.")
+    else:
+        messages.error(request, "Comando inválido para remover item.")
     return redirect("orders:detail", order_id=order.id)
 
 
 @login_required
 @require_POST
 def order_confirm(request, order_id):
-    response, organization, order = _post_context(request, order_id)
-    if response:
-        return response
-    result = _run_command(
-        request,
-        CommandForm(request.POST),
-        lambda data: services.confirm_order(
-            organization=organization,
-            order=order,
-            actor=request.user,
-            **data,
-        ),
-    )
-    if result:
-        messages.success(request, "Pedido confirmado.")
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    order = _order_or_404(organization=organization, order_id=order_id)
+    form = CommandForm(request.POST)
+    if form.is_valid():
+        try:
+            services.confirm_order(
+                organization=organization,
+                order=order,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except OrderDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, f"{order.display_number} confirmado.")
+    else:
+        messages.error(request, "Comando inválido para confirmar pedido.")
     return redirect("orders:detail", order_id=order.id)
 
 
 @login_required
 @require_POST
 def order_cancel(request, order_id):
-    response, organization, order = _post_context(request, order_id)
-    if response:
-        return response
-    result = _run_command(
-        request,
-        CancelForm(request.POST),
-        lambda data: services.cancel_order(
-            organization=organization,
-            order=order,
-            actor=request.user,
-            **data,
-        ),
-    )
-    if result:
-        messages.success(request, "Pedido cancelado.")
+    context = _context_or_redirect(request)
+    if not isinstance(context, tuple):
+        return context
+    organization, _ = context
+    order = _order_or_404(organization=organization, order_id=order_id)
+    form = CancelForm(request.POST)
+    if form.is_valid():
+        try:
+            services.cancel_order(
+                organization=organization,
+                order=order,
+                actor=request.user,
+                **form.cleaned_data,
+            )
+        except OrderDomainError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, f"{order.display_number} cancelado.")
+    else:
+        messages.error(request, "Comando inválido para cancelar pedido.")
     return redirect("orders:detail", order_id=order.id)
