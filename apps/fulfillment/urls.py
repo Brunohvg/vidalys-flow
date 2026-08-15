@@ -9,6 +9,7 @@ urlpatterns = [
     path("orders/<uuid:order_id>/new/", views.fulfillment_create, name="create"),
     path("<uuid:fulfillment_id>/", views.fulfillment_detail, name="detail"),
     path("<uuid:fulfillment_id>/items/", views.fulfillment_update, name="update"),
+    path("<uuid:fulfillment_id>/tracking/", views.fulfillment_tracking, name="tracking"),
     path(
         "<uuid:fulfillment_id>/transition/<str:target_status>/",
         views.fulfillment_transition,
