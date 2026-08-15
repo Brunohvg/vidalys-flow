@@ -5,7 +5,7 @@
   "status": "approved",
   "branch": "phase/09-infrastructure-homologation",
   "base_sha": "12b519c3e8237e1ebe43c1a0253b0747e0680e07",
-  "head_sha": "fac5e9c0d86b2137c8542d7ef4101e1746a38fab",
+  "head_sha": "ab7fbb40b34ace5cc9a9b6c9c5f5c425b54e0095",
   "commits": [
     {"sha": "069ea4d6ff4e17f61249e97ee8a75dc5509bf00b", "subject": "chore(governance): define Phase 09 infrastructure and homologation"},
     {"sha": "d1ef19fd4371e1b38ac8db0fc83e082eaba08165", "subject": "feat(infra): add Coolify homologation stack"},
