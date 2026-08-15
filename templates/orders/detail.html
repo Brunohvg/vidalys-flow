@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load dashboard_experience %}
+{% load dashboard_experience payment_workspace %}
 {% block title %}{{ detail.display_number }} — Vidalys Flow{% endblock %}
 {% block content %}
 <style>
@@ -67,10 +67,7 @@
   <div class="workspace-grid">
     <div class="workspace-stack">
       <section class="panel" aria-labelledby="customer-heading">
-        <div class="panel-head">
-          <h2 id="customer-heading">Cliente</h2>
-          {% if order.is_editable %}<span class="muted">Rascunho editável</span>{% endif %}
-        </div>
+        <div class="panel-head"><h2 id="customer-heading">Cliente</h2>{% if order.is_editable %}<span class="muted">Rascunho editável</span>{% endif %}</div>
         <strong>{{ detail.customer_name }}</strong>
         {% if order.status != "draft" %}
           <div class="summary-grid" style="margin-top:.75rem;">
@@ -79,154 +76,54 @@
           </div>
         {% endif %}
         {% if order.is_editable %}
-          <details class="inline-editor">
-            <summary>Alterar cliente</summary>
-            <div class="editor-body">
-              <form method="post" action="{% url 'orders:change-customer' order.id %}">
-                {% csrf_token %}{{ customer_form.as_p }}<button type="submit">Salvar cliente</button>
-              </form>
-            </div>
-          </details>
+          <details class="inline-editor"><summary>Alterar cliente</summary><div class="editor-body"><form method="post" action="{% url 'orders:change-customer' order.id %}">{% csrf_token %}{{ customer_form.as_p }}<button type="submit">Salvar cliente</button></form></div></details>
         {% endif %}
       </section>
 
       <section class="panel" aria-labelledby="items-heading">
-        <div class="panel-head">
-          <h2 id="items-heading">Itens e valor</h2>
-          <strong>R$ {{ order.total }}</strong>
-        </div>
-        {% if order.pricing_mode == "manual" and not order.items.exists %}
-          <p class="muted-block">Venda por valor manual. Não é necessário criar item fictício.</p>
-        {% endif %}
+        <div class="panel-head"><h2 id="items-heading">Itens e valor</h2><strong>R$ {{ order.total }}</strong></div>
+        {% if order.pricing_mode == "manual" and not order.items.exists %}<p class="muted-block">Venda por valor manual. Não é necessário criar item fictício.</p>{% endif %}
         {% for entry in item_forms %}
           <article class="item-row">
-            <div class="item-main">
-              <div>
-                <strong>{{ entry.item.quantity }} × {{ entry.item.name_snapshot }}</strong>
-                {% if entry.item.variant_snapshot %}<div class="muted">{{ entry.item.variant_snapshot }}</div>{% endif %}
-                {% if entry.item.sku_snapshot %}<div class="muted">SKU {{ entry.item.sku_snapshot }}</div>{% endif %}
-              </div>
-              <div class="item-price">R$ {{ entry.item.total }}</div>
-            </div>
+            <div class="item-main"><div><strong>{{ entry.item.quantity }} × {{ entry.item.name_snapshot }}</strong>{% if entry.item.variant_snapshot %}<div class="muted">{{ entry.item.variant_snapshot }}</div>{% endif %}{% if entry.item.sku_snapshot %}<div class="muted">SKU {{ entry.item.sku_snapshot }}</div>{% endif %}</div><div class="item-price">R$ {{ entry.item.total }}</div></div>
             {% if order.is_editable %}
-              <details class="inline-editor">
-                <summary>Editar item</summary>
-                <div class="editor-body">
-                  <form method="post" action="{% url 'orders:update-item' order.id entry.item.id %}">
-                    {% csrf_token %}{{ entry.form.as_p }}<button type="submit">Salvar item</button>
-                  </form>
-                  <form method="post" action="{% url 'orders:remove-item' order.id entry.item.id %}" style="margin-top:.6rem;">
-                    {% csrf_token %}
-                    <input type="hidden" name="expected_version" value="{{ order.version }}">
-                    <input type="hidden" name="idempotency_key" value="{{ entry.remove_key }}">
-                    <button class="danger" type="submit">Remover item</button>
-                  </form>
-                </div>
-              </details>
+              <details class="inline-editor"><summary>Editar item</summary><div class="editor-body">
+                <form method="post" action="{% url 'orders:update-item' order.id entry.item.id %}">{% csrf_token %}{{ entry.form.as_p }}<button type="submit">Salvar item</button></form>
+                <form method="post" action="{% url 'orders:remove-item' order.id entry.item.id %}" style="margin-top:.6rem;">{% csrf_token %}<input type="hidden" name="expected_version" value="{{ order.version }}"><input type="hidden" name="idempotency_key" value="{{ entry.remove_key }}"><button class="danger" type="submit">Remover item</button></form>
+              </div></details>
             {% endif %}
           </article>
-        {% empty %}
-          {% if order.pricing_mode != "manual" %}<p class="muted-block">Nenhum item adicionado.</p>{% endif %}
-        {% endfor %}
-
-        {% if order.is_editable %}
-          <details class="inline-editor">
-            <summary>+ Adicionar item</summary>
-            <div class="editor-body">
-              <p class="muted">Produto e variação são opcionais. As regras canônicas de preço continuam sendo aplicadas.</p>
-              <form method="post" action="{% url 'orders:add-item' order.id %}">
-                {% csrf_token %}{{ item_form.as_p }}<button type="submit">Adicionar item</button>
-              </form>
-            </div>
-          </details>
-        {% endif %}
+        {% empty %}{% if order.pricing_mode != "manual" %}<p class="muted-block">Nenhum item adicionado.</p>{% endif %}{% endfor %}
+        {% if order.is_editable %}<details class="inline-editor"><summary>+ Adicionar item</summary><div class="editor-body"><p class="muted">Produto e variação são opcionais. As regras canônicas de preço continuam sendo aplicadas.</p><form method="post" action="{% url 'orders:add-item' order.id %}">{% csrf_token %}{{ item_form.as_p }}<button type="submit">Adicionar item</button></form></div></details>{% endif %}
       </section>
 
       {% if order.status != "draft" %}
         <section class="panel" aria-labelledby="delivery-address-heading">
           <div class="panel-head"><h2 id="delivery-address-heading">Endereço</h2></div>
-          {% if detail.shipping_address %}
-            <p style="margin:.2rem 0;"><strong>{{ detail.shipping_address.recipient_name }}</strong></p>
-            <p class="muted-block">{{ detail.shipping_address.street }}, {{ detail.shipping_address.number }}{% if detail.shipping_address.complement %} · {{ detail.shipping_address.complement }}{% endif %}</p>
-            <p class="muted-block">{{ detail.shipping_address.district }} · {{ detail.shipping_address.city }}/{{ detail.shipping_address.state }} · {{ detail.shipping_address.postal_code }}</p>
-          {% else %}<p class="muted-block">Nenhum endereço de entrega registrado.</p>{% endif %}
+          {% if detail.shipping_address %}<p style="margin:.2rem 0;"><strong>{{ detail.shipping_address.recipient_name }}</strong></p><p class="muted-block">{{ detail.shipping_address.street }}, {{ detail.shipping_address.number }}{% if detail.shipping_address.complement %} · {{ detail.shipping_address.complement }}{% endif %}</p><p class="muted-block">{{ detail.shipping_address.district }} · {{ detail.shipping_address.city }}/{{ detail.shipping_address.state }} · {{ detail.shipping_address.postal_code }}</p>{% else %}<p class="muted-block">Nenhum endereço de entrega registrado.</p>{% endif %}
         </section>
       {% endif %}
 
-      <section class="panel" aria-labelledby="history-heading">
-        <div class="panel-head"><h2 id="history-heading">Histórico</h2></div>
-        <ol class="timeline">
-          {% for event in detail.history %}
-            <li>{{ event.created_at|date:"d/m/Y H:i" }} · {{ event.from_status|default:"criação" }} → {{ event.to_status }}</li>
-          {% empty %}<li>Sem eventos registrados.</li>{% endfor %}
-        </ol>
-      </section>
+      <section class="panel" aria-labelledby="history-heading"><div class="panel-head"><h2 id="history-heading">Histórico</h2></div><ol class="timeline">{% for event in detail.history %}<li>{{ event.created_at|date:"d/m/Y H:i" }} · {{ event.from_status|default:"criação" }} → {{ event.to_status }}</li>{% empty %}<li>Sem eventos registrados.</li>{% endfor %}</ol></section>
     </div>
 
     <aside class="workspace-stack">
-      {% if order.is_editable %}
-        <section class="panel">
-          <h2>Próximo passo</h2>
-          <p class="muted-block">Quando os dados estiverem corretos, confirme o pedido. A confirmação congela os snapshots canônicos.</p>
-          <form method="post" action="{% url 'orders:confirm' order.id %}">
-            {% csrf_token %}{{ confirm_form.as_p }}<button type="submit">Confirmar pedido</button>
-          </form>
-        </section>
-      {% endif %}
+      {% if order.is_editable %}<section class="panel" id="confirm-order"><h2>Próximo passo</h2><p class="muted-block">Quando os dados estiverem corretos, confirme o pedido. A confirmação congela os snapshots canônicos.</p><form method="post" action="{% url 'orders:confirm' order.id %}">{% csrf_token %}{{ confirm_form.as_p }}<button type="submit">Confirmar pedido</button></form></section>{% endif %}
 
-      <section class="panel" aria-labelledby="payment-heading">
-        <div class="panel-head"><h2 id="payment-heading">Pagamento</h2></div>
-        {% if order.status == "confirmed" %}
-          {% if order.payment_intent %}
-            <p><strong>{{ order.payment_intent.get_status_display }}</strong></p>
-            <p class="muted-block">As ações de PIX, checkout e recebimento serão concentradas aqui no próximo incremento.</p>
-            <div class="compact-actions"><a href="{% url 'payments:detail' order.payment_intent.id %}">Ver detalhes</a></div>
-          {% elif can_adjust %}
-            <p class="muted-block">Ainda não há intenção de pagamento.</p>
-            <div class="compact-actions"><a href="{% url 'payments:create' order.id %}">Preparar pagamento</a></div>
-          {% else %}<p class="muted-block">A gerência ainda não preparou o pagamento.</p>{% endif %}
-        {% else %}<p class="muted-block">Disponível após confirmação do pedido.</p>{% endif %}
-      </section>
+      {% payment_order_workspace organization order %}
 
       <section class="panel" aria-labelledby="fulfillment-heading">
         <div class="panel-head"><h2 id="fulfillment-heading">Atendimento</h2></div>
         {% if order.status == "confirmed" %}
           {% for fulfillment in order.fulfillments.all %}
-            <div style="margin-bottom:.7rem;">
-              <strong>{{ fulfillment.display_number }}</strong>
-              <div>{{ fulfillment.get_method_display }}</div>
-              <div class="muted">{{ fulfillment.get_status_display }}</div>
-              <div class="compact-actions" style="margin-top:.45rem;"><a href="{% url 'fulfillment:detail' fulfillment.id %}">Ver atendimento</a></div>
-            </div>
-          {% empty %}
-            <p class="muted-block">Nenhum atendimento criado.</p>
-            <div class="compact-actions"><a href="{% url 'fulfillment:create' order.id %}">Definir retirada ou entrega</a></div>
-          {% endfor %}
+            <div style="margin-bottom:.7rem;"><strong>{{ fulfillment.display_number }}</strong><div>{{ fulfillment.get_method_display }}</div><div class="muted">{{ fulfillment.get_status_display }}</div><div class="compact-actions" style="margin-top:.45rem;"><a href="{% url 'fulfillment:detail' fulfillment.id %}">Ver atendimento</a></div></div>
+          {% empty %}<p class="muted-block">Nenhum atendimento criado.</p><div class="compact-actions"><a href="{% url 'fulfillment:create' order.id %}">Definir retirada ou entrega</a></div>{% endfor %}
         {% else %}<p class="muted-block">Disponível após confirmação do pedido.</p>{% endif %}
       </section>
 
-      <section class="panel">
-        <h2>Resumo</h2>
-        <div class="summary-grid" style="margin-top:.7rem;">
-          <div class="summary-item"><small>Subtotal</small><strong>R$ {{ order.subtotal }}</strong></div>
-          <div class="summary-item"><small>Descontos</small><strong>R$ {{ order.discount_total }}</strong></div>
-          <div class="summary-item"><small>Acréscimos</small><strong>R$ {{ order.surcharge_total }}</strong></div>
-          <div class="summary-item"><small>Total</small><strong>R$ {{ order.total }}</strong></div>
-        </div>
-      </section>
+      <section class="panel"><h2>Resumo</h2><div class="summary-grid" style="margin-top:.7rem;"><div class="summary-item"><small>Subtotal</small><strong>R$ {{ order.subtotal }}</strong></div><div class="summary-item"><small>Descontos</small><strong>R$ {{ order.discount_total }}</strong></div><div class="summary-item"><small>Acréscimos</small><strong>R$ {{ order.surcharge_total }}</strong></div><div class="summary-item"><small>Total</small><strong>R$ {{ order.total }}</strong></div></div></section>
 
-      {% if can_cancel and order.status != "cancelled" %}
-        <section class="panel">
-          <details class="inline-editor">
-            <summary class="danger-link">Cancelar pedido</summary>
-            <div class="editor-body">
-              <form method="post" action="{% url 'orders:cancel' order.id %}">
-                {% csrf_token %}{{ cancel_form.as_p }}<button class="danger" type="submit">Confirmar cancelamento</button>
-              </form>
-            </div>
-          </details>
-        </section>
-      {% endif %}
+      {% if can_cancel and order.status != "cancelled" %}<section class="panel"><details class="inline-editor"><summary class="danger-link">Cancelar pedido</summary><div class="editor-body"><form method="post" action="{% url 'orders:cancel' order.id %}">{% csrf_token %}{{ cancel_form.as_p }}<button class="danger" type="submit">Confirmar cancelamento</button></form></div></details></section>{% endif %}
     </aside>
   </div>
 </div>

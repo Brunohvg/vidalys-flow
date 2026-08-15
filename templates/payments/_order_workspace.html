@@ -1,0 +1,130 @@
+{% if visible %}
+<section class="panel" id="payment-workspace" aria-labelledby="payment-workspace-heading">
+  <div class="panel-head">
+    <h2 id="payment-workspace-heading">Pagamento</h2>
+    {% if payment %}<span class="badge">{{ payment.get_status_display }}</span>{% endif %}
+  </div>
+
+  {% if order.status != "confirmed" %}
+    <p class="muted-block">O pagamento fica disponível após a confirmação do pedido.</p>
+
+  {% elif not payment %}
+    <p class="muted-block">Ainda não há cobrança para este pedido.</p>
+    {% if can_operate and create_form %}
+      <form method="post" action="{% url 'payments:workspace_create' order.id %}">
+        {% csrf_token %}{{ create_form.as_p }}
+        <button type="submit">Preparar pagamento</button>
+      </form>
+    {% else %}
+      <p class="muted-block">A gerência precisa preparar o pagamento.</p>
+    {% endif %}
+
+  {% else %}
+    <div class="summary-grid" style="margin-bottom:.8rem;">
+      <div class="summary-item"><small>Estado</small><strong>{{ payment.get_status_display }}</strong></div>
+      <div class="summary-item"><small>Valor</small><strong>R$ {{ payment.amount }}</strong></div>
+    </div>
+
+    {% if payment.status != "paid" and payment.status != "cancelled" and payment.status != "expired" and payment.status != "requires_attention" %}
+      {% if pix %}
+        <div class="summary-item" style="margin-bottom:.75rem;">
+          <small>PIX da Organization</small>
+          <strong>{{ pix.beneficiary_name }}</strong>
+          <p class="muted-block">{{ pix.get_key_type_display }}</p>
+          <input id="order-pix-key-{{ order.id }}" value="{{ pix.key_value }}" readonly>
+          <div class="compact-actions" style="margin-top:.5rem;">
+            <button type="button" class="secondary-action copy-payment-value" data-copy-target="order-pix-key-{{ order.id }}">Copiar PIX</button>
+          </div>
+          <p class="muted-block">Copiar a chave não altera o estado financeiro.</p>
+        </div>
+      {% elif can_operate %}
+        <p class="muted-block">Nenhuma instrução PIX ativa. <a href="{% url 'payments:pix_settings' %}">Configurar PIX</a></p>
+      {% endif %}
+
+      {% if can_operate and manual_form %}
+        <details class="inline-editor">
+          <summary>Registrar pagamento recebido</summary>
+          <div class="editor-body">
+            <p class="muted-block">Use somente para recebimento fora de checkout hospedado. O valor deve coincidir com o PaymentIntent.</p>
+            <form method="post" action="{% url 'payments:workspace_manual' payment.id %}">
+              {% csrf_token %}{{ manual_form.as_p }}
+              <button type="submit">Confirmar recebimento</button>
+            </form>
+          </div>
+        </details>
+      {% endif %}
+
+      {% if can_operate and checkout_form %}
+        <details class="inline-editor">
+          <summary>Criar link de pagamento</summary>
+          <div class="editor-body">
+            {% if has_checkout_accounts %}
+              <p class="muted-block">A solicitação usa Payments e permanece protegida pelos guardrails de efeitos externos.</p>
+              <form method="post" action="{% url 'payments:workspace_checkout' payment.id %}">
+                {% csrf_token %}{{ checkout_form.as_p }}
+                <button type="submit">Criar link</button>
+              </form>
+            {% else %}
+              <p class="muted-block">Nenhuma conta de checkout ativa está configurada.</p>
+            {% endif %}
+          </div>
+        </details>
+      {% endif %}
+
+      {% if payment_detail.attempts %}
+        <div style="margin-top:.8rem;">
+          {% for attempt in payment_detail.attempts %}
+            {% if attempt.hosted_url %}
+              <div class="summary-item" style="margin-bottom:.55rem;">
+                <small>Link de pagamento ativo</small>
+                <input id="checkout-url-{{ attempt.id }}" value="{{ attempt.hosted_url }}" readonly>
+                <div class="compact-actions" style="margin-top:.5rem;">
+                  <a href="{{ attempt.hosted_url }}" target="_blank" rel="noopener noreferrer">Abrir</a>
+                  {% if can_operate %}<button type="button" class="secondary-action copy-payment-value" data-copy-target="checkout-url-{{ attempt.id }}">Copiar link</button>{% endif %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if can_operate and has_active_checkout and cancel_form %}
+        <details class="inline-editor">
+          <summary>Cancelar checkout ativo</summary>
+          <div class="editor-body">
+            <form method="post" action="{% url 'payments:workspace_cancel_checkout' payment.id %}">
+              {% csrf_token %}{{ cancel_form.as_p }}
+              <button class="danger" type="submit">Solicitar cancelamento</button>
+            </form>
+          </div>
+        </details>
+      {% endif %}
+    {% elif payment.status == "paid" %}
+      <p class="muted-block">Recebimento confirmado. Nenhuma nova cobrança deve ser criada para este pedido.</p>
+    {% elif payment.status == "requires_attention" %}
+      <p class="message">Este pagamento requer revisão de gerência antes de continuar.</p>
+    {% else %}
+      <p class="muted-block">Não há cobrança ativa neste estado.</p>
+    {% endif %}
+  {% endif %}
+</section>
+
+<script>
+(function(){
+  document.querySelectorAll('.copy-payment-value').forEach(function(button){
+    button.addEventListener('click', async function(){
+      const target = document.getElementById(button.dataset.copyTarget);
+      if (!target) return;
+      try {
+        await navigator.clipboard.writeText(target.value);
+        const previous = button.textContent;
+        button.textContent = 'Copiado';
+        window.setTimeout(function(){ button.textContent = previous; }, 1200);
+      } catch (_) {
+        target.select();
+      }
+    });
+  });
+})();
+</script>
+{% endif %}
