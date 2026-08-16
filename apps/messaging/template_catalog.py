@@ -61,6 +61,18 @@ _SPECS = (
         parameter_schema=("customer_name", "order_number", "fulfillment_status"),
     ),
     TransactionalTemplateSpec(
+        semantic_key="fulfillment_tracking",
+        channel="whatsapp",
+        locale="pt-BR",
+        purpose="fulfillment_progress",
+        body_text=(
+            "Olá {customer_name}, o pedido {order_number} foi enviado. "
+            "Rastreio: {tracking_code} {tracking_url}"
+        ),
+        body_html="",
+        parameter_schema=("customer_name", "order_number", "tracking_code", "tracking_url"),
+    ),
+    TransactionalTemplateSpec(
         semantic_key="checkout_link",
         channel="whatsapp",
         locale="pt-BR",
@@ -68,6 +80,25 @@ _SPECS = (
         body_text="Olá {customer_name}, pague seu pedido {order_number} em {checkout_link}.",
         body_html="",
         parameter_schema=("customer_name", "order_number", "checkout_link"),
+    ),
+    TransactionalTemplateSpec(
+        semantic_key="pix_instruction",
+        channel="whatsapp",
+        locale="pt-BR",
+        purpose="pix_instruction",
+        body_text=(
+            "Olá {customer_name}, para pagar o pedido {order_number} via PIX use "
+            "{pix_key_type}: {pix_key}. Beneficiário: {pix_beneficiary}. Banco: {pix_bank}."
+        ),
+        body_html="",
+        parameter_schema=(
+            "customer_name",
+            "order_number",
+            "pix_key_type",
+            "pix_key",
+            "pix_beneficiary",
+            "pix_bank",
+        ),
     ),
     TransactionalTemplateSpec(
         semantic_key="payment_paid",
