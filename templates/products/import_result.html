@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Resultado da importação · Vidalys Flow{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted" style="margin:0">PRODUTOS · ETAPA 4 DE 4</p>
+  <h1>Importação concluída</h1>
+  {% if already_imported %}
+    <p>Este mesmo lote já havia sido concluído. Nenhum produto foi duplicado.</p>
+  {% else %}
+    <p>{{ count }} produto{{ count|pluralize }} importado{{ count|pluralize }} com evidência de lote e linha.</p>
+  {% endif %}
+  <div class="actions">
+    <a href="{% url 'products:list' %}">Voltar aos produtos</a>
+    <a href="{% url 'products:import-csv' %}">Importar outro arquivo</a>
+  </div>
+</section>
+{% endblock %}
