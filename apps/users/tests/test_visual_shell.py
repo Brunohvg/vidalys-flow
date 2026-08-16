@@ -36,6 +36,8 @@ def test_authenticated_shell_keeps_sales_first_navigation_and_marks_current_page
         assert technical_destination not in html
     assert f'href="{reverse("orders:list")}" aria-current="page"' in html
     assert f'href="{reverse("orders:create")}"' in html
+    assert "/static/brand/vidalys-flow-mark.svg" in html
+    assert '<span class="brand-mark" aria-hidden="true">V</span>' not in html
 
 
 def test_dashboard_report_marks_reports_not_dashboard_as_current(
