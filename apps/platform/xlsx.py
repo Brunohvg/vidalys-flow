@@ -41,7 +41,7 @@ def _column_index(cell_ref):
 
 def _safe_text(value):
     text = "" if value is None else str(value)
-    if any(char in text for char in ("\x00",)):
+    if "\x00" in text:
         raise XlsxError("Conteúdo XLSX contém caractere inválido.")
     return text
 
@@ -120,9 +120,10 @@ def _bounded_read(archive, name):
 
 def _shared_strings(archive):
     try:
-        payload = _bounded_read(archive, "xl/sharedStrings.xml")
-    except XlsxError:
+        archive.getinfo("xl/sharedStrings.xml")
+    except KeyError:
         return []
+    payload = _bounded_read(archive, "xl/sharedStrings.xml")
     root = ET.fromstring(payload)
     strings = []
     for item in root.findall(f"{{{_MAIN_NS}}}si"):
