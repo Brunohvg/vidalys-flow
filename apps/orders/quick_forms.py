@@ -7,7 +7,7 @@ from apps.customers.models import Customer
 from apps.fulfillment.models import Fulfillment
 from apps.orders.models import Order
 from apps.organizations.models import OrganizationUnit
-from apps.products.models import Product
+from apps.products.models import Product, ProductVariant
 
 
 class QuickOrderCreateForm(forms.Form):
@@ -38,6 +38,12 @@ class QuickOrderCreateForm(forms.Form):
         required=False,
         label="Produto",
         help_text="Opcional para venda por valor; obrigatório no modo por itens.",
+    )
+    variant = forms.ModelChoiceField(
+        queryset=ProductVariant.objects.none(),
+        required=False,
+        label="Variação",
+        help_text="Opcional. SKU e código de barras selecionam a variação exata.",
     )
     product_quantity = forms.DecimalField(
         max_digits=12,
@@ -85,6 +91,11 @@ class QuickOrderCreateForm(forms.Form):
             organization=organization,
             status=Product.Status.ACTIVE,
         ).order_by("name")
+        self.fields["variant"].queryset = ProductVariant.objects.filter(
+            organization=organization,
+            status=Product.Status.ACTIVE,
+            product__status=Product.Status.ACTIVE,
+        ).select_related("product").order_by("product__name", "name", "sku")
         self.fields["pickup_unit"].queryset = OrganizationUnit.objects.filter(
             organization=organization,
             is_active=True,
@@ -99,6 +110,7 @@ class QuickOrderCreateForm(forms.Form):
         pricing_mode = cleaned.get("pricing_mode")
         manual_total = cleaned.get("manual_total")
         product = cleaned.get("product")
+        variant = cleaned.get("variant")
         product_quantity = cleaned.get("product_quantity")
         product_unit_price = cleaned.get("product_unit_price")
         method = cleaned.get("fulfillment_method")
@@ -106,6 +118,13 @@ class QuickOrderCreateForm(forms.Form):
 
         if customer is None and not customer_name:
             self.add_error("customer_name", "Selecione um cliente existente ou informe o nome do novo cliente.")
+
+        if variant is not None:
+            if product is None:
+                product = variant.product
+                cleaned["product"] = product
+            elif variant.product_id != product.id:
+                self.add_error("variant", "A variação selecionada não pertence ao produto.")
 
         if pricing_mode == Order.PricingMode.MANUAL and manual_total is None:
             self.add_error("manual_total", "Informe o valor da venda.")
@@ -120,6 +139,7 @@ class QuickOrderCreateForm(forms.Form):
             if product_unit_price is None:
                 self.add_error("product_unit_price", "Informe o preço unitário.")
         else:
+            cleaned["variant"] = None
             cleaned["product_quantity"] = None
             cleaned["product_unit_price"] = None
 
