@@ -4,8 +4,20 @@ from apps.customers.models import ContactPoint, Customer
 from apps.fulfillment.models import Fulfillment
 from apps.messaging import policies, services
 from apps.messaging.content import render_message_body
-from apps.messaging.exceptions import InvalidMessage, MessagingPermissionDenied, OrganizationMismatch, ProviderEffectsDisabled
-from apps.messaging.models import Message, MessageDeliveryAttempt, MessageTemplate, MessagingChannel, MessagingPreference, MessagingProviderConnection
+from apps.messaging.exceptions import (
+    InvalidMessage,
+    MessagingPermissionDenied,
+    OrganizationMismatch,
+    ProviderEffectsDisabled,
+)
+from apps.messaging.models import (
+    Message,
+    MessageDeliveryAttempt,
+    MessageTemplate,
+    MessagingChannel,
+    MessagingPreference,
+    MessagingProviderConnection,
+)
 from apps.messaging.providers import SendRequest, assert_capability, provider_channel_kind, require_network_allowed
 from apps.payments import policies as payment_policies
 from apps.payments.models import PaymentIntent, PixPaymentInstruction
@@ -106,10 +118,14 @@ def create_pix_message(*, organization, actor, intent, channel, contact_point, i
         raise OrganizationMismatch("Pagamento não pertence à organização.")
     if source.status not in {PaymentIntent.Status.PENDING, PaymentIntent.Status.AWAITING_PAYMENT}:
         raise InvalidMessage("Pagamento não está elegível para receber instruções PIX.")
-    pix = PixPaymentInstruction.objects.select_for_update().filter(
-        organization=organization,
-        is_active=True,
-    ).first()
+    pix = (
+        PixPaymentInstruction.objects.select_for_update()
+        .filter(
+            organization=organization,
+            is_active=True,
+        )
+        .first()
+    )
     if pix is None:
         raise InvalidMessage("A Organization não possui instrução PIX ativa.")
     customer = source.order.customer
@@ -158,10 +174,14 @@ def _validate_pix_source(*, message):
         raise InvalidMessage("Pagamento deixou de ser elegível para instrução PIX.")
     if intent.version != message.source_version or intent.order.customer_id != message.customer_id:
         raise InvalidMessage("Fonte da instrução PIX mudou; crie uma nova mensagem.")
-    pix = PixPaymentInstruction.objects.select_for_update().filter(
-        organization=message.organization,
-        is_active=True,
-    ).first()
+    pix = (
+        PixPaymentInstruction.objects.select_for_update()
+        .filter(
+            organization=message.organization,
+            is_active=True,
+        )
+        .first()
+    )
     if pix is None:
         raise InvalidMessage("Instrução PIX deixou de estar ativa.")
     current = {
