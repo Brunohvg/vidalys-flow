@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load order_saved_filters %}
 {% block title %}Pedidos — Vidalys Flow{% endblock %}
 {% block content %}
+  {% order_saved_filters as saved_filters %}
   <h1>Pedidos</h1>
   <p class="muted">{{ organization.name }}</p>
   <div class="actions"><a href="{% url 'orders:create' %}">Novo pedido</a></div>
@@ -14,6 +16,32 @@
       {% if request.GET %}<a href="{% url 'orders:list' %}">Limpar filtros</a>{% endif %}
     </div>
   </div>
+
+  {% if saved_filters or querystring %}
+    <div class="card" aria-label="Filtros salvos">
+      <strong>Filtros salvos</strong>
+      {% if saved_filters %}
+        <div class="actions">
+          {% for saved in saved_filters %}
+            <a href="?{{ saved.querystring }}">{{ saved.name }}</a>
+            <form method="post" action="{% url 'orders:delete-filter' saved.id %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="secondary-action">Remover {{ saved.name }}</button>
+            </form>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if querystring %}
+        <form method="post" action="{% url 'orders:save-filter' %}" class="actions" style="margin-top:.7rem;">
+          {% csrf_token %}
+          <input type="hidden" name="querystring" value="{{ querystring }}">
+          <label for="saved-filter-name">Salvar filtro atual como</label>
+          <input id="saved-filter-name" name="name" maxlength="50" required placeholder="Ex.: Pedidos web pendentes">
+          <button type="submit">Salvar filtro</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
 
   <form method="get" class="grid">
     {{ filter_form.as_p }}
