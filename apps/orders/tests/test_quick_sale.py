@@ -8,7 +8,7 @@ from apps.fulfillment.models import Fulfillment, FulfillmentItem
 from apps.orders.models import Order, OrderItem
 from apps.orders.quick_services import create_quick_sale
 from apps.organizations.models import OrganizationUnit
-from apps.products.models import Product
+from apps.products.models import Product, ProductVariant
 
 pytestmark = pytest.mark.django_db
 
@@ -75,6 +75,41 @@ def test_itemized_quick_sale_uses_selected_product_and_allocates_it(
     assert item.quantity == Decimal("2.000")
     assert allocation.order_item_id == item.id
     assert allocation.quantity == Decimal("2.000")
+
+
+def test_itemized_quick_sale_preserves_selected_variant_and_sku_snapshot(
+    organization,
+    user,
+    operator_membership,
+):
+    unit = OrganizationUnit.objects.create(organization=organization, name="Balcão", is_active=True)
+    product = Product.objects.create(organization=organization, name="Fita Cetim", default_unit="un")
+    variant = ProductVariant.objects.create(
+        organization=organization,
+        product=product,
+        name="Rosa 38mm",
+        sku="FIT-ROSA-38",
+        barcode="7891234567890",
+    )
+
+    order, _ = create_quick_sale(
+        organization=organization,
+        actor=user,
+        idempotency_key=str(uuid.uuid4()),
+        customer_name="Cliente variante",
+        pricing_mode=Order.PricingMode.ITEMIZED,
+        fulfillment_method=Fulfillment.Method.PICKUP,
+        pickup_unit=unit,
+        product=product,
+        variant=variant,
+        product_quantity=Decimal("1.000"),
+        product_unit_price=Decimal("12.50"),
+    )
+
+    item = OrderItem.objects.get(order=order)
+    assert item.variant_id == variant.id
+    assert item.variant_snapshot == "Rosa 38mm"
+    assert item.sku_snapshot == "FIT-ROSA-38"
 
 
 def test_delivery_quick_sale_freezes_address_before_fulfillment(
