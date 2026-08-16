@@ -24,8 +24,10 @@
               <div class="compact-actions" style="margin-top:.4rem;">
                 {% if fulfillment.tracking_code %}<button type="button" class="secondary-action copy-tracking" data-copy-target="tracking-code-{{ fulfillment.id }}">Copiar rastreio</button>{% endif %}
                 {% if fulfillment.tracking_url %}<a href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener noreferrer">Abrir rastreio</a>{% endif %}
-                {% if fulfillment.method == "delivery" and fulfillment.status == "ready" or fulfillment.status == "in_transit" %}
-                  <a href="{% url 'messaging:contextual_send' 'tracking' fulfillment.id %}">Enviar rastreio</a>
+                {% if fulfillment.method == "delivery" %}
+                  {% if fulfillment.status == "ready" or fulfillment.status == "in_transit" %}
+                    <a href="{% url 'messaging:contextual_send' 'tracking' fulfillment.id %}">Enviar rastreio</a>
+                  {% endif %}
                 {% endif %}
               </div>
             </div>
