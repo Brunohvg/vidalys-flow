@@ -89,4 +89,10 @@ def test_allowlist_is_closed_and_documented():
         "checkout_link",
         "amount",
         "currency",
+        "tracking_code",
+        "tracking_url",
+        "pix_key_type",
+        "pix_key",
+        "pix_beneficiary",
+        "pix_bank",
     } == ALLOWED_PARAMETER_KEYS
