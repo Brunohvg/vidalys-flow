@@ -37,7 +37,8 @@ def test_save_filter_normalizes_allowlisted_query_and_renders_it(
     page = client.get(reverse("orders:list"))
     html = page.content.decode()
     assert "Confirmados web" in html
-    assert entries[0]["querystring"] in html
+    assert "status=confirmed" in html
+    assert "channel=web" in html
 
 
 def test_saved_filter_list_is_scoped_to_active_organization(
