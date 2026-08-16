@@ -2,6 +2,7 @@ from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
 
+from apps.messaging.contextual import PURPOSE_PIX_INSTRUCTION, dispatch_pix_message
 from apps.messaging.events import ALLOWLISTED_SOURCE_EVENTS, MESSAGE_CREATED
 from apps.messaging.exceptions import MessagingDomainError
 from apps.messaging.idempotency import claim_command, complete_command
@@ -74,7 +75,7 @@ def dispatch_message_events(*, limit=20, adapter_resolver=None):
     processed = 0
     for event in events:
         attempt = (
-            MessageDeliveryAttempt.objects.select_related("channel", "channel__connection")
+            MessageDeliveryAttempt.objects.select_related("message", "channel", "channel__connection")
             .filter(
                 organization=event.organization,
                 message_id=event.aggregate_id,
@@ -88,7 +89,8 @@ def dispatch_message_events(*, limit=20, adapter_resolver=None):
         if attempt.dispatch_available_at and attempt.dispatch_available_at > timezone.now():
             continue
         try:
-            dispatch_message(attempt=attempt, adapter=resolver(attempt), idempotency_key=str(event.id))
+            dispatcher = dispatch_pix_message if attempt.message.purpose == PURPOSE_PIX_INSTRUCTION else dispatch_message
+            dispatcher(attempt=attempt, adapter=resolver(attempt), idempotency_key=str(event.id))
         except Exception:
             continue
         processed += 1
