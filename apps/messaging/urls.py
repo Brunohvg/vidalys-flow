@@ -1,11 +1,12 @@
 from django.urls import path
 
-from apps.messaging import views
+from apps.messaging import contextual_views, views
 
 app_name = "messaging"
 
 urlpatterns = [
     path("send/", views.message_send, name="send"),
+    path("send/<str:kind>/<uuid:source_id>/", contextual_views.contextual_send, name="contextual_send"),
     path("connections/", views.connection_list, name="connection_list"),
     path("connections/<uuid:connection_id>/<str:action>/", views.connection_state, name="connection_state"),
     path("channels/", views.channel_list, name="channel_list"),
