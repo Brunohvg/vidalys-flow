@@ -5,19 +5,22 @@
   <div class="section-heading">
     <div>
       <p class="muted" style="margin:0">PRODUTOS</p>
-      <h1>Importar CSV</h1>
+      <h1>Importar produtos</h1>
     </div>
-    <a href="{% url 'products:export-csv' %}">Baixar CSV atual</a>
+    <div class="actions">
+      <a href="{% url 'products:export-csv' %}">Baixar CSV atual</a>
+      <a href="{% url 'products:export-xlsx' %}">Baixar XLSX atual</a>
+    </div>
   </div>
-  <p>O arquivo é validado por completo antes da confirmação. Se uma linha falhar, nenhuma linha será importada.</p>
-  <p class="muted">Use o mesmo <code>product_key</code> em várias linhas para agrupar variações do mesmo produto. Limite: {{ max_rows }} linhas.</p>
-  <p class="muted">Cabeçalho obrigatório: {% for header in headers %}<code>{{ header }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+  <p>Fluxo seguro: upload → mapeamento → validação e conflitos → prévia → confirmação → resultado.</p>
+  <p class="muted">Use o mesmo <code>product_key</code> para agrupar variações. Limite: {{ max_rows }} linhas. XLSX não aceita fórmulas ou macros.</p>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <label for="product-import-file">Arquivo CSV UTF-8</label>
-    <input id="product-import-file" type="file" name="file" accept=".csv,text/csv" required>
+    <input type="hidden" name="step" value="upload">
+    <label for="product-import-file">Arquivo CSV ou XLSX</label>
+    <input id="product-import-file" type="file" name="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
     <div class="actions">
-      <button type="submit">Importar produtos</button>
+      <button type="submit">Continuar para mapeamento</button>
       <a href="{% url 'products:list' %}">Cancelar</a>
     </div>
   </form>
