@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Vidalys Flow</title>
+  <desc id="desc">Símbolo VF com linha de fluxo e pulso.</desc>
+  <defs>
+    <linearGradient id="flow" x1="10" y1="64" x2="118" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.55" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#6d4aff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="30" fill="#15112d"/>
+  <path d="M17 43h17l16 42 14-34 9 22 8-16h12V43h21" fill="none" stroke="url(#flow)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M77 43h25" fill="none" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>
+  <path d="M91 43v42" fill="none" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>
+  <path d="M91 62h17" fill="none" stroke="#f8fafc" stroke-width="8" stroke-linecap="round"/>
+</svg>
