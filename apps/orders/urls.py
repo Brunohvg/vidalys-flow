@@ -1,11 +1,13 @@
 from django.urls import path
 
-from apps.orders import quick_views, views
+from apps.orders import quick_views, saved_filter_views, views
 
 app_name = "orders"
 
 urlpatterns = [
     path("", views.order_list, name="list"),
+    path("filters/save/", saved_filter_views.save_order_filter, name="save-filter"),
+    path("filters/<uuid:filter_id>/delete/", saved_filter_views.delete_order_filter, name="delete-filter"),
     path("new/", quick_views.order_create, name="create"),
     path("new/advanced/", views.order_create, name="create-draft"),
     path("<uuid:order_id>/", views.order_detail, name="detail"),
