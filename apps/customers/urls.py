@@ -10,6 +10,7 @@ urlpatterns = [
     path("autocomplete/", autocomplete_views.customer_autocomplete, name="autocomplete"),
     path("import/", transfer_views.customer_import_csv, name="import-csv"),
     path("export.csv", transfer_views.customer_export_csv, name="export-csv"),
+    path("export.xlsx", transfer_views.customer_export_xlsx, name="export-xlsx"),
     path("<uuid:customer_id>/", views.customer_detail, name="detail"),
     path("<uuid:customer_id>/edit/", views.customer_edit, name="edit"),
     path("<uuid:customer_id>/contacts/", views.customer_add_contact, name="add-contact"),
