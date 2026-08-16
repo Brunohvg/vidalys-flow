@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Mapear produtos · Vidalys Flow{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted" style="margin:0">PRODUTOS · ETAPA 2 DE 4</p>
+  <h1>Mapear colunas</h1>
+  <p>Associe cada campo do Vidalys à coluna do arquivo.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="step" value="mapping">
+    <input type="hidden" name="stage" value="{{ stage }}">
+    <table class="responsive-table">
+      <thead><tr><th>Campo Vidalys</th><th>Coluna do arquivo</th></tr></thead>
+      <tbody>
+        {% for canonical in canonical_headers %}
+          <tr>
+            <td data-label="Campo">
+              <code>{{ canonical }}</code>
+              {% if canonical in required_headers %}<strong> obrigatório</strong>{% endif %}
+            </td>
+            <td data-label="Coluna">
+              <select name="map_{{ canonical }}">
+                <option value="{{ blank_mapping }}">Não importar</option>
+                {% for source in source_headers %}
+                  <option value="{{ source }}"{% if source == canonical %} selected{% endif %}>{{ source }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="actions">
+      <button type="submit">Validar e visualizar prévia</button>
+      <a href="{% url 'products:import-csv' %}">Recomeçar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
