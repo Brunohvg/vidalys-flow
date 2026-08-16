@@ -8,7 +8,16 @@ from apps.platform.models import DataImportBatchReceipt
 pytestmark = pytest.mark.django_db
 
 
-HEADER = "customer_type,display_name,legal_name,document,email,phone,notes_summary\n"
+HEADERS = (
+    "customer_type",
+    "display_name",
+    "legal_name",
+    "document",
+    "email",
+    "phone",
+    "notes_summary",
+)
+HEADER = ",".join(HEADERS) + "\n"
 ROW = "individual,Cliente Sem Documento,,,retry@example.com,11999998888,Importado\n"
 
 
@@ -20,7 +29,21 @@ def _upload():
     )
 
 
-def test_customer_csv_retry_is_noop_and_receipts_do_not_store_plain_customer_data(
+def _confirmed_import(client):
+    mapping = client.post(
+        reverse("customers:import-csv"),
+        {"step": "upload", "file": _upload()},
+    )
+    payload = {"step": "mapping", "stage": mapping.context["stage"]}
+    payload.update({f"map_{header}": header for header in HEADERS})
+    preview = client.post(reverse("customers:import-csv"), payload)
+    return client.post(
+        reverse("customers:import-csv"),
+        {"step": "confirm", "stage": preview.context["stage"]},
+    )
+
+
+def test_customer_import_retry_is_noop_and_receipts_do_not_store_plain_customer_data(
     client,
     organization,
     user,
@@ -28,11 +51,12 @@ def test_customer_csv_retry_is_noop_and_receipts_do_not_store_plain_customer_dat
 ):
     client.force_login(user)
 
-    first = client.post(reverse("customers:import-csv"), {"file": _upload()})
-    repeated = client.post(reverse("customers:import-csv"), {"file": _upload()})
+    first = _confirmed_import(client)
+    repeated = _confirmed_import(client)
 
-    assert first.status_code == 302
-    assert repeated.status_code == 302
+    assert first.status_code == 200
+    assert repeated.status_code == 200
+    assert repeated.context["already_imported"] is True
     assert Customer.objects.filter(
         organization=organization,
         display_name="Cliente Sem Documento",
