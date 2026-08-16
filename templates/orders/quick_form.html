@@ -58,7 +58,6 @@
         <input id="customer-existing-search" type="search" autocomplete="off" placeholder="Nome do cliente">
         <div style="margin-top:.55rem;">{{ form.customer }}{{ form.customer.errors }}</div>
       </div>
-
       <details class="progressive" {% if form.customer_name.errors or form.customer_document.errors or form.customer_phone.errors or form.customer_email.errors %}open{% endif %}>
         <summary>Cadastrar cliente novo</summary>
         <div class="details-body field-grid">
@@ -76,8 +75,7 @@
       <div class="field money" id="manual-total-field">
         {{ form.manual_total.label_tag }}{{ form.manual_total }}{{ form.manual_total.errors }}
       </div>
-
-      <details class="progressive" id="itemized-details" {% if form.product.errors or form.product_quantity.errors or form.product_unit_price.errors %}open{% endif %}>
+      <details class="progressive" id="itemized-details" {% if form.product.errors or form.variant.errors or form.product_quantity.errors or form.product_unit_price.errors %}open{% endif %}>
         <summary>Adicionar produto ou vender por itens</summary>
         <div class="details-body">
           <div class="choice-row" style="margin-bottom:.85rem;">
@@ -88,10 +86,11 @@
           {{ form.pricing_mode.errors }}
           <div class="field-grid">
             <div class="field full">
-              <label for="product-search">Buscar produto, SKU ou código de barras</label>
-              <input id="product-search" type="search" autocomplete="off" placeholder="Produto, SKU ou código">
-              <div style="margin-top:.55rem;">{{ form.product }}{{ form.product.errors }}</div>
+              <label for="product-search">Buscar produto, variação, SKU ou código de barras</label>
+              <input id="product-search" type="search" autocomplete="off" placeholder="Produto, variação, SKU ou código">
             </div>
+            <div class="field">{{ form.product.label_tag }}{{ form.product }}{{ form.product.errors }}</div>
+            <div class="field">{{ form.variant.label_tag }}{{ form.variant }}{{ form.variant.errors }}</div>
             <div class="field">{{ form.product_quantity.label_tag }}{{ form.product_quantity }}{{ form.product_quantity.errors }}</div>
             <div class="field">{{ form.product_unit_price.label_tag }}{{ form.product_unit_price }}{{ form.product_unit_price.errors }}</div>
           </div>
@@ -103,11 +102,9 @@
       <h2>3. Atendimento</h2>
       <p class="hint">Escolha somente como o pedido será atendido. Campos específicos aparecem quando necessários.</p>
       <div class="field">{{ form.fulfillment_method.label_tag }}{{ form.fulfillment_method }}{{ form.fulfillment_method.errors }}</div>
-
       <div class="field" id="pickup-unit-field" style="margin-top:.75rem;">
         {{ form.pickup_unit.label_tag }}{{ form.pickup_unit }}{{ form.pickup_unit.errors }}
       </div>
-
       <div id="delivery-fields" class="delivery-panel">
         <p class="hint">Informe o endereço somente porque esta venda será entregue.</p>
         <div class="field-grid">
@@ -120,7 +117,6 @@
           <div class="field">{{ form.delivery_city.label_tag }}{{ form.delivery_city }}{{ form.delivery_city.errors }}</div>
         </div>
       </div>
-
       <details class="progressive" {% if form.channel.errors %}open{% endif %}>
         <summary>Mais opções</summary>
         <div class="details-body field">{{ form.channel.label_tag }}{{ form.channel }}{{ form.channel.errors }}</div>
@@ -192,8 +188,62 @@
     });
   }
 
+  function attachProductAutocomplete(){
+    const search = document.getElementById('product-search');
+    const productSelect = document.getElementById('id_product');
+    const variantSelect = document.getElementById('id_variant');
+    let timer = null;
+    if (!search || !productSelect || !variantSelect) return;
+    search.addEventListener('input', function(){
+      clearTimeout(timer);
+      const query = search.value.trim();
+      if (query.length < 2) return;
+      timer = setTimeout(async function(){
+        try {
+          const response = await fetch('{% url "products:autocomplete" %}?q=' + encodeURIComponent(query), {
+            headers: {'Accept':'application/json'}, credentials:'same-origin'
+          });
+          if (!response.ok) return;
+          const data = await response.json();
+          const selectedProduct = productSelect.value;
+          const selectedVariant = variantSelect.value;
+          const products = new Map();
+          const variants = [];
+          data.results.forEach(function(item){
+            if (!products.has(item.product_id)) {
+              const productLabel = item.kind === 'product' ? item.label : item.label.split(' · ')[0];
+              products.set(item.product_id, productLabel);
+            }
+            if (item.kind === 'variant' && item.variant_id) variants.push(item);
+          });
+          productSelect.replaceChildren(new Option('Selecione um produto', ''));
+          products.forEach(function(label, productId){
+            productSelect.add(new Option(label, productId, false, productId === selectedProduct));
+          });
+          variantSelect.replaceChildren(new Option('Sem variação específica', ''));
+          variants.forEach(function(item){
+            const option = new Option(item.label, item.variant_id, false, item.variant_id === selectedVariant);
+            option.dataset.productId = item.product_id;
+            variantSelect.add(option);
+          });
+        } catch (_) {
+          // Progressive enhancement: server-rendered controls remain usable.
+        }
+      }, 220);
+    });
+    variantSelect.addEventListener('change', function(){
+      const option = variantSelect.selectedOptions[0];
+      const productId = option ? option.dataset.productId : '';
+      if (productId) productSelect.value = productId;
+    });
+    productSelect.addEventListener('change', function(){
+      const option = variantSelect.selectedOptions[0];
+      if (option && option.value && option.dataset.productId !== productSelect.value) variantSelect.value = '';
+    });
+  }
+
   attachAutocomplete('customer-existing-search', 'id_customer', '{% url "customers:autocomplete" %}', 'Selecione um cliente');
-  attachAutocomplete('product-search', 'id_product', '{% url "products:autocomplete" %}', 'Selecione um produto');
+  attachProductAutocomplete();
 })();
 </script>
 {% endblock %}
