@@ -89,7 +89,11 @@ def dispatch_message_events(*, limit=20, adapter_resolver=None):
         if attempt.dispatch_available_at and attempt.dispatch_available_at > timezone.now():
             continue
         try:
-            dispatcher = dispatch_pix_message if attempt.message.purpose == PURPOSE_PIX_INSTRUCTION else dispatch_message
+            dispatcher = (
+                dispatch_pix_message
+                if attempt.message.purpose == PURPOSE_PIX_INSTRUCTION
+                else dispatch_message
+            )
             dispatcher(attempt=attempt, adapter=resolver(attempt), idempotency_key=str(event.id))
         except Exception:
             continue
