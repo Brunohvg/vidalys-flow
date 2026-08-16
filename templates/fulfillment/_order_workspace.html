@@ -18,8 +18,16 @@
 
           {% if fulfillment.tracking_code or fulfillment.tracking_url %}
             <div style="margin-top:.55rem;">
-              {% if fulfillment.tracking_code %}<div><small>Rastreio</small><strong>{{ fulfillment.tracking_code }}</strong></div>{% endif %}
-              {% if fulfillment.tracking_url %}<div class="compact-actions" style="margin-top:.4rem;"><a href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener noreferrer">Abrir rastreio</a></div>{% endif %}
+              {% if fulfillment.tracking_code %}
+                <div><small>Rastreio</small><strong id="tracking-code-{{ fulfillment.id }}">{{ fulfillment.tracking_code }}</strong></div>
+              {% endif %}
+              <div class="compact-actions" style="margin-top:.4rem;">
+                {% if fulfillment.tracking_code %}<button type="button" class="secondary-action copy-tracking" data-copy-target="tracking-code-{{ fulfillment.id }}">Copiar rastreio</button>{% endif %}
+                {% if fulfillment.tracking_url %}<a href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener noreferrer">Abrir rastreio</a>{% endif %}
+                {% if fulfillment.method == "delivery" and fulfillment.status == "ready" or fulfillment.status == "in_transit" %}
+                  <a href="{% url 'messaging:contextual_send' 'tracking' fulfillment.id %}">Enviar rastreio</a>
+                {% endif %}
+              </div>
             </div>
           {% endif %}
 
@@ -50,4 +58,23 @@
     {% endfor %}
   {% endif %}
 </section>
+<script>
+(function(){
+  document.querySelectorAll('.copy-tracking').forEach(function(button){
+    button.addEventListener('click', async function(){
+      const target = document.getElementById(button.dataset.copyTarget);
+      if (!target) return;
+      const value = target.textContent.trim();
+      try {
+        await navigator.clipboard.writeText(value);
+        const previous = button.textContent;
+        button.textContent = 'Copiado';
+        window.setTimeout(function(){ button.textContent = previous; }, 1200);
+      } catch (_) {
+        // Text remains visible for manual copy when Clipboard API is unavailable.
+      }
+    });
+  });
+})();
+</script>
 {% endif %}
