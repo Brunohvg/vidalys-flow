@@ -307,6 +307,7 @@ def create_quick_sale(
     fulfillment_method,
     pickup_unit=None,
     product=None,
+    variant=None,
     product_quantity=None,
     product_unit_price=None,
     customer=None,
@@ -344,6 +345,11 @@ def create_quick_sale(
         raise ValueError("Retirada exige unidade ativa.")
     if fulfillment_method == Fulfillment.Method.DELIVERY and pickup_unit is not None:
         raise ValueError("Entrega não utiliza unidade de retirada.")
+    if variant is not None:
+        if product is None:
+            product = variant.product
+        elif variant.product_id != product.id:
+            raise ValueError("A variação selecionada não pertence ao produto.")
     if pricing_mode == Order.PricingMode.ITEMIZED and product is None:
         raise ValueError("Venda por itens exige ao menos um produto.")
     if product is not None and (product_quantity is None or product_unit_price is None):
@@ -380,6 +386,7 @@ def create_quick_sale(
             expected_version=1,
             idempotency_key=_subkey(idempotency_key, "item"),
             product=product,
+            variant=variant,
             quantity=product_quantity,
             unit_price=product_unit_price,
         )
