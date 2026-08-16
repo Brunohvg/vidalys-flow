@@ -9,6 +9,7 @@ PURPOSE_CHOICES = (
     ("fulfillment_progress", "Progresso de fulfillment"),
     ("payment_confirmation", "Confirmação de pagamento"),
     ("checkout_link", "Link de checkout"),
+    ("pix_instruction", "Instrução PIX"),
 )
 
 
@@ -56,7 +57,7 @@ class ConnectionCreateForm(forms.Form):
 
 class ChannelCreateForm(forms.Form):
     connection = forms.ModelChoiceField(queryset=MessagingProviderConnection.objects.none(), label="Conexão")
-    kind = forms.ChoiceField(choices=MessagingChannel.Kind.choices, label="Tipo")
+    kind = forms.ChoiceField(choices=MessagingProviderConnection.Provider.choices, label="Tipo")
     display_name = forms.CharField(max_length=120, label="Nome")
     credential_alias = forms.CharField(max_length=120, label="Alias de credencial do canal")
     idempotency_key = forms.CharField(max_length=64, widget=forms.HiddenInput)
@@ -66,6 +67,7 @@ class ChannelCreateForm(forms.Form):
         self.fields["connection"].queryset = MessagingProviderConnection.objects.filter(
             organization=organization, is_active=True
         )
+        self.fields["kind"].choices = MessagingChannel.Kind.choices
         if not self.is_bound:
             self.initial.setdefault("idempotency_key", str(uuid.uuid4()))
 
