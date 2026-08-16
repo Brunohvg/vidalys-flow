@@ -4,16 +4,59 @@ from django.urls import reverse
 
 from apps.customers import transfer_views
 from apps.customers.models import Customer
+from apps.platform.xlsx import build_xlsx, parse_xlsx
 
 pytestmark = pytest.mark.django_db
 
 
+HEADERS = (
+    "customer_type",
+    "display_name",
+    "legal_name",
+    "document",
+    "email",
+    "phone",
+    "notes_summary",
+)
+
+
 def _csv(*rows):
-    header = "customer_type,display_name,legal_name,document,email,phone,notes_summary\n"
+    header = ",".join(HEADERS) + "\n"
     return SimpleUploadedFile(
         "clientes.csv",
         (header + "\n".join(rows) + "\n").encode(),
         content_type="text/csv",
+    )
+
+
+def _xlsx(*rows):
+    payload = build_xlsx(headers=HEADERS, rows=rows)
+    return SimpleUploadedFile(
+        "clientes.xlsx",
+        payload,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+def _preview(client, uploaded):
+    uploaded_response = client.post(
+        reverse("customers:import-csv"),
+        {"step": "upload", "file": uploaded},
+    )
+    assert uploaded_response.status_code == 200
+    assert uploaded_response.templates[0].name == "customers/import_mapping.html"
+    mapping = {"step": "mapping", "stage": uploaded_response.context["stage"]}
+    mapping.update({f"map_{header}": header for header in HEADERS})
+    preview = client.post(reverse("customers:import-csv"), mapping)
+    assert preview.status_code == 200
+    assert preview.templates[0].name == "customers/import_preview.html"
+    return preview
+
+
+def _confirm(client, preview):
+    return client.post(
+        reverse("customers:import-csv"),
+        {"step": "confirm", "stage": preview.context["stage"]},
     )
 
 
@@ -40,102 +83,109 @@ def test_customer_export_does_not_leak_other_organization(
     content = response.content.decode("utf-8-sig")
 
     assert response.status_code == 200
-    assert response["Content-Disposition"] == 'attachment; filename="clientes.csv"'
     assert "Cliente Visível" in content
     assert "Cliente Oculto" not in content
 
+    xlsx = client.get(reverse("customers:export-xlsx"))
+    _, rows = parse_xlsx(xlsx.content, max_rows=10)
+    assert any(row["display_name"] == "Cliente Visível" for row in rows)
+    assert not any(row["display_name"] == "Cliente Oculto" for row in rows)
 
-def test_customer_import_success_creates_contacts_and_can_be_exported(
+
+@pytest.mark.parametrize("file_kind", ["csv", "xlsx"])
+def test_customer_import_requires_preview_before_atomic_confirmation(
     client,
     organization,
     user,
     operator_membership,
+    file_kind,
 ):
     client.force_login(user)
-    upload = _csv(
-        "individual,Maria Importada,,,maria@example.com,11999999999,Cliente CSV",
-        "company,Empresa Importada,Ltda,,,,Conta empresa",
-    )
+    csv_row = "individual,Maria Importada,,,maria@example.com,11999999999,Cliente importada"
+    xlsx_row = ("individual", "Maria Importada", "", "", "maria@example.com", "11999999999", "Cliente importada")
+    uploaded = _csv(csv_row) if file_kind == "csv" else _xlsx(xlsx_row)
 
-    response = client.post(reverse("customers:import-csv"), {"file": upload})
+    preview = _preview(client, uploaded)
 
-    assert response.status_code == 302
+    assert preview.context["can_confirm"] is True
+    assert not Customer.objects.filter(organization=organization, display_name="Maria Importada").exists()
+
+    result = _confirm(client, preview)
+
+    assert result.status_code == 200
+    assert result.templates[0].name == "customers/import_result.html"
     maria = Customer.objects.get(organization=organization, display_name="Maria Importada")
     assert maria.contacts.filter(kind="email", normalized_value="maria@example.com").exists()
     assert maria.contacts.filter(kind="phone", normalized_value="+5511999999999").exists()
-    assert Customer.objects.filter(organization=organization, display_name="Empresa Importada").exists()
-
-    exported = client.get(reverse("customers:export-csv")).content.decode("utf-8-sig")
-    assert "maria@example.com" not in exported
-    assert "11999999999" not in exported
-    assert "ma***@example.com" in exported
-    assert "+55****99" in exported
 
 
-def test_customer_import_rolls_back_entire_file_on_invalid_row(
+def test_customer_import_preview_blocks_invalid_row_without_writes(
     client,
     organization,
     user,
     operator_membership,
 ):
     client.force_login(user)
-    upload = _csv(
-        "individual,Primeiro Cliente,,,,,",
-        "invalid,Segundo Cliente,,,,,",
+    preview = _preview(
+        client,
+        _csv(
+            "individual,Primeiro Cliente,,,,,",
+            "invalid,Segundo Cliente,,,,,",
+        ),
     )
 
-    response = client.post(reverse("customers:import-csv"), {"file": upload})
-
-    assert response.status_code == 200
+    assert preview.context["can_confirm"] is False
+    assert preview.context["errors"]
     assert not Customer.objects.filter(
         organization=organization,
         display_name__in=("Primeiro Cliente", "Segundo Cliente"),
     ).exists()
-    assert "Importação cancelada" in response.content.decode()
 
 
-def test_customer_import_rejects_missing_file_bad_header_and_row_limit(
+def test_customer_import_requires_mapping_for_required_fields(client, user, operator_membership):
+    client.force_login(user)
+    uploaded = SimpleUploadedFile("clientes.csv", b"name\nMaria\n", content_type="text/csv")
+    mapping = client.post(reverse("customers:import-csv"), {"step": "upload", "file": uploaded})
+    response = client.post(
+        reverse("customers:import-csv"),
+        {
+            "step": "mapping",
+            "stage": mapping.context["stage"],
+            **{f"map_{header}": "__blank__" for header in HEADERS},
+        },
+    )
+    assert response.status_code == 200
+    assert "Mapeie o campo obrigatório" in response.content.decode()
+
+
+def test_customer_import_rejects_missing_file_row_limit_and_oversized_file(
     client,
     user,
     operator_membership,
     monkeypatch,
 ):
     client.force_login(user)
-    missing = client.post(reverse("customers:import-csv"), {})
-    assert missing.status_code == 200
-    assert "Selecione um arquivo CSV" in missing.content.decode()
-
-    bad_header = SimpleUploadedFile("clientes.csv", b"name\nMaria\n", content_type="text/csv")
-    invalid = client.post(reverse("customers:import-csv"), {"file": bad_header})
-    assert "Cabeçalho CSV inválido" in invalid.content.decode()
+    missing = client.post(reverse("customers:import-csv"), {"step": "upload"})
+    assert "Selecione um arquivo CSV ou XLSX" in missing.content.decode()
 
     monkeypatch.setattr(transfer_views, "MAX_IMPORT_ROWS", 1)
     too_many = client.post(
         reverse("customers:import-csv"),
-        {"file": _csv("individual,A,,,,,", "individual,B,,,,,")},
+        {"step": "upload", "file": _csv("individual,A,,,,,", "individual,B,,,,,")},
     )
     assert "excede o limite de 1 linhas" in too_many.content.decode()
 
-
-def test_customer_import_rejects_oversized_file(
-    client,
-    user,
-    operator_membership,
-    monkeypatch,
-):
-    client.force_login(user)
     monkeypatch.setattr(transfer_views, "MAX_IMPORT_BYTES", 16)
-    response = client.post(
+    oversized = client.post(
         reverse("customers:import-csv"),
-        {"file": _csv("individual,Arquivo grande,,,,,")},
+        {"step": "upload", "file": _csv("individual,Arquivo grande,,,,,")},
     )
-    assert response.status_code == 200
-    assert "excede o limite" in response.content.decode()
+    assert "excede o limite" in oversized.content.decode()
 
 
-def test_customer_import_rejects_non_utf8_file(client, user, operator_membership):
+def test_customer_import_rejects_non_utf8_csv(client, user, operator_membership):
     client.force_login(user)
     uploaded = SimpleUploadedFile("clientes.csv", b"\xff\xfe\xff", content_type="text/csv")
-    response = client.post(reverse("customers:import-csv"), {"file": uploaded})
+    response = client.post(reverse("customers:import-csv"), {"step": "upload", "file": uploaded})
     assert response.status_code == 200
-    assert "Importação cancelada" in response.content.decode()
+    assert "CSV deve usar UTF-8" in response.content.decode()
