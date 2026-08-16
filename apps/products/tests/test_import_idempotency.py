@@ -8,7 +8,16 @@ from apps.products.models import Product
 pytestmark = pytest.mark.django_db
 
 
-HEADER = "product_key,product_name,description,default_unit,variant_name,sku,barcode\n"
+HEADERS = (
+    "product_key",
+    "product_name",
+    "description",
+    "default_unit",
+    "variant_name",
+    "sku",
+    "barcode",
+)
+HEADER = ",".join(HEADERS) + "\n"
 ROWS = (
     "produto-sem-sku,Produto Sem SKU,Descrição segura,un,,,,\n"
     "produto-com-variantes,Produto Com Variantes,,un,Branca,SKU-BR,789001\n"
@@ -24,7 +33,21 @@ def _upload():
     )
 
 
-def test_product_csv_retry_is_noop_and_preserves_grouped_variants(
+def _confirmed_import(client):
+    mapping = client.post(
+        reverse("products:import-csv"),
+        {"step": "upload", "file": _upload()},
+    )
+    payload = {"step": "mapping", "stage": mapping.context["stage"]}
+    payload.update({f"map_{header}": header for header in HEADERS})
+    preview = client.post(reverse("products:import-csv"), payload)
+    return client.post(
+        reverse("products:import-csv"),
+        {"step": "confirm", "stage": preview.context["stage"]},
+    )
+
+
+def test_product_import_retry_is_noop_and_preserves_grouped_variants(
     client,
     organization,
     user,
@@ -32,11 +55,12 @@ def test_product_csv_retry_is_noop_and_preserves_grouped_variants(
 ):
     client.force_login(user)
 
-    first = client.post(reverse("products:import-csv"), {"file": _upload()})
-    repeated = client.post(reverse("products:import-csv"), {"file": _upload()})
+    first = _confirmed_import(client)
+    repeated = _confirmed_import(client)
 
-    assert first.status_code == 302
-    assert repeated.status_code == 302
+    assert first.status_code == 200
+    assert repeated.status_code == 200
+    assert repeated.context["already_imported"] is True
     assert Product.objects.filter(
         organization=organization,
         name="Produto Sem SKU",
