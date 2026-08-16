@@ -2,9 +2,9 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
+from apps.platform.xlsx import build_xlsx, parse_xlsx
 from apps.products import transfer_views
 from apps.products.models import Product
-from apps.platform.xlsx import build_xlsx, parse_xlsx
 
 pytestmark = pytest.mark.django_db
 
