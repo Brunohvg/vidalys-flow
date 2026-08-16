@@ -257,15 +257,32 @@ def product_import_csv(request):
         stage_headers, rows = load_stage(request.POST.get("stage", ""))
         if stage_headers != PRODUCT_HEADERS:
             raise TabularImportError("Prévia canônica inválida.")
-        groups, errors, conflicts = _validate_product_rows(organization=organization, rows=rows)
-        if errors or conflicts:
-            raise TabularImportError("A prévia ficou obsoleta; revise validações e conflitos novamente.")
 
         source_digest = import_batch_digest(
             domain=DataImportBatchReceipt.Domain.PRODUCTS,
             headers=PRODUCT_HEADERS,
             rows=rows,
         )
+        existing_batch = DataImportBatchReceipt.objects.filter(
+            organization=organization,
+            domain=DataImportBatchReceipt.Domain.PRODUCTS,
+            source_digest=source_digest,
+            completed=True,
+        ).first()
+        if existing_batch is not None:
+            groups, errors = _group_product_rows(rows)
+            if errors:
+                raise TabularImportError("Lote importado possui estrutura canônica inválida.")
+            return render(
+                request,
+                "products/import_result.html",
+                {"organization": organization, "count": len(groups), "already_imported": True},
+            )
+
+        groups, errors, conflicts = _validate_product_rows(organization=organization, rows=rows)
+        if errors or conflicts:
+            raise TabularImportError("A prévia ficou obsoleta; revise validações e conflitos novamente.")
+
         with transaction.atomic():
             batch, is_new = claim_import_batch(
                 organization=organization,
