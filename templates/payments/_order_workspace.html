@@ -34,8 +34,9 @@
           <input id="order-pix-key-{{ order.id }}" value="{{ pix.key_value }}" readonly>
           <div class="compact-actions" style="margin-top:.5rem;">
             <button type="button" class="secondary-action copy-payment-value" data-copy-target="order-pix-key-{{ order.id }}">Copiar PIX</button>
+            {% if can_operate %}<a href="{% url 'messaging:contextual_send' 'pix' payment.id %}">Enviar PIX</a>{% endif %}
           </div>
-          <p class="muted-block">Copiar a chave não altera o estado financeiro.</p>
+          <p class="muted-block">Copiar ou registrar o envio da chave não altera o estado financeiro.</p>
         </div>
       {% elif can_operate %}
         <p class="muted-block">Nenhuma instrução PIX ativa. <a href="{% url 'payments:pix_settings' %}">Configurar PIX</a></p>
