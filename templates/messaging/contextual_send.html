@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Vidalys Flow{% endblock %}
+{% block content %}
+<section class="card" style="max-width:44rem;margin:0 auto;">
+  <p class="muted" style="margin:0">PEDIDO {{ order.display_number }} · {{ organization.name }}</p>
+  <h1>{{ title }}</h1>
+  {% if kind == "pix" %}
+    <p>O envio usa a configuração PIX ativa da Organization. Copiar ou enviar a chave não confirma recebimento nem altera o estado do pagamento.</p>
+  {% else %}
+    <p>O envio usa o rastreio canônico atual do atendimento. Se o rastreio mudar antes do dispatch, a mensagem antiga falha fechada.</p>
+  {% endif %}
+  <p class="muted">Messaging valida contato, consentimento, template e canal. Providers externos continuam bloqueados nesta fase.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.idempotency_key }}
+    {{ form.non_field_errors }}
+    <div class="field">{{ form.channel.label_tag }}{{ form.channel }}{{ form.channel.errors }}</div>
+    <div class="field">{{ form.contact_point.label_tag }}{{ form.contact_point }}{{ form.contact_point.errors }}</div>
+    <div class="actions">
+      <button type="submit">Registrar envio</button>
+      <a href="{% url 'orders:detail' order.id %}">Voltar ao pedido</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
